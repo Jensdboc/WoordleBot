@@ -4,8 +4,9 @@ import numpy as np
 from sympy import false
 
 class WoordleGame:
-    def __init__(self, author : discord.member, message = discord.message):
-        self.word = "giraf"
+
+    def __init__(self, word, author : discord.member, message = discord.message):
+        self.word = word
         self.woordle_list = [letter for letter in self.word]
         self.author = author
         self.message = message
@@ -47,10 +48,7 @@ class WoordleGame:
         for letter in range(len(guess)):
             emoji_name = "yellow_" + str(guess[letter]).upper()
             green_emoji = "green_" + str(guess[letter]).upper()
-            if self.board[self.row - 1][letter] != green_emoji and guess[letter].lower() in temp_list:
+            if self.board[self.row - 1][letter] != str(get(client.emojis, name=green_emoji)) and guess[letter].lower() in temp_list:
+                # print(self.board[self.row - 1])
                 temp_list.remove(guess[letter].lower())
                 self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
-
-
-
-    

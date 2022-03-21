@@ -1,7 +1,7 @@
-from http import client
 import discord
 from discord.ext import commands
 from discord.utils import get
+
 from woordle_game import *
 from woordle_games import *
 
@@ -13,7 +13,6 @@ class Woordle(commands.Cog):
     
     def __init__(self, client):
         self.client = client
-        self.dict = {"green":"🟩","yellow":"🟨","gray":"⬛"}
         self.games = WoordleGames()
 
     def check_word(self, word):
@@ -44,7 +43,7 @@ class Woordle(commands.Cog):
             embed = discord.Embed(title="Woordle", description="You have already started a Woordle, use !woordle <guess> to play", color=0xff0000)
             await ctx.send(embed=embed)
             return
-        woordle_game = WoordleGame(ctx.author, ctx.message)
+        woordle_game = WoordleGame(self.games.word, ctx.author, ctx.message)
         message = self.games.add_woordle_game(woordle_game)
         if message != None:
             embed = discord.Embed(title="Woordle", description=message, color=ctx.author.color)        
@@ -116,7 +115,24 @@ class Woordle(commands.Cog):
             embed = discord.Embed(title="Woordle", description="All the games have been reset!", color=0x11806a)        
             await ctx.send(embed=embed)
 
-        
+    @commands.command(usage="!setword <word>", 
+                      description="Set the current word",
+                      help="This is an admin-only command",
+                      aliases = ['sw'])
+    async def setword(self, ctx, word):
+        if ctx.author.id != 656916865364525067:
+            embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=0xff0000)        
+            await ctx.send(embed=embed)
+        else:
+            # Clear all games
+            if self.games.set_word(word):
+                embed = discord.Embed(title="Woordle", description=word + " has been set as the new word!", color=0x11806a)        
+                await ctx.send(embed=embed)
+            else:
+                await ctx.message.add_reaction("❌")
+                embed = discord.Embed(title="Woordle", description=word + " is not a valid word!", color=0x11806a)        
+                await ctx.send(embed=embed)
+
 #Allows to connect cog to bot    
 def setup(client):
     client.add_cog(Woordle(client))
