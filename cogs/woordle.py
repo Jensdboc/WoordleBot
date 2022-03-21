@@ -56,7 +56,7 @@ class Woordle(commands.Cog):
             woordle_game.message = await ctx.send(embed=embed)
             if woordle_game.right_guess(guess):
                 woordle_game.stop()
-                embed = discord.Embed(title="Woordle", description="Congratulations," + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
+                embed = discord.Embed(title="Woordle", description="Congratulations, " + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
                 await ctx.send(embed=embed)
             woordle_game.add_row()
 
@@ -92,7 +92,7 @@ class Woordle(commands.Cog):
             await woordle_game.message.edit(embed=embed)
             if woordle_game.right_guess(guess):
                 woordle_game.stop()
-                embed = discord.Embed(title="Woordle", description="Congratulations," + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
+                embed = discord.Embed(title="Woordle", description="Congratulations, " + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
                 await ctx.send(embed=embed)
             elif woordle_game.row < 6:
                 woordle_game.add_row()
