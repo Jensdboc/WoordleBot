@@ -18,7 +18,7 @@ intents = discord.Intents.all()
 #Startup#
 #*******#
 
-client = commands.Bot(command_prefix="!", help_command=CustomHelpCommand(), case_insensitive=True, intents=intents)
+client = commands.Bot(command_prefix="=", help_command=CustomHelpCommand(), case_insensitive=True, intents=intents)
 client.mute_message = None
 client.activity = discord.Game(name="Woordle")
 

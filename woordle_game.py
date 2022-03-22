@@ -14,6 +14,15 @@ class WoordleGame:
         self.row = 1
         self.column = 5
         self.playing = True
+        self.letters = {"a":":regional_indicator_a:","b":":regional_indicator_b:","c":":regional_indicator_c:",
+                        "d":":regional_indicator_d:","e":":regional_indicator_e:","f":":regional_indicator_f:",
+                        "g":":regional_indicator_g:","h":":regional_indicator_h:","i":":regional_indicator_i:",
+                        "j":":regional_indicator_j:","k":":regional_indicator_k:","l":":regional_indicator_l:",
+                        "m":":regional_indicator_m:","n":":regional_indicator_n:","o":":regional_indicator_o:",
+                        "p":":regional_indicator_p:","q":":regional_indicator_q:","r":":regional_indicator_r:",
+                        "s":":regional_indicator_s:","t":":regional_indicator_t:","u":":regional_indicator_u:",
+                        "v":":regional_indicator_v:","w":":regional_indicator_w:","x":":regional_indicator_x:",
+                        "y":":regional_indicator_y:","z":":regional_indicator_z:"}            
     
     def add_row(self):
         self.row += 1
@@ -24,12 +33,21 @@ class WoordleGame:
     def stop(self):
         self.playing = False
 
-    def display(self):
+    def display(self, client : discord.client):
+        alphabet = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
         board = ""
         for i in range(self.row):
             for j in range(self.column):
                 board += self.board[i][j]
             board += "\n"
+        board += "\n"
+        for index, letter in enumerate(alphabet):
+            if index == 13:
+                board += "\n"
+            if get(client.emojis, name=self.letters[letter]) == None:
+                board += self.letters[letter]
+            else:
+                board += str(get(client.emojis, name=self.letters[letter]))
         return board
 
     def update_board(self, guess, client : discord.client):
@@ -41,9 +59,12 @@ class WoordleGame:
                 temp_list.remove(guess[letter].lower())
                 emoji_name = "green_" + str(guess[letter]).upper()
                 self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
+                self.letters[str(guess[letter]).lower()] = emoji_name
             else:
                 emoji_name = "gray_" + str(guess[letter]).upper()
                 self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
+                if self.letters[str(guess[letter]).lower()] != "green_" + str(guess[letter]).upper():
+                    self.letters[str(guess[letter]).lower()] = emoji_name
         # Handle all correct letters on wrong spots
         for letter in range(len(guess)):
             emoji_name = "yellow_" + str(guess[letter]).upper()
@@ -52,3 +73,4 @@ class WoordleGame:
                 # print(self.board[self.row - 1])
                 temp_list.remove(guess[letter].lower())
                 self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
+                self.letters[str(guess[letter]).lower()] = emoji_name                

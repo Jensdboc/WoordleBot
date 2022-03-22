@@ -20,6 +20,12 @@ class Woordle(commands.Cog):
             words = all_words.read().splitlines()
             return word.upper() in words
 
+    @commands.command()
+    async def test(self, ctx):
+        woordlegame = self.games.get_woordle_game(ctx.author)
+        print(woordlegame.letters["a"])
+        await ctx.send(":regional_indicator_a:")
+
     @commands.command(usage="!gimmewoordle <guess>", 
                       description="Start the woordle of the day",
                       aliases = ['gw'])
@@ -51,7 +57,7 @@ class Woordle(commands.Cog):
         else:    
             # Update board with guess, create message and add row
             woordle_game.update_board(guess, self.client)
-            embed = discord.Embed(title="Woordle", description=woordle_game.display(), color=0xff0000)        
+            embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=0xff0000)        
             woordle_game.message = await ctx.send(embed=embed)
             if woordle_game.right_guess(guess):
                 woordle_game.stop()
@@ -87,7 +93,7 @@ class Woordle(commands.Cog):
         else:
             # Update board with guess, edit message
             woordle_game.update_board(guess, self.client)
-            embed = discord.Embed(title="Woordle", description=woordle_game.display(), color=ctx.author.color)        
+            embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=ctx.author.color)        
             await woordle_game.message.edit(embed=embed)
             if woordle_game.right_guess(guess):
                 woordle_game.stop()
