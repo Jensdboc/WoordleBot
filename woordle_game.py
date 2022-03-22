@@ -73,4 +73,5 @@ class WoordleGame:
                 # print(self.board[self.row - 1])
                 temp_list.remove(guess[letter].lower())
                 self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
-                self.letters[str(guess[letter]).lower()] = emoji_name                
+                if self.letters[str(guess[letter]).lower()] != green_emoji:
+                    self.letters[str(guess[letter]).lower()] = emoji_name               
