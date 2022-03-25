@@ -26,57 +26,60 @@ class Woordle(commands.Cog):
         print(woordlegame.letters["a"])
         await ctx.send(":regional_indicator_a:")
 
-    @commands.command(usage="!gimmewoordle <guess>", 
-                      description="Start the woordle of the day",
-                      aliases = ['gw'])
-    async def gimmewoordle(self, ctx, guess):
-        # Delete message and check if the guess is valid
-        # await ctx.message.delete()
-        if len(guess) != 5:
-            await ctx.message.add_reaction("❌")
-            # embed = discord.Embed(title="Woordle", description="Your guess has to be 5 letters long!", color=ctx.author.color)        
-            # await ctx.send(embed=embed)
-            return
-        if not self.check_word(guess):
-            await ctx.message.add_reaction("❌")
-            # embed = discord.Embed(title="Woordle", description="Your guess has to be a valid word!", color=ctx.author.color)        
-            # await ctx.send(embed=embed)
-            return
+    # @commands.command(usage="!gimmewoordle <guess>", 
+    #                   description="Start the woordle of the day",
+    #                   aliases = ['gw'])
+    # async def gimmewoordle(self, ctx, guess=None):
+    #     # Delete message and check if the guess is valid
+    #     # await ctx.message.delete()
+    #     if guess == None:
+    #         embed = discord.Embed(title="Woordle", description="Please insert a guess!", color=ctx.author.color)        
+    #         await ctx.send(embed=embed)
+    #         return
+    #     if len(guess) != 5:
+    #         await ctx.message.add_reaction("❌")
+    #         # embed = discord.Embed(title="Woordle", description="Your guess has to be 5 letters long!", color=ctx.author.color)        
+    #         # await ctx.send(embed=embed)
+    #         return
+    #     if not self.check_word(guess):
+    #         await ctx.message.add_reaction("❌")
+    #         # embed = discord.Embed(title="Woordle", description="Your guess has to be a valid word!", color=ctx.author.color)        
+    #         # await ctx.send(embed=embed)
+    #         return
 
-        # Create woordle and check if the game is valid
-        woordle_game = self.games.get_woordle_game(ctx.author)
-        if woordle_game != None:
-            embed = discord.Embed(title="Woordle", description="You have already started a Woordle, use !woordle <guess> to play", color=0xff0000)
-            await ctx.send(embed=embed)
-            return
-        woordle_game = WoordleGame(self.games.word, ctx.author, ctx.message)
-        message = self.games.add_woordle_game(woordle_game)
-        if message != None:
-            embed = discord.Embed(title="Woordle", description=message, color=ctx.author.color)        
-            await ctx.send(embed=embed)
-        else:    
-            # Update board with guess, create message and add row
-            woordle_game.update_board(guess, self.client)
-            embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=0xff0000)        
-            woordle_game.message = await ctx.send(embed=embed)
-            if woordle_game.right_guess(guess):
-                woordle_game.stop()
-                embed = discord.Embed(title="Woordle", description="Congratulations, " + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
-                await ctx.send(embed=embed)
-            woordle_game.add_row()
+    #     # Create woordle and check if the game is valid
+    #     woordle_game = self.games.get_woordle_game(ctx.author)
+    #     if woordle_game != None:
+    #         embed = discord.Embed(title="Woordle", description="You have already started a Woordle, use !woordle <guess> to play", color=0xff0000)
+    #         await ctx.send(embed=embed)
+    #         return
+    #     woordle_game = WoordleGame(self.games.word, ctx.author, ctx.message)
+    #     message = self.games.add_woordle_game(woordle_game)
+    #     if message != None:
+    #         embed = discord.Embed(title="Woordle", description=message, color=ctx.author.color)        
+    #         await ctx.send(embed=embed)
+    #     else:    
+    #         # Update board with guess, create message and add row
+    #         woordle_game.update_board(guess, self.client)
+    #         embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=0xff0000)        
+    #         woordle_game.message = await ctx.send(embed=embed)
+    #         if woordle_game.right_guess(guess):
+    #             woordle_game.stop()
+    #             embed = discord.Embed(title="Woordle", description="Congratulations, " + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
+    #             await ctx.send(embed=embed)
+    #         woordle_game.add_row()
 
     @commands.command(usage="!woordle", 
                       description="Guess the next word for the Woordle",
                       aliases = ['w'])
-    async def woordle(self, ctx, guess):
+    async def woordle(self, ctx, guess=None):
         # Delete message and check if the guess is valid
         # await ctx.message.delete()
-        if len(guess) != 5:
-            await ctx.message.add_reaction("❌")
-            # embed = discord.Embed(title="Woordle", description="Your guess has to be 5 letters long!", color=ctx.author.color)        
-            # await ctx.send(embed=embed)
+        if guess == None:
+            embed = discord.Embed(title="Woordle", description="Please insert a guess!", color=ctx.author.color)        
+            await ctx.send(embed=embed)
             return
-        if not self.check_word(guess):
+        if not self.check_word(guess) or len(guess) != 5:
             await ctx.message.add_reaction("❌")
             # embed = discord.Embed(title="Woordle", description="Your guess has to be a valid word!", color=ctx.author.color)        
             # await ctx.send(embed=embed)
@@ -85,8 +88,21 @@ class Woordle(commands.Cog):
         # Get woordle and check if the game is valid
         woordle_game = self.games.get_woordle_game(ctx.author)
         if woordle_game == None:
-            embed = discord.Embed(title="Woordle", description="You have not started a Woordle yet, use !gimmewoordle <guess> to start a Woordle", color=0xff0000)
-            await ctx.send(embed=embed)
+            woordle_game = WoordleGame(self.games.word, ctx.author, ctx.message)
+            message = self.games.add_woordle_game(woordle_game)
+            if message != None:
+                embed = discord.Embed(title="Woordle", description=message, color=ctx.author.color)        
+                await ctx.send(embed=embed)
+            else:    
+                # Update board with guess, create message and add row
+                woordle_game.update_board(guess, self.client)
+                embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=0xff0000)        
+                woordle_game.message = await ctx.send(embed=embed)
+                if woordle_game.right_guess(guess):
+                    woordle_game.stop()
+                    embed = discord.Embed(title="Woordle", description="Congratulations, " + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
+                    await ctx.send(embed=embed)
+                woordle_game.add_row()
         elif not woordle_game.playing:
             embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=0xff0000)
             await ctx.send(embed=embed)
