@@ -113,7 +113,7 @@ class Woordle(commands.Cog):
             embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=0xff0000)        
             await ctx.send(embed=embed)
         else:
-            # Clear all games
+            # Set current word
             if self.games.set_word(word):
                 embed = discord.Embed(title="Woordle", description=word + " has been set as the new word!", color=0x11806a)        
                 await ctx.send(embed=embed)
