@@ -3,7 +3,7 @@ import discord
 from woordle_game import WoordleGame
 
 def check_word(word):
-    with open('data\\woorden.txt', 'r') as all_words:
+    with open("woorden.txt", 'r') as all_words:
         words = all_words.read().splitlines()
         return word.upper() in words
 

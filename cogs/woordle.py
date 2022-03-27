@@ -21,7 +21,7 @@ class Woordle(commands.Cog):
         self.day_loop.start()
 
     def check_word(self, word):
-        with open('data\\all_words.txt', 'r') as all_words:
+        with open("all_words.txt", 'r') as all_words:
             words = all_words.read().splitlines()
             return word.upper() in words
 
@@ -124,7 +124,7 @@ class Woordle(commands.Cog):
 
     @tasks.loop(hours=12)
     async def day_loop(self):
-        with open('data\\woorden.txt', 'r') as all_words:
+        with open("woorden.txt", 'r') as all_words:
             words = all_words.read().splitlines()
             word = random.choice(words)
             self.games.set_word(word)
