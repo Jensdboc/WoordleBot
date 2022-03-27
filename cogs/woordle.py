@@ -122,7 +122,7 @@ class Woordle(commands.Cog):
                 embed = discord.Embed(title="Woordle", description=word + " is not a valid word!", color=0x11806a)        
                 await ctx.send(embed=embed)
 
-    @tasks.loop(hours=24)
+    @tasks.loop(hours=4)
     async def day_loop(self):
         with open('data\\woorden.txt', 'r') as all_words:
             words = all_words.read().splitlines()
