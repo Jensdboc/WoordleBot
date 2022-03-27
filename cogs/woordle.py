@@ -1,9 +1,13 @@
+from ast import alias
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.utils import get
 
 from woordle_game import *
 from woordle_games import *
+
+import random
+from datetime import datetime
 
 #*********************#
 #User commands woordle#
@@ -14,6 +18,7 @@ class Woordle(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.games = WoordleGames()
+        self.day_loop.start()
 
     def check_word(self, word):
         with open('data\\all_words.txt', 'r') as all_words:
@@ -26,53 +31,15 @@ class Woordle(commands.Cog):
         print(woordlegame.letters["a"])
         await ctx.send(":regional_indicator_a:")
 
-    # @commands.command(usage="!gimmewoordle <guess>", 
-    #                   description="Start the woordle of the day",
-    #                   aliases = ['gw'])
-    # async def gimmewoordle(self, ctx, guess=None):
-    #     # Delete message and check if the guess is valid
-    #     # await ctx.message.delete()
-    #     if guess == None:
-    #         embed = discord.Embed(title="Woordle", description="Please insert a guess!", color=ctx.author.color)        
-    #         await ctx.send(embed=embed)
-    #         return
-    #     if len(guess) != 5:
-    #         await ctx.message.add_reaction("❌")
-    #         # embed = discord.Embed(title="Woordle", description="Your guess has to be 5 letters long!", color=ctx.author.color)        
-    #         # await ctx.send(embed=embed)
-    #         return
-    #     if not self.check_word(guess):
-    #         await ctx.message.add_reaction("❌")
-    #         # embed = discord.Embed(title="Woordle", description="Your guess has to be a valid word!", color=ctx.author.color)        
-    #         # await ctx.send(embed=embed)
-    #         return
-
-    #     # Create woordle and check if the game is valid
-    #     woordle_game = self.games.get_woordle_game(ctx.author)
-    #     if woordle_game != None:
-    #         embed = discord.Embed(title="Woordle", description="You have already started a Woordle, use !woordle <guess> to play", color=0xff0000)
-    #         await ctx.send(embed=embed)
-    #         return
-    #     woordle_game = WoordleGame(self.games.word, ctx.author, ctx.message)
-    #     message = self.games.add_woordle_game(woordle_game)
-    #     if message != None:
-    #         embed = discord.Embed(title="Woordle", description=message, color=ctx.author.color)        
-    #         await ctx.send(embed=embed)
-    #     else:    
-    #         # Update board with guess, create message and add row
-    #         woordle_game.update_board(guess, self.client)
-    #         embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=0xff0000)        
-    #         woordle_game.message = await ctx.send(embed=embed)
-    #         if woordle_game.right_guess(guess):
-    #             woordle_game.stop()
-    #             embed = discord.Embed(title="Woordle", description="Congratulations, " + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
-    #             await ctx.send(embed=embed)
-    #         woordle_game.add_row()
-
     @commands.command(usage="!woordle", 
                       description="Guess the next word for the Woordle",
                       aliases = ['w'])
     async def woordle(self, ctx, guess=None):
+        # Check if there is a current word
+        if self.games.word is None:
+            embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=ctx.author.color)        
+            await ctx.send(embed=embed)
+            return
         # Delete message and check if the guess is valid
         # await ctx.message.delete()
         if guess == None:
@@ -154,6 +121,14 @@ class Woordle(commands.Cog):
                 await ctx.message.add_reaction("❌")
                 embed = discord.Embed(title="Woordle", description=word + " is not a valid word!", color=0x11806a)        
                 await ctx.send(embed=embed)
+
+    @tasks.loop(hours=24)
+    async def day_loop(self):
+        with open('data\\woorden.txt', 'r') as all_words:
+            words = all_words.read().splitlines()
+            word = random.choice(words)
+            self.games.set_word(word)
+            print("The word has been changed to "+self.games.word)
 
 #Allows to connect cog to bot    
 def setup(client):

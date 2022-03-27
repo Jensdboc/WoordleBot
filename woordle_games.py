@@ -11,7 +11,7 @@ class WoordleGames:
 
     def __init__(self):
         self.games = []
-        self.word = "kramp"
+        self.word = None
 
     def set_word(self, word):
         if len(word) == 5 and check_word(word):

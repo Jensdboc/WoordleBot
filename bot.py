@@ -1,5 +1,6 @@
 # Imports 
 from pydoc import cli
+import sched
 import discord
 from discord.ext import commands, tasks 
 import numpy as np # Extra for othello   
@@ -8,7 +9,7 @@ import os # Import for cogs
 # Create files
 from pathlib import Path
 
-# Import from files
+# Import for files
 from Help import CustomHelpCommand
 
 # Intents
