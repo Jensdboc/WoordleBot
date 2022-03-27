@@ -1,7 +1,6 @@
 import discord
 from discord.utils import get
 import numpy as np
-from sympy import false
 
 class WoordleGame:
 
