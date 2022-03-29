@@ -18,6 +18,7 @@ class Woordle(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.games = WoordleGames()
+        # Reset all games and get new words by restart every 24 hours
         self.day_loop.start()
 
     def check_word(self, word):
@@ -86,7 +87,7 @@ class Woordle(commands.Cog):
                 woordle_game.add_row()
             else: 
                 woordle_game.stop()
-                embed = discord.Embed(title="Woordle", description="The game has finished!", color=ctx.author.color)        
+                embed = discord.Embed(title="Woordle", description="The game has finished, the word was "+woordle_game.word+"!", color=ctx.author.color)        
                 await ctx.send(embed=embed)
 
     @commands.command(usage="!woordlereset", 
@@ -122,13 +123,14 @@ class Woordle(commands.Cog):
                 embed = discord.Embed(title="Woordle", description=word + " is not a valid word!", color=0x11806a)        
                 await ctx.send(embed=embed)
 
-    @tasks.loop(hours=12)
+    @tasks.loop(hours=24)
     async def day_loop(self):
         with open("woorden.txt", 'r') as all_words:
             words = all_words.read().splitlines()
             word = random.choice(words)
             self.games.set_word(word)
-            print("The word has been changed to "+self.games.word)
+        self.games.reset_woordle_games()
+        print("The word has been changed to "+self.games.word)
 
 #Allows to connect cog to bot    
 def setup(client):
