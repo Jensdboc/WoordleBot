@@ -49,6 +49,22 @@ class WoordleGame:
                 board += str(get(client.emojis, name=self.letters[letter]))
         return board
 
+    def display_end(self):
+        end_board = ""
+        colors = {"green":"🟩","yellow":"🟨","gray":"⬛"}
+        for i in range(self.row):
+            for j in range(self.column):
+                if self.board[i][j][2:7] == "green":
+                    end_board += colors["green"]
+                elif self.board[i][j][2:8] == "yellow":
+                    end_board += colors["yellow"]
+                elif self.board[i][j][2:6] == "gray":
+                    end_board += colors["gray"]
+            end_board += "\n"
+        end_board += "\n"
+        print(end_board)
+        return end_board
+
     def update_board(self, guess, client : discord.client):
         # Copy all letters from word
         temp_list = self.woordle_list.copy()

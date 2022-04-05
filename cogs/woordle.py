@@ -18,6 +18,7 @@ class Woordle(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.games = WoordleGames()
+        self.counter = 0
         # Reset all games and get new words by restart every 24 hours
         self.day_loop.start()
 
@@ -36,6 +37,7 @@ class Woordle(commands.Cog):
                       description="Guess the next word for the Woordle",
                       aliases = ['w'])
     async def woordle(self, ctx, guess=None):
+        channel = self.client.get_channel(878308113604812880) # Other-games, De Boomhut Van Nonkel Jerry
         # Check if there is a current word
         if self.games.word is None:
             embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=ctx.author.color)        
@@ -68,8 +70,9 @@ class Woordle(commands.Cog):
                 woordle_game.message = await ctx.send(embed=embed)
                 if woordle_game.right_guess(guess):
                     woordle_game.stop()
-                    embed = discord.Embed(title="Woordle", description="Congratulations, " + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
-                    await ctx.send(embed=embed)
+                    # woordle_game.display_end()
+                    embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ str(woordle_game.row) + "/6 by " + ctx.author.name, description=woordle_game.display_end(), color=ctx.author.color)        
+                    await channel.send(embed=embed)
                 woordle_game.add_row()
         elif not woordle_game.playing:
             embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=0xff0000)
@@ -81,14 +84,17 @@ class Woordle(commands.Cog):
             await woordle_game.message.edit(embed=embed)
             if woordle_game.right_guess(guess):
                 woordle_game.stop()
-                embed = discord.Embed(title="Woordle", description="Congratulations, " + ctx.author.name + " finished the Woordle in: " + str(woordle_game.row) + "/6!", color=ctx.author.color)        
-                await ctx.send(embed=embed)
+                woordle_game.display_end()
+                embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ str(woordle_game.row) + "/6 by " + ctx.author.name, description=woordle_game.display_end(), color=ctx.author.color)        
+                await channel.send(embed=embed)
             elif woordle_game.row < 6:
                 woordle_game.add_row()
             else: 
                 woordle_game.stop()
-                embed = discord.Embed(title="Woordle", description="The game has finished, the word was "+woordle_game.word+"!", color=ctx.author.color)        
-                await ctx.send(embed=embed)
+                embed_private = discord.Embed(title="Woordle", description="Better luck next time, the word was " + woordle_game.word + "!", color=ctx.author.color)        
+                embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ str(woordle_game.row) + "/6 by " + ctx.author.name, description=woordle_game.display_end(), color=ctx.author.color)        
+                await ctx.send(embed=embed_private)
+                await channel.send(embed=embed)
 
     @commands.command(usage="!woordlereset", 
                       description="Reset all current wordlegames",
@@ -129,6 +135,7 @@ class Woordle(commands.Cog):
             words = all_words.read().splitlines()
             word = random.choice(words)
             self.games.set_word(word)
+        self.counter += 1
         self.games.reset_woordle_games()
         print("The word has been changed to "+self.games.word)
 
