@@ -27,12 +27,6 @@ class Woordle(commands.Cog):
             words = all_words.read().splitlines()
             return word.upper() in words
 
-    @commands.command()
-    async def test(self, ctx):
-        woordlegame = self.games.get_woordle_game(ctx.author)
-        print(woordlegame.letters["a"])
-        await ctx.send(":regional_indicator_a:")
-
     @commands.command(usage="!woordle", 
                       description="Guess the next word for the Woordle",
                       aliases = ['w'])
