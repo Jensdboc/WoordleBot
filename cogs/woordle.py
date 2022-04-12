@@ -86,7 +86,7 @@ class Woordle(commands.Cog):
             else: 
                 woordle_game.stop()
                 embed_private = discord.Embed(title="Woordle", description="Better luck next time, the word was " + woordle_game.word + "!", color=ctx.author.color)        
-                embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ str(woordle_game.row) + "/6 by " + ctx.author.name, description=woordle_game.display_end(), color=ctx.author.color)        
+                embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ "X/6 by " + ctx.author.name, description=woordle_game.display_end(), color=ctx.author.color)        
                 await ctx.send(embed=embed_private)
                 await channel.send(embed=embed)
 
