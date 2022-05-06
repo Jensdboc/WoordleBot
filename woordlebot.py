@@ -6,8 +6,14 @@ from discord.ext import commands, tasks
 import numpy as np # Extra for othello   
 import os # Import for cogs
 
+# Database
+import sqlite3
+from datetime import datetime
+
 # Create files
 from pathlib import Path
+
+from sqlalchemy import DATE
 
 # Import for files
 from Help import CustomHelpCommand
@@ -21,7 +27,33 @@ intents = discord.Intents.all()
 
 client = commands.Bot(command_prefix="=", help_command=CustomHelpCommand(), case_insensitive=True, intents=intents)
 client.mute_message = None
-client.activity = discord.Game(name="Woordle")
+client.activity = discord.Game(name="=help")
+
+
+# Database test: https://www.youtube.com/watch?v=H09U2E2v8eg&t=35s&ab_channel=DevXplaining
+# Connect to db and make cursor
+db = sqlite3.connect("woordle.db")
+cur = db.cursor()
+
+# Create table for woordle game if it does not exist
+cur.execute('''
+CREATE TABLE IF NOT EXISTS woordle_game (
+    id integer PRIMARY KEY AUTOINCREMENT,
+    date text NOT NULL, 
+    number_of_people text NOT NULL
+    )
+''')
+
+#ADD WORD TO WOORDLE_GAME
+
+# Create new woordle game-entry with current date and number of people equal to 0
+cur.execute('''
+INSERT INTO woordle_game (date, number_of_people) 
+    VALUES (?,?)
+''',[datetime.now().strftime("%D"), "0"])
+
+# Make sure transaction is ended and changes have been made final
+db.commit()
 
 @client.event
 async def on_ready():
@@ -63,4 +95,4 @@ for filename in os.listdir('./cogs'):
 with open('token.txt', 'r') as file:
     token = file.readline()
     print("Reading token...")
-    client.run(token)
+    client.run("NzY0NDUzNDM5OTUzNjk4ODQ2.X4Gevg.6gPcnxLyJr-Vq5OVWZ0b6eJqhvI")
