@@ -95,4 +95,4 @@ for filename in os.listdir('./cogs'):
 with open('token.txt', 'r') as file:
     token = file.readline()
     print("Reading token...")
-    client.run("NzY0NDUzNDM5OTUzNjk4ODQ2.X4Gevg.6gPcnxLyJr-Vq5OVWZ0b6eJqhvI")
+    client.run(token)
