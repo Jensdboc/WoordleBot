@@ -1,10 +1,12 @@
+from sqlite3 import Timestamp
 import discord
 from discord.utils import get
 import numpy as np
+from sqlalchemy import null
 
 class WoordleGame:
 
-    def __init__(self, word, author : discord.member, message = discord.message):
+    def __init__(self, word, author : discord.member, message = discord.message, time = Timestamp):
         self.word = word
         self.woordle_list = [letter for letter in self.word] if self.word != None else None
         self.author = author
@@ -13,6 +15,7 @@ class WoordleGame:
         self.row = 1
         self.column = 5
         self.playing = True
+        self.timestart = time
         self.letters = {"a":":regional_indicator_a:","b":":regional_indicator_b:","c":":regional_indicator_c:",
                         "d":":regional_indicator_d:","e":":regional_indicator_e:","f":":regional_indicator_f:",
                         "g":":regional_indicator_g:","h":":regional_indicator_h:","i":":regional_indicator_i:",
