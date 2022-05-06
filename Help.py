@@ -9,7 +9,7 @@ class CustomHelpCommand(commands.HelpCommand):
         super().__init__()
 
     async def send_bot_help(self, mapping):
-        embed = discord.Embed(title="Help overview", description="Use !help <category> for more information. **First letter has to be capitilized!**")
+        embed = discord.Embed(title="Help overview", description="Use =help <category> for more information. **First letter has to be capitilized!**")
         for cog in mapping:
             if cog:
                 list = ""
@@ -20,7 +20,7 @@ class CustomHelpCommand(commands.HelpCommand):
                 
     async def send_cog_help(self, cog):
         if cog:
-            embed = discord.Embed(title="Help " + cog.qualified_name, description="Use !help <command> for more information.")
+            embed = discord.Embed(title="Help " + cog.qualified_name, description="Use =help <command> for more information.")
             list = ""
             for command in cog.get_commands():
                 list += command.usage
@@ -34,7 +34,7 @@ class CustomHelpCommand(commands.HelpCommand):
 
     async def send_group_help(self, group):
         #await self.get_destination().send(f'{group.name}: {[command.name for index, command in enumerate(group.commands)]}')
-        await self.get_destination().send('This is not implemented yet but you can use !help <command>')
+        await self.get_destination().send('This is not implemented yet but you can use =help <command>')
     
     async def send_command_help(self, command):
         title = command.name.capitalize()
