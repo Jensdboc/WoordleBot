@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands, tasks 
 import numpy as np # Extra for othello   
 import os # Import for cogs
+import random # Import for choosing word
 
 # Database
 import sqlite3
@@ -29,28 +30,50 @@ client = commands.Bot(command_prefix="=", help_command=CustomHelpCommand(), case
 client.mute_message = None
 client.activity = discord.Game(name="=help")
 
-
 # Database test: https://www.youtube.com/watch?v=H09U2E2v8eg&t=35s&ab_channel=DevXplaining
 # Connect to db and make cursor
 db = sqlite3.connect("woordle.db")
 cur = db.cursor()
 
-# Create table for woordle game if it does not exist
+# Create table for woordlegames if it does not exist
 cur.execute('''
-CREATE TABLE IF NOT EXISTS woordle_game (
+CREATE TABLE IF NOT EXISTS woordle_games (
     id integer PRIMARY KEY AUTOINCREMENT,
     date text NOT NULL, 
-    number_of_people text NOT NULL
+    number_of_people integer NOT NULL,
+    word text NOT NULL
+    )
+''')
+
+# Create table for a game if it does not exist
+cur.execute('''
+CREATE TABLE IF NOT EXISTS game (
+    person integer NOT NULL, 
+    guesses integer NOT NULL,
+    time timestamp NOT NULL,
+    id integer NOT NULL,
+    wordstring NOT NULL,
+    wrong_guesses NOT NULL,
+    PRIMARY KEY (person, id),
+    FOREIGN KEY (id)
+        REFERENCES woordle_games (id)
     )
 ''')
 
 #ADD WORD TO WOORDLE_GAME
+def pick_word():
+    with open("woorden.txt", 'r') as all_words:
+        words = all_words.read().splitlines()
+        word = random.choice(words)
+    print("The word has been changed to "+word)
+    return word
 
-# Create new woordle game-entry with current date and number of people equal to 0
+# Create new woordle game-entry with current date and number of people equal to 0 and a new word
 cur.execute('''
-INSERT INTO woordle_game (date, number_of_people) 
-    VALUES (?,?)
-''',[datetime.now().strftime("%D"), "0"])
+INSERT INTO woordle_games (date, number_of_people, word) 
+    VALUES (?,?,?)
+''',[datetime.now().strftime("%D"), 0, pick_word()])
+
 
 # Make sure transaction is ended and changes have been made final
 db.commit()
