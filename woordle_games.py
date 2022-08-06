@@ -38,3 +38,4 @@ class WoordleGames:
 
     def reset_woordle_games(self):
         self.games = []
+        
