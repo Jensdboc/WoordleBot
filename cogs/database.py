@@ -96,7 +96,7 @@ class Database(commands.Cog):
             wrong_guess_count += data[5]
         
         message = "Total games: " + str(game_count) + "\n"
-        message += "Average number of guesses: " + str(guess_count/game_count) + "\n"
+        message += "Average number of guesses: " + str(round(guess_count/game_count,3)) + "\n"
         message += "Average time of guesses: " + str(round(total_time/game_count,3)) + " seconds\n"
         message += "Highest streak: " + str(longest_streak(ids)) + "\n"
         message += "Fastest time: " + str(fastest_time) + " seconds \n"
