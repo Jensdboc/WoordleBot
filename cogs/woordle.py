@@ -22,10 +22,16 @@ class Woordle(commands.Cog):
         self.client = client
         self.games = WoordleGames()
         self.db = sqlite3.connect("woordle.db")
-        self.cur = self.db.cursor()
-        self.counter = int(self.cur.execute('SELECT id FROM woordle_game WHERE date is ?', [datetime.now().strftime("%D")]).fetchall()[0][0])        
+        cur = self.db.cursor()
+        self.wordstring = ""
+        self.wrong_guesses = 0
+        self.counter = int(cur.execute('SELECT id FROM woordle_games WHERE id = (SELECT max(id) FROM woordle_games)').fetchall()[0][0])  
+        self.games.set_word(cur.execute('SELECT word FROM woordle_games WHERE id = (SELECT max(id) FROM woordle_games)').fetchall()[0][0])
+        print("Counter: ", self.counter)
+        print("Word: ", self.games.word)
+        cur.close()
         # Reset all games and get new words by restart every 24 hours
-        self.day_loop.start()
+        # self.day_loop.start()
 
     def check_word(self, word):
         with open("all_words.txt", 'r') as all_words:
@@ -40,7 +46,9 @@ class Woordle(commands.Cog):
             embed = discord.Embed(title="Woordle", description="Woops, maybe you should start a game in private!", color=ctx.author.color)        
             await ctx.send(embed=embed)
             return
-        channel = self.client.get_channel(878308113604812880) # Other-games, De Boomhut Van Nonkel Jerry
+        channel = self.client.get_channel(878308113604812880)  # Other-games, De Boomhut Van Nonkel Jerry: 878308113604812880 
+                                                               # Bot-spam, De Boomhut Van Nonkel Jerry: 765211470744518658
+                                                               # Private channel: 1003268990476496906
         # Check if there is a current word
         if self.games.word is None:
             embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=ctx.author.color)        
@@ -53,10 +61,28 @@ class Woordle(commands.Cog):
             await ctx.send(embed=embed)
             return
         if not self.check_word(guess) or len(guess) != 5:
+            self.wrong_guesses += 1
             await ctx.message.add_reaction("❌")
             # embed = discord.Embed(title="Woordle", description="Your guess has to be a valid word!", color=ctx.author.color)        
             # await ctx.send(embed=embed)
             return
+
+        def show_results(id):
+            # Make embed
+            woordle_game.stop()
+            woordle_game.display_end()
+            timediff = str(timedelta(seconds=(time.time() - woordle_game.timestart)))[:-3]
+            embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ str(woordle_game.row) + "/6 by " + ctx.author.name + ": " + timediff, description=woordle_game.display_end(), color=ctx.author.color)        
+            # Process information
+            cur = self.db.cursor()
+            cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)', (id, str(woordle_game.row), timediff, self.counter, self.wordstring, self.wrong_guesses))
+            cur.execute("""
+                UPDATE woordle_games
+                SET number_of_people = number_of_people + 1
+                WHERE id = ?;
+            """, (str(self.counter),))  # This has to be a a string, can't insert integers
+            self.db.commit()
+            return embed
 
         # Get woordle and check if the game is valid
         woordle_game = self.games.get_woordle_game(ctx.author)
@@ -71,12 +97,10 @@ class Woordle(commands.Cog):
                 # Update board with guess, create message and add row
                 woordle_game.update_board(guess, self.client)
                 embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=0xff0000)        
+                self.wordstring += guess
                 woordle_game.message = await ctx.send(embed=embed)
                 if woordle_game.right_guess(guess):
-                    woordle_game.stop()
-                    timediff = str(timedelta(seconds=(time.time() - woordle_game.timestart)))
-                    embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ str(woordle_game.row) + "/6 by " + ctx.author.name + ": " + timediff, description=woordle_game.display_end(), color=ctx.author.color)        
-                    await channel.send(embed=embed)
+                    await channel.send(embed = show_results(ctx.author.id))
                 woordle_game.add_row()
         elif not woordle_game.playing:
             embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=0xff0000)
@@ -85,22 +109,28 @@ class Woordle(commands.Cog):
             # Update board with guess, edit message
             woordle_game.update_board(guess, self.client)
             embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=ctx.author.color)        
+            self.wordstring += guess
             await woordle_game.message.edit(embed=embed)
             if woordle_game.right_guess(guess):
-                woordle_game.stop()
-                woordle_game.display_end()
-                timediff = str(timedelta(seconds=(time.time() - woordle_game.timestart)))
-                embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ str(woordle_game.row) + "/6 by " + ctx.author.name + ": " + timediff, description=woordle_game.display_end(), color=ctx.author.color)        
-                await channel.send(embed=embed)
+                await channel.send(embed = show_results(ctx.author.id))
             elif woordle_game.row < 6:
                 woordle_game.add_row()
             else: 
                 woordle_game.stop()
                 timediff = str(timedelta(seconds=(time.time() - woordle_game.timestart)))
                 embed_private = discord.Embed(title="Woordle", description="Better luck next time, the word was " + woordle_game.word + "!", color=ctx.author.color)        
-                embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ "X/6 by " + ctx.author.name + ": " + timediff, description=woordle_game.display_end(), color=ctx.author.color)        
+                embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ "X/6 by " + ctx.author.name + ": " + timediff[:-3], description=woordle_game.display_end(), color=ctx.author.color)        
                 await ctx.send(embed=embed_private)
                 await channel.send(embed=embed)
+                # Process information
+                cur = self.db.cursor()
+                cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)', (id, "failed", timediff, self.counter, self.wordstring, self.wrong_guesses))
+                cur.execute("""
+                    UPDATE woordle_games
+                    SET number_of_people = number_of_people + 1
+                    WHERE id = ?;
+                """, str(self.counter))  # This has to be a a string, can't insert integers
+                self.db.commit()
 
     @commands.command(usage="=woordlereset", 
                       description="Reset all current wordlegames",
