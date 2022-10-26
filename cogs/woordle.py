@@ -36,6 +36,10 @@ class Woordle(commands.Cog):
                       description="Guess the next word for the Woordle",
                       aliases = ['w'])
     async def woordle(self, ctx, guess=None):
+        if ctx.channel.type != discord.ChannelType.private:
+            embed = discord.Embed(title="Woordle", description="Woops, maybe you should start a game in private!", color=ctx.author.color)        
+            await ctx.send(embed=embed)
+            return
         channel = self.client.get_channel(878308113604812880) # Other-games, De Boomhut Van Nonkel Jerry
         # Check if there is a current word
         if self.games.word is None:
@@ -141,6 +145,6 @@ class Woordle(commands.Cog):
         self.games.reset_woordle_games()
         print("The word has been changed to "+self.games.word)
 
-#Allows to connect cog to bot    
+#Allows to connect cog to bot
 def setup(client):
     client.add_cog(Woordle(client))
