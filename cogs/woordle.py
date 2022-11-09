@@ -42,9 +42,15 @@ class Woordle(commands.Cog):
                       description="Guess the next word for the Woordle",
                       aliases = ['w'])
     async def woordle(self, ctx, guess=None):
+        if ctx.channel.type != discord.ChannelType.private:
+            embed = discord.Embed(title="Woordle", description="Woops, maybe you should start a game in private!", color=ctx.author.color)        
+            await ctx.send(embed=embed)
+            return
         channel = self.client.get_channel(878308113604812880)  # Other-games, De Boomhut Van Nonkel Jerry: 878308113604812880 
                                                                # Bot-spam, De Boomhut Van Nonkel Jerry: 765211470744518658
                                                                # Private channel: 1003268990476496906
+                                                               # Emilia server: 1039877136179277864
+        channel2 = self.client.get_channel(1039877136179277864)
         # Check if there is a current word
         if self.games.word is None:
             embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=ctx.author.color)        
@@ -97,6 +103,7 @@ class Woordle(commands.Cog):
                 woordle_game.message = await ctx.send(embed=embed)
                 if woordle_game.right_guess(guess):
                     await channel.send(embed = show_results(ctx.author.id))
+                    await channel2.send(embed = show_results(ctx.author.id))
                 woordle_game.add_row()
         elif not woordle_game.playing:
             embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=0xff0000)
@@ -109,6 +116,7 @@ class Woordle(commands.Cog):
             await woordle_game.message.edit(embed=embed)
             if woordle_game.right_guess(guess):
                 await channel.send(embed = show_results(ctx.author.id))
+                await channel2.send(embed = show_results(ctx.author.id))
             elif woordle_game.row < 6:
                 woordle_game.add_row()
             else: 
@@ -118,6 +126,7 @@ class Woordle(commands.Cog):
                 embed = discord.Embed(title="Woordle " + str(self.counter) + " "+ "X/6 by " + ctx.author.name + ": " + timediff[:-3], description=woordle_game.display_end(), color=ctx.author.color)        
                 await ctx.send(embed=embed_private)
                 await channel.send(embed=embed)
+                await channel2.send(embed=embed)
                 # Process information
                 cur = self.db.cursor()
                 cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)', (id, "failed", timediff, self.counter, self.wordstring, self.wrong_guesses))
