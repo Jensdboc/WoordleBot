@@ -12,8 +12,7 @@ class Administration(commands.Cog):
                       description="Announce a message to the subscribed channels")
     async def announce(self, ctx, *, message):
         if ctx.author.id == 656916865364525067:
-            #channel_ids = [878308113604812880, 1039877136179277864]
-            channel_ids = [754049462455762964, 754049030312558674]
+            channel_ids = [878308113604812880, 1039877136179277864]
             for id in channel_ids:
                 channel = self.client.get_channel(id)
                 embed = discord.Embed(title="Woordle announcement", description=message, color=ctx.author.color)        
