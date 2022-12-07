@@ -181,5 +181,5 @@ class Woordle(commands.Cog):
         print("The word has been changed to "+self.games.word)
 
 #Allows to connect cog to bot
-def setup(client):
-    client.add_cog(Woordle(client))
+async def setup(client):
+    await client.add_cog(Woordle(client))

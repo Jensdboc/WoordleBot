@@ -1,16 +1,16 @@
+# Imports 
 from ast import alias
-import discord
-from discord.ext import commands, tasks
-from discord.utils import get
-
-import random
 from datetime import datetime, timedelta
-import time
+from discord import utils
+from discord.ext import commands, tasks
 
-import collections
-
+import discord
+import random
 import sqlite3
+import time
+import collections 
 
+# Custom imports
 from tables import Description
 
 #**********************#
@@ -107,5 +107,5 @@ class Database(commands.Cog):
 
 
 #Allows to connect cog to bot
-def setup(client):
-    client.add_cog(Database(client))
+async def setup(client):
+    await client.add_cog(Database(client))

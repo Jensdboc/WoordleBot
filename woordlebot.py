@@ -1,19 +1,19 @@
 # Imports 
-from pydoc import cli
-import sched
+from pathlib import Path
+from datetime import datetime
+
+import asyncio
 import discord
-from discord.ext import commands, tasks 
-import numpy as np # Extra for othello   
+import numpy as np # Extra for othello
 import os # Import for cogs
 import random # Import for choosing word
+import sched
+
+from discord.ext import commands, tasks
+from pydoc import cli
 
 # Database
 import sqlite3
-from datetime import datetime
-
-# Create files
-from pathlib import Path
-
 from sqlalchemy import DATE
 
 # Import for files
@@ -94,28 +94,33 @@ def file_exist(name):
 #Loads extension
 @client.command()
 async def load(ctx, extension):
-    client.load_extension(f'cogs.{extension}')
+    await client.load_extension(f'cogs.{extension}')
     await ctx.send("Succesfully loaded `" + extension + '`')
 
 #Unloads extension
 @client.command()
 async def unload(ctx, extension):
-    client.unload_extension(f'cogs.{extension}')
+    await client.unload_extension(f'cogs.{extension}')
     await ctx.send("Succesfully unloaded `" + extension + '`')
 
 #Reloads extension
 @client.command()
 async def reload(ctx, extension):
-    client.unload_extension(f'cogs.{extension}')
-    client.load_extension(f'cogs.{extension}')
+    await client.unload_extension(f'cogs.{extension}')
+    await client.load_extension(f'cogs.{extension}')
     await ctx.send("Succesfully reloaded `" + extension + '`')
 
 #Loads every extensions in cogs
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        client.load_extension(f'cogs.{filename[:-3]}')
+async def load_extensions():
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            await client.load_extension(f'cogs.{filename[:-3]}')
 
-with open('token.txt', 'r') as file:
-    token = file.readline()
-    print("Reading token...")
-    client.run(token)
+async def main():
+    with open('token.txt', 'r') as file:
+        token = file.readline()
+        print("Reading token...")
+    await load_extensions()
+    await client.start(token)
+
+asyncio.run(main())
