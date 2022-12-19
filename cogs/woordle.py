@@ -50,7 +50,9 @@ class Woordle(commands.Cog):
                                                                # Bot-spam, De Boomhut Van Nonkel Jerry: 765211470744518658
                                                                # Private channel: 1003268990476496906
                                                                # Emilia server: 1039877136179277864
+                                                               # Tom en Jerry: 1054342112474316810
         channel2 = self.client.get_channel(1039877136179277864)
+        channel3 = self.client.get_channel(1054342112474316810)
         # Check if there is a current word
         if self.games.word is None:
             embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=ctx.author.color)        
@@ -104,6 +106,7 @@ class Woordle(commands.Cog):
                 if woordle_game.right_guess(guess):
                     await channel.send(embed = show_results(ctx.author.id))
                     await channel2.send(embed = show_results(ctx.author.id))
+                    await channel3.send(embed = show_results(ctx.author.id))
                 woordle_game.add_row()
         elif not woordle_game.playing:
             embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=0xff0000)
@@ -117,6 +120,7 @@ class Woordle(commands.Cog):
             if woordle_game.right_guess(guess):
                 await channel.send(embed = show_results(ctx.author.id))
                 await channel2.send(embed = show_results(ctx.author.id))
+                await channel3.send(embed = show_results(ctx.author.id))
             elif woordle_game.row < 6:
                 woordle_game.add_row()
             else: 
@@ -127,6 +131,7 @@ class Woordle(commands.Cog):
                 await ctx.send(embed=embed_private)
                 await channel.send(embed=embed)
                 await channel2.send(embed=embed)
+                await channel3.send(embed=embed)
                 # Process information
                 cur = self.db.cursor()
                 cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)', (id, "failed", timediff, self.counter, self.wordstring, self.wrong_guesses))
