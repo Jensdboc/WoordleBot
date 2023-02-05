@@ -1,4 +1,3 @@
-# Imports 
 from pathlib import Path
 from datetime import datetime
 
@@ -7,17 +6,16 @@ import discord
 import numpy as np # Extra for othello
 import os # Import for cogs
 import random # Import for choosing word
-import sched
 
-from discord.ext import commands, tasks
+from discord.ext import commands
 from pydoc import cli
 
 # Database
 import sqlite3
-from sqlalchemy import DATE
 
 # Import for files
 from Help import CustomHelpCommand
+from admincheck import admin_check
 
 # Intents
 intents = discord.Intents.all()
@@ -74,7 +72,6 @@ INSERT INTO woordle_games (date, number_of_people, word)
     VALUES (?,?,?)
 ''',[datetime.now().strftime("%D"), 0, pick_word()])
 
-
 # Make sure transaction is ended and changes have been made final
 db.commit()
 
@@ -92,19 +89,19 @@ def file_exist(name):
 #*************#
 
 #Loads extension
-@client.command()
+@client.command(admin_check)
 async def load(ctx, extension):
     await client.load_extension(f'cogs.{extension}')
     await ctx.send("Succesfully loaded `" + extension + '`')
 
 #Unloads extension
-@client.command()
+@client.command(admin_check)
 async def unload(ctx, extension):
     await client.unload_extension(f'cogs.{extension}')
     await ctx.send("Succesfully unloaded `" + extension + '`')
 
 #Reloads extension
-@client.command()
+@client.command(admin_check)
 async def reload(ctx, extension):
     await client.unload_extension(f'cogs.{extension}')
     await client.load_extension(f'cogs.{extension}')
