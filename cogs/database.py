@@ -1,17 +1,8 @@
-# Imports 
-from ast import alias
-from datetime import datetime, timedelta
-from discord import utils
-from discord.ext import commands, tasks
-
 import discord
-import random
 import sqlite3
-import time
 import collections 
 
-# Custom imports
-from tables import Description
+from discord.ext import commands
 
 #**********************#
 #Database test commands#

@@ -1,8 +1,6 @@
-from sqlite3 import Timestamp
 import discord
+from sqlite3 import Timestamp
 from discord.utils import get
-import numpy as np
-from sqlalchemy import null
 
 class WoordleGame:
 

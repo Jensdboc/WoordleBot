@@ -1,16 +1,12 @@
-from ast import alias
+import sqlite3
+import time
+import random
 import discord
 from discord.ext import commands, tasks
-from discord.utils import get
+from datetime import timedelta
 
 from woordle_game import *
 from woordle_games import *
-
-import random
-from datetime import datetime, timedelta
-import time
-
-import sqlite3
 
 #*********************#
 #User commands woordle#

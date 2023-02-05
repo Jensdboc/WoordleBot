@@ -1,19 +1,12 @@
-from pathlib import Path
-from datetime import datetime
-
+import sqlite3
 import asyncio
 import discord
-import numpy as np # Extra for othello
 import os # Import for cogs
 import random # Import for choosing word
-
+from pathlib import Path
+from datetime import datetime
 from discord.ext import commands
-from pydoc import cli
 
-# Database
-import sqlite3
-
-# Import for files
 from Help import CustomHelpCommand
 from admincheck import admin_check
 
@@ -79,29 +72,23 @@ db.commit()
 async def on_ready():
     print('Bot = ready')
 
-# Create file if it doesn't exist
-def file_exist(name):
-    file = Path(name)
-    file.touch(exist_ok=True)
-
-#*************#
-#Cogs commands#
-#*************#
-
 #Loads extension
-@client.command(admin_check)
+@client.command()
+@commands.check(admin_check)
 async def load(ctx, extension):
     await client.load_extension(f'cogs.{extension}')
     await ctx.send("Succesfully loaded `" + extension + '`')
 
 #Unloads extension
-@client.command(admin_check)
+@client.command()
+@commands.check(admin_check)
 async def unload(ctx, extension):
     await client.unload_extension(f'cogs.{extension}')
     await ctx.send("Succesfully unloaded `" + extension + '`')
 
 #Reloads extension
-@client.command(admin_check)
+@client.command()
+@commands.check(admin_check)
 async def reload(ctx, extension):
     await client.unload_extension(f'cogs.{extension}')
     await client.load_extension(f'cogs.{extension}')
