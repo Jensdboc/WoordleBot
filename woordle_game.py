@@ -63,7 +63,6 @@ class WoordleGame:
                     end_board += colors["gray"]
             end_board += "\n"
         end_board += "\n"
-        # print(end_board)
         return end_board
 
     def update_board(self, guess, client : discord.client):
