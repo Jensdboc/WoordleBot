@@ -55,7 +55,10 @@ CREATE TABLE IF NOT EXISTS game (
 def pick_word():
     with open("woorden.txt", 'r') as all_words:
         words = all_words.read().splitlines()
-        word = random.choice(words)
+        if (datetime.now().strftime("%D") == "04/01/23"):
+            word = "APRIL"
+        else:
+            word = random.choice(words)
     print("The word has been changed to "+word)
     return word
 

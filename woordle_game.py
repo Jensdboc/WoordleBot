@@ -1,6 +1,7 @@
 import discord
 from sqlite3 import Timestamp
 from discord.utils import get
+from datetime import datetime
 
 class WoordleGame:
 
@@ -72,7 +73,10 @@ class WoordleGame:
         for letter in range(len(guess)):
             if guess[letter].lower() == self.word[letter].lower():
                 temp_list.remove(guess[letter].upper())
-                emoji_name = "green_" + str(guess[letter]).upper()
+                if (datetime.now().strftime("%D") == "04/01/23"):
+                    emoji_name = "gray_" + str(guess[letter]).upper()
+                else:
+                    emoji_name = "green_" + str(guess[letter]).upper()
                 self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
                 self.letters[str(guess[letter]).lower()] = emoji_name
             else:
@@ -82,10 +86,13 @@ class WoordleGame:
                     self.letters[str(guess[letter]).lower()] = emoji_name
         # Handle all correct letters on wrong spots
         for letter in range(len(guess)):
-            emoji_name = "yellow_" + str(guess[letter]).upper()
-            green_emoji = "green_" + str(guess[letter]).upper()
+            if (datetime.now().strftime("%D") == "04/01/23"):
+                emoji_name = "gray_" + str(guess[letter]).upper()
+                green_emoji = "gray_" + str(guess[letter]).upper()  
+            else:
+                emoji_name = "yellow_" + str(guess[letter]).upper()
+                green_emoji = "green_" + str(guess[letter]).upper()
             if self.board[self.row - 1][letter] != str(get(client.emojis, name=green_emoji)) and guess[letter].upper() in temp_list:
-                # print(self.board[self.row - 1])
                 temp_list.remove(guess[letter].upper())
                 self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
                 if self.letters[str(guess[letter]).lower()] != green_emoji:
