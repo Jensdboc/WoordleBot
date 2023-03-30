@@ -2,10 +2,12 @@ import discord
 
 from woordle_game import WoordleGame
 
+
 def check_word(word):
     with open("woorden.txt", 'r') as all_words:
         words = all_words.read().splitlines()
         return word.upper() in words
+
 
 class WoordleGames:
 
@@ -20,17 +22,17 @@ class WoordleGames:
         else:
             return False
 
-    def add_woordle_game(self, woordlegame : WoordleGame):
+    def add_woordle_game(self, woordlegame: WoordleGame):
         for game in self.games:
             if game.author == woordlegame.author:
                 return "You already started a Woordle today!"
         self.games.append(woordlegame)
         return None
-        
-    def remove_woordle_game(self, game : WoordleGame):
+
+    def remove_woordle_game(self, game: WoordleGame):
         self.games.remove(game)
-    
-    def get_woordle_game(self, author : discord.member):
+
+    def get_woordle_game(self, author: discord.member):
         for game in self.games:
             if game.author == author:
                 return game
@@ -38,4 +40,3 @@ class WoordleGames:
 
     def reset_woordle_games(self):
         self.games = []
-        

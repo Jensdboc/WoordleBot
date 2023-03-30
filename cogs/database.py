@@ -1,12 +1,9 @@
 import discord
 import sqlite3
-import collections 
+import collections
 
 from discord.ext import commands
 
-#**********************#
-#Database test commands#
-#**********************#
 
 class Database(commands.Cog):
 
@@ -34,7 +31,7 @@ class Database(commands.Cog):
         self.cur.close
 
     @commands.command()
-    async def stats(self, ctx, member : discord.Member):
+    async def stats(self, ctx, member: discord.Member):
         def convert_str_to_time(str):
             str_split = str.split(":")
             return float(str_split[0])*3600 + float(str_split[1])*60 + float(str_split[2])
@@ -67,6 +64,7 @@ class Database(commands.Cog):
             streaks = []
             first = True
             streak = 0
+            start_id = -1
             for id in ids:
                 if (first or id == start_id + 1) and game_won(id):
                     streak += 1
@@ -80,17 +78,16 @@ class Database(commands.Cog):
             return max(streaks)
 
         if member is None:
-            embed = discord.Embed(title="Woordle stats", description="You have to provide a member!", color=ctx.author.color)             
-            await ctx.send(embed = embed)
-            return 
+            embed = discord.Embed(title="Woordle stats", description="You have to provide a member!", color=ctx.author.color)
+            await ctx.send(embed=embed)
+            return
         self.cur.execute('''
             SELECT * from game WHERE person = ?
         ''', (member.id,))
         datas = self.cur.fetchall()
         game_count = len(datas)
         if game_count == 0:
-            embed = discord.Embed(title="Woordle stats from "+member.display_name, description="This user hasn't played any games so far!", color=ctx.author.color)             
-            await ctx.send(embed = embed)
+            embed = discord.Embed(title="Woordle stats from "+member.display_name, description="This user hasn't played any games so far!", color=ctx.author.color)
             return
         guess_count = 0
         total_time = 0
@@ -103,27 +100,28 @@ class Database(commands.Cog):
             guess_count += data[1] if data[1] != 'failed' else 6
             game_time = convert_str_to_time(data[2])
             total_time += game_time
-            if fastest_time == None:
+            if fastest_time is None:
                 fastest_time = total_time
             elif fastest_time > game_time:
                 fastest_time = game_time
             ids.append(data[3])
             all_words += data[4]
-            game_id.update({data[3] : data[4]})
+            game_id.update({data[3]: data[4]})
 
             wrong_guess_count += data[5]
-        
+
         message = "Total games: " + str(game_count) + "\n"
-        message += "Average number of guesses: " + str(round(guess_count/game_count,3)) + "\n"
-        message += "Average time of guesses: " + str(round(total_time/game_count,3)) + " seconds\n"
+        message += "Average number of guesses: " + str(round(guess_count/game_count, 3)) + "\n"
+        message += "Average time of guesses: " + str(round(total_time/game_count, 3)) + " seconds\n"
         message += "Highest streak: " + str(longest_streak(ids)) + "\n"
         message += "Highest win streak: " + str(longest_win_streak(ids)) + "\n"
         message += "Fastest time: " + str(fastest_time) + " seconds \n"
         message += "Total wrong guesses: " + str(wrong_guess_count) + "\n"
         message += "Favourite letter: " + str(collections.Counter(all_words).most_common(1)[0][0]) + "\n"
-        embed = discord.Embed(title="Woordle stats "+member.display_name, description=message, color=ctx.author.color)             
-        await ctx.send(embed = embed)
+        embed = discord.Embed(title="Woordle stats "+member.display_name, description=message, color=ctx.author.color)
+        await ctx.send(embed=embed)
 
-#Allows to connect cog to bot
+
+# Allows to connect cog to bot
 async def setup(client):
     await client.add_cog(Database(client))

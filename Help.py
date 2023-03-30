@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
-from sqlalchemy import true
-from tables import Description
+
 
 class CustomHelpCommand(commands.HelpCommand):
 
@@ -15,9 +14,10 @@ class CustomHelpCommand(commands.HelpCommand):
                 list = ""
                 for command in cog.get_commands():
                     list += command.name + ', '
-                embed.add_field(name = cog.qualified_name, value = list[:-2])
-        await self.get_destination().send(embed=embed) # get_destination: Calls destination a.k.a. where you want to send the command
-                
+                embed.add_field(name=cog.qualified_name, value=list[:-2])
+        # get_destination: Calls destination a.k.a. where you want to send the command
+        await self.get_destination().send(embed=embed)
+
     async def send_cog_help(self, cog):
         if cog:
             embed = discord.Embed(title="Help " + cog.qualified_name, description="Use =help <command> for more information.")
@@ -27,15 +27,15 @@ class CustomHelpCommand(commands.HelpCommand):
                 for alias in command.aliases:
                     list += ', [!' + alias + ']'
                 list += ': ' + command.description + "\n"
-            embed.add_field(name = cog.qualified_name, value = list[:-2])
+            embed.add_field(name=cog.qualified_name, value=list[:-2])
             await self.get_destination().send(embed=embed)
         else:
             await self.get_destination().send("This is not a valid cog.")
 
     async def send_group_help(self, group):
-        #await self.get_destination().send(f'{group.name}: {[command.name for index, command in enumerate(group.commands)]}')
+        # await self.get_destination().send(f'{group.name}: {[command.name for index, command in enumerate(group.commands)]}')
         await self.get_destination().send('This is not implemented yet but you can use =help <command>')
-    
+
     async def send_command_help(self, command):
         title = command.name.capitalize()
         for alias in command.aliases:
