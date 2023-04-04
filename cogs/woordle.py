@@ -66,7 +66,8 @@ class Woordle(commands.Cog):
             woordle_game.stop()
             woordle_game.display_end()
             timediff = str(timedelta(seconds=(time.time() - woordle_game.timestart)))[:-3]
-            embed = discord.Embed(title="Woordle " + str(self.counter) + " " + str(woordle_game.row) + "/6 by " + ctx.author.name + ": " + timediff, description=woordle_game.display_end(), color=ctx.author.color)
+            embed = discord.Embed(title=f"Woordle {str(self.counter)} {str(woordle_game.row)}/6 by {ctx.author.name}: {timediff}",
+                                  description=woordle_game.display_end(), color=ctx.author.color)
             # Process information
             cur = self.db.cursor()
             cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)', (id, str(woordle_game.row), timediff, self.counter, self.wordstring, self.wrong_guesses))
@@ -76,7 +77,6 @@ class Woordle(commands.Cog):
                 WHERE id = ?;
             """, (str(self.counter),))  # This has to be a a string, can't insert integers
             self.db.commit()
-            print("Called")
             return embed
 
         # Get woordle and check if the game is valid
@@ -119,11 +119,12 @@ class Woordle(commands.Cog):
             else:
                 woordle_game.stop()
                 timediff = str(timedelta(seconds=(time.time() - woordle_game.timestart)))
-                embed_private = discord.Embed(title="Woordle", description="Better luck next time, the word was " + woordle_game.word + "!", color=ctx.author.color)
+                embed_private = discord.Embed(title="Woordle", description=f"Better luck next time, the word was {woordle_game.word}!", color=ctx.author.color)
                 await ctx.send(embed=embed_private)
                 for id in channel_ids:
                     channel = self.client.get_channel(id)
-                    embed = discord.Embed(title="Woordle " + str(self.counter) + " " + "X/6 by " + ctx.author.name + ": " + timediff[:-3], description=woordle_game.display_end(), color=ctx.author.color)
+                    embed = discord.Embed(title=f"Woordle {str(self.counter)} X/6 by {ctx.author.name}: {timediff[:-3]}",
+                                          description=woordle_game.display_end(), color=ctx.author.color)
                     await channel.send(embed=embed)
                 # Process information
                 cur = self.db.cursor()
@@ -134,7 +135,6 @@ class Woordle(commands.Cog):
                     WHERE id = ?;
                 """, str(self.counter))  # This has to be a a string, can't insert integers
                 self.db.commit()
-                print("Called failed")
 
     @commands.command(usage="=woordlereset",
                       description="Reset all current wordlegames",
@@ -162,11 +162,11 @@ class Woordle(commands.Cog):
         else:
             # Set current word
             if self.games.set_word(word):
-                embed = discord.Embed(title="Woordle", description=word + " has been set as the new word!", color=0x11806a)
+                embed = discord.Embed(title="Woordle", description=f"{word} has been set as the new word!", color=0x11806a)
                 await ctx.send(embed=embed)
             else:
                 await ctx.message.add_reaction("❌")
-                embed = discord.Embed(title="Woordle", description=word + " is not a valid word!", color=0x11806a)
+                embed = discord.Embed(title="Woordle", description=f"{word} is not a valid word!", color=0x11806a)
                 await ctx.send(embed=embed)
 
     @tasks.loop(hours=24)
@@ -177,7 +177,7 @@ class Woordle(commands.Cog):
             self.games.set_word(word)
         self.counter += 1
         self.games.reset_woordle_games()
-        print("The word has been changed to "+self.games.word)
+        print(f"The word has been changed to {self.games.word}")
 
 
 # Allows to connect cog to bot

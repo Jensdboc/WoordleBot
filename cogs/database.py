@@ -87,7 +87,7 @@ class Database(commands.Cog):
         datas = self.cur.fetchall()
         game_count = len(datas)
         if game_count == 0:
-            embed = discord.Embed(title="Woordle stats from "+member.display_name, description="This user hasn't played any games so far!", color=ctx.author.color)
+            embed = discord.Embed(title=f"Woordle stats from {member.display_name}", description="This user hasn't played any games so far!", color=ctx.author.color)
             return
         guess_count = 0
         total_time = 0
@@ -107,18 +107,17 @@ class Database(commands.Cog):
             ids.append(data[3])
             all_words += data[4]
             game_id.update({data[3]: data[4]})
-
             wrong_guess_count += data[5]
 
-        message = "Total games: " + str(game_count) + "\n"
-        message += "Average number of guesses: " + str(round(guess_count/game_count, 3)) + "\n"
-        message += "Average time of guesses: " + str(round(total_time/game_count, 3)) + " seconds\n"
-        message += "Highest streak: " + str(longest_streak(ids)) + "\n"
-        message += "Highest win streak: " + str(longest_win_streak(ids)) + "\n"
-        message += "Fastest time: " + str(fastest_time) + " seconds \n"
-        message += "Total wrong guesses: " + str(wrong_guess_count) + "\n"
-        message += "Favourite letter: " + str(collections.Counter(all_words).most_common(1)[0][0]) + "\n"
-        embed = discord.Embed(title="Woordle stats "+member.display_name, description=message, color=ctx.author.color)
+        message = f"Total games: {str(game_count)}\n"
+        message += f"Average number of guesses: {str(round(guess_count/game_count, 3))}\n"
+        message += f"Average time of guesses: {str(round(total_time/game_count, 3))} seconds\n"
+        message += f"Highest streak: {str(longest_streak(ids))}\n"
+        message += f"Highest win streak: {str(longest_win_streak(ids))}\n"
+        message += f"Fastest time: {str(fastest_time)} seconds \n"
+        message += f"Total wrong guesses: {str(wrong_guess_count)}\n"
+        message += f"Favourite letter: {str(collections.Counter(all_words).most_common(1)[0][0])}\n"
+        embed = discord.Embed(title=f"Woordle stats {member.display_name}", description=message, color=member.color)
         await ctx.send(embed=embed)
 
 

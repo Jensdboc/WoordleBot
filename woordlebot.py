@@ -1,8 +1,8 @@
 import sqlite3
 import asyncio
 import discord
-import os  # Import for cogs
-import random  # Import for choosing word
+import os
+import random
 from datetime import datetime
 from discord.ext import commands
 
@@ -12,7 +12,7 @@ from admincheck import admin_check
 # Intents
 intents = discord.Intents.all()
 
-client = commands.Bot(command_prefix="=", help_command=CustomHelpCommand(),
+client = commands.Bot(command_prefix="==", help_command=CustomHelpCommand(),
                       case_insensitive=True, intents=intents)
 client.mute_message = None
 client.activity = discord.Game(name="=help")
@@ -53,10 +53,7 @@ CREATE TABLE IF NOT EXISTS game (
 def pick_word():
     with open("woorden.txt", 'r') as all_words:
         words = all_words.read().splitlines()
-        if (datetime.now().strftime("%D") == "04/01/23"):
-            word = "APRIL"
-        else:
-            word = random.choice(words)
+        word = random.choice(words)
     print("The word has been changed to "+word)
     return word
 

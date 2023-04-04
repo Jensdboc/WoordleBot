@@ -1,7 +1,6 @@
 import discord
 from sqlite3 import Timestamp
 from discord.utils import get
-from datetime import datetime
 
 
 class WoordleGame:
@@ -37,15 +36,17 @@ class WoordleGame:
         self.playing = False
 
     def display(self, client: discord.client):
-        alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+        alphabet = [letter for letter in "abcdefghijklmnopqrstuvwxyz"]
+        # Set current board
         board = ""
         for i in range(self.row):
             for j in range(self.column):
                 board += self.board[i][j]
             board += "\n"
         board += "\n"
+        # Set list of status of chosen letters
         for index, letter in enumerate(alphabet):
-            if index == 13:
+            if index == len(alphabet)/2:
                 board += "\n"
             if get(client.emojis, name=self.letters[letter]) is None:
                 board += self.letters[letter]
@@ -54,6 +55,7 @@ class WoordleGame:
         return board
 
     def display_end(self):
+        # Convert string to emoji
         end_board = ""
         colors = {"green": "🟩", "yellow": "🟨", "gray": "⬛"}
         for i in range(self.row):
@@ -72,30 +74,22 @@ class WoordleGame:
         # Copy all letters from word
         temp_list = self.woordle_list.copy()
         # Handle all correct spots
-        for letter in range(len(guess)):
-            if guess[letter].lower() == self.word[letter].lower():
-                temp_list.remove(guess[letter].upper())
-                if (datetime.now().strftime("%D") == "04/01/23"):
-                    emoji_name = "gray_" + str(guess[letter]).upper()
-                else:
-                    emoji_name = "green_" + str(guess[letter]).upper()
-                self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
-                self.letters[str(guess[letter]).lower()] = emoji_name
+        for index, letter in enumerate(guess):
+            if letter.upper() == self.word[index].upper():
+                temp_list.remove(letter.upper())
+                emoji_name = "green_" + str(letter).upper()
+                self.board[self.row - 1][index] = str(get(client.emojis, name=emoji_name))
+                self.letters[str(letter).lower()] = emoji_name
             else:
-                emoji_name = "gray_" + str(guess[letter]).upper()
-                self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
-                if self.letters[str(guess[letter]).lower()] != "green_" + str(guess[letter]).upper():
-                    self.letters[str(guess[letter]).lower()] = emoji_name
-        # Handle all correct letters on wrong spots
-        for letter in range(len(guess)):
-            if (datetime.now().strftime("%D") == "04/01/23"):
-                emoji_name = "gray_" + str(guess[letter]).upper()
-                green_emoji = "gray_" + str(guess[letter]).upper()
-            else:
-                emoji_name = "yellow_" + str(guess[letter]).upper()
-                green_emoji = "green_" + str(guess[letter]).upper()
-            if self.board[self.row - 1][letter] != str(get(client.emojis, name=green_emoji)) and guess[letter].upper() in temp_list:
-                temp_list.remove(guess[letter].upper())
-                self.board[self.row - 1][letter] = str(get(client.emojis, name=emoji_name))
-                if self.letters[str(guess[letter]).lower()] != green_emoji:
-                    self.letters[str(guess[letter]).lower()] = emoji_name
+                emoji_name = "gray_" + str(letter).upper()
+                self.board[self.row - 1][index] = str(get(client.emojis, name=emoji_name))
+                if self.letters[str(letter).lower()] != "green_" + str(letter).upper():
+                    self.letters[str(letter).lower()] = emoji_name
+        for index, letter in enumerate(guess):
+            emoji_name = "yellow_" + str(letter).upper()
+            green_emoji = "green_" + str(letter).upper()
+            if self.board[self.row - 1][index] != str(get(client.emojis, name=green_emoji)) and letter.upper() in temp_list:
+                temp_list.remove(letter.upper())
+                self.board[self.row - 1][index] = str(get(client.emojis, name=emoji_name))
+                if self.letters[str(letter).lower()] != green_emoji:
+                    self.letters[str(letter).lower()] = emoji_name
