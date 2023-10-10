@@ -8,10 +8,21 @@ from datetime import timedelta
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 
+CHANNEL_ID = 1161262990989991936
+
 
 class Woordle(commands.Cog):
+    """Class for Woordle commands"""
 
-    def __init__(self, client):
+    def __init__(self, client: discord.Client) -> None:
+        """
+        Initialize the Woordle cog
+
+        Parameters
+        ----------
+        client : discord.Client
+            Discord Woordle bot
+        """
         self.client = client
         self.games = WoordleGames()
         self.db = sqlite3.connect("woordle.db")
@@ -24,7 +35,15 @@ class Woordle(commands.Cog):
         print("Word: ", self.games.word)
         cur.close()
 
-    def check_word(self, word):
+    def check_word(self, word: str) -> bool:
+        """
+        Check if a given word appears in "all_words.txt"
+
+        Returns
+        -------
+        check : bool
+            Return True if word in file, otherwise False
+        """
         with open("all_words.txt", 'r') as all_words:
             words = all_words.read().splitlines()
             return word.upper() in words
@@ -32,7 +51,17 @@ class Woordle(commands.Cog):
     @commands.command(usage="=woordle",
                       description="Guess the next word for the Woordle",
                       aliases=['w'])
-    async def woordle(self, ctx, guess=None):
+    async def woordle(self, ctx: commands.Context, guess: str = None):
+        """
+        Play one guess in a WoordleGame
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        guess : str
+            Current guess in a WoordleGame
+        """
         if ctx.channel.type != discord.ChannelType.private:
             embed = discord.Embed(title="Woordle", description="Woops, maybe you should start a game in private!", color=ctx.author.color)
             await ctx.send(embed=embed)
@@ -43,8 +72,9 @@ class Woordle(commands.Cog):
         # Private channel: 1003268990476496906
         # Emilia server: 1039877136179277864
         # Tom en Jerry: 1054342112474316810
+        # Woordle server: 1161262990989991936
 
-        channel_ids = [878308113604812880, 1039877136179277864, 1054342112474316810]
+        channel_ids = [878308113604812880, 1039877136179277864, 1054342112474316810, 1161262990989991936]
         # channel_ids = [954028573830811703] # Bot-test
         # Check if there is a current word
         if self.games.word is None:
@@ -61,16 +91,31 @@ class Woordle(commands.Cog):
             await ctx.message.add_reaction("❌")
             return
 
-        def show_results(id):
+        def show_results(id: int) -> discord.Embed:
+            """
+            Process WoordleGame information
+
+            Parameters
+            ----------
+            id : int
+                ID of the player of the WoordleGame
+
+            Return
+            ------
+            embed : discord.Embed
+                Ending message of a WoordleGame
+            """
             # Make embed
             woordle_game.stop()
             woordle_game.display_end()
             timediff = str(timedelta(seconds=(time.time() - woordle_game.timestart)))[:-3]
             embed = discord.Embed(title=f"Woordle {str(self.counter)} {str(woordle_game.row)}/6 by {ctx.author.name}: {timediff}",
                                   description=woordle_game.display_end(), color=ctx.author.color)
+
             # Process information
             cur = self.db.cursor()
-            cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)', (id, str(woordle_game.row), timediff, self.counter, self.wordstring, self.wrong_guesses))
+            cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)',
+                        (id, str(woordle_game.row), timediff, self.counter, self.wordstring, self.wrong_guesses))
             cur.execute("""
                 UPDATE woordle_games
                 SET number_of_people = number_of_people + 1
@@ -140,7 +185,15 @@ class Woordle(commands.Cog):
                       description="Reset all current wordlegames",
                       help="This is an admin-only command",
                       aliases=['wr'])
-    async def woordlereset(self, ctx):
+    async def woordlereset(self, ctx: commands.Context):
+        """
+        Reset all WoordleGames
+
+        Parameter
+        ---------
+        ctx : commands.Context
+            Context the command is represented in
+        """
         # Check if author is admin
         if ctx.author.id != 656916865364525067:
             embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=0xff0000)
@@ -155,7 +208,17 @@ class Woordle(commands.Cog):
                       description="Set the current word",
                       help="This is an admin-only command",
                       aliases=['sw'])
-    async def setword(self, ctx, word):
+    async def setword(self, ctx: commands.Context, word: str):
+        """
+        Manually set a word
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        word : str
+            Word to set
+        """
         if ctx.author.id != 656916865364525067:
             embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=0xff0000)
             await ctx.send(embed=embed)
@@ -171,6 +234,9 @@ class Woordle(commands.Cog):
 
     @tasks.loop(hours=24)
     async def day_loop(self):
+        """
+        Loop changing the word every 24 hours
+        """
         with open("woorden.txt", 'r') as all_words:
             words = all_words.read().splitlines()
             word = random.choice(words)

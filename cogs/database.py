@@ -6,14 +6,24 @@ from discord.ext import commands
 
 
 class Database(commands.Cog):
+    """Class for interactions with the database"""
 
-    def __init__(self, client):
+    def __init__(self, client: discord.Client) -> None:
+        """
+        Initialize the Database cog
+
+        Parameters
+        ----------
+        client : discord.Client
+            Discord Woordle bot
+        """
         self.client = client
         self.db = sqlite3.connect("woordle.db")
         self.cur = self.db.cursor()
 
     @commands.command()
-    async def get_games(self, ctx):
+    async def get_games(self):
+        """Retrieve the tables woordle_games"""
         self.cur.execute('''
             SELECT * from woordle_games
         ''')
@@ -22,7 +32,8 @@ class Database(commands.Cog):
         self.cur.close
 
     @commands.command()
-    async def get_game(self, ctx):
+    async def get_game(self):
+        """Retrieve the tables game"""
         self.cur.execute('''
             SELECT * from game
         ''')
@@ -31,12 +42,43 @@ class Database(commands.Cog):
         self.cur.close
 
     @commands.command()
-    async def stats(self, ctx, member: discord.Member):
-        def convert_str_to_time(str):
+    async def stats(self, ctx: commands.Context, member: discord.Member):
+        """
+        Send the statistics of a member
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        member : discord.Member
+            Member the show the statistics of
+        """
+        def convert_str_to_time(str: str):
+            """
+            Converts a string to a float representing time
+
+            Parameters
+            ----------
+            str: str
+                String to be converted
+            """
             str_split = str.split(":")
             return float(str_split[0])*3600 + float(str_split[1])*60 + float(str_split[2])
 
-        def game_won(id):
+        def game_won(id: int) -> bool:
+            """
+            Check if the game was won or not
+
+            Parameters
+            ----------
+            id: int
+                ID of game played
+
+            Return
+            ------
+            won : bool
+                Returns True if won, else False
+            """
             self.cur.execute('''
                 SELECT guesses from game
                 WHERE id = ?
@@ -44,7 +86,20 @@ class Database(commands.Cog):
             guess = self.cur.fetchall()[0][0]
             return guess != "failed"
 
-        def longest_streak(ids):
+        def longest_streak(ids: list[int]) -> int:
+            """
+            Return the longest streak of games played
+
+            Parameters
+            ----------
+            ids : list[int]
+                List of games played
+
+            Return
+            ------
+            streak : int
+                Longest streak of games played
+            """
             sorted(ids)
             streaks = []
             start_id = ids[0]
@@ -59,12 +114,26 @@ class Database(commands.Cog):
             streaks.append(streak)
             return max(streaks)
 
-        def longest_win_streak(ids):
+        def longest_win_streak(ids: list[int]) -> int:
+            """
+            Return the longest win streak of games played
+
+            Parameters
+            ----------
+            ids : list[int]
+                List of games played
+
+            Return
+            ------
+            streak : int
+                Longest win streak of games played
+            """
             sorted(ids)
             streaks = []
             first = True
             streak = 0
             start_id = -1
+            # Check if the first game has been won or not
             for id in ids:
                 if (first or id == start_id + 1) and game_won(id):
                     streak += 1
@@ -81,6 +150,7 @@ class Database(commands.Cog):
             embed = discord.Embed(title="Woordle stats", description="You have to provide a member!", color=ctx.author.color)
             await ctx.send(embed=embed)
             return
+
         self.cur.execute('''
             SELECT * from game WHERE person = ?
         ''', (member.id,))
@@ -89,6 +159,7 @@ class Database(commands.Cog):
         if game_count == 0:
             embed = discord.Embed(title=f"Woordle stats from {member.display_name}", description="This user hasn't played any games so far!", color=ctx.author.color)
             return
+
         guess_count = 0
         total_time = 0
         all_words = ""

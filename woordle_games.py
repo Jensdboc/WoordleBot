@@ -7,6 +7,7 @@ from woordle_game import WoordleGame
 def check_word(word: str) -> bool:
     """
     Check if a given word appears in "woorden.txt"
+
     Returns
     -------
     check : bool
