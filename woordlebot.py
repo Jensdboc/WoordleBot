@@ -1,39 +1,38 @@
-import sqlite3
 import asyncio
 import discord
 import os
+import sqlite3
 import random
 from datetime import datetime
 from discord.ext import commands
 
-from Help import CustomHelpCommand
-from admincheck import admin_check
+from help import CustomHelpCommand
 
-# Intents
+# Initialize client
 intents = discord.Intents.all()
-
 client = commands.Bot(command_prefix="=", help_command=CustomHelpCommand(),
                       case_insensitive=True, intents=intents)
 client.mute_message = None
 client.activity = discord.Game(name="=help")
 
-# Database test:
-# https://www.youtube.com/watch?v=H09U2E2v8eg&t=35s&ab_channel=DevXplaining
 # Connect to db and make cursor
 db = sqlite3.connect("woordle.db")
 cur = db.cursor()
 
 # Create table for woordlegames if it does not exist
+# This contains the general information for a daily game
+# Date has to be unique
 cur.execute('''
 CREATE TABLE IF NOT EXISTS woordle_games (
     id integer PRIMARY KEY AUTOINCREMENT,
-    date text NOT NULL,
+    date text UNIQUE NOT NULL,
     number_of_people integer NOT NULL,
     word text NOT NULL
     )
 ''')
 
 # Create table for a game if it does not exist
+# This contains the information per person for each game
 cur.execute('''
 CREATE TABLE IF NOT EXISTS game (
     person integer NOT NULL,
@@ -48,54 +47,69 @@ CREATE TABLE IF NOT EXISTS game (
     )
 ''')
 
+# Create table for a player if it does not exist
+# This contains the information about each player
+cur.execute('''
+CREATE TABLE IF NOT EXISTS player (
+    id integer NOT NULL,
+    credits integer NOT NULL,
+    PRIMARY KEY (id)
+    )
+''')
 
-# Add word to wordle_game
-def pick_word():
+# Make sure transaction is ended and changes have been made final
+db.commit()
+
+
+# Add word to woordle_game if not in the database already
+def pick_word() -> str:
+    """
+    Pick a random word from "woorden.txt" for the next woordle game
+
+    Returns
+    -------
+    word : str
+        Word for the next WoordleGame
+    """
     with open("woorden.txt", 'r') as all_words:
         words = all_words.read().splitlines()
         word = random.choice(words)
-    print("The word has been changed to "+word)
     return word
 
 
-# Create new woordle game
+# Create new woordle game if it does not exist already
+# If there is a game for the current date already, ignore the new word
 cur.execute('''
-INSERT INTO woordle_games (date, number_of_people, word)
+INSERT OR IGNORE INTO woordle_games (date, number_of_people, word)
     VALUES (?,?,?)
 ''', [datetime.now().strftime("%D"), 0, pick_word()])
 
 # Make sure transaction is ended and changes have been made final
 db.commit()
 
-
-@client.event
-async def on_ready():
-    print('Bot = ready')
-
-
-# Loads extension
-@client.command()
-@commands.check(admin_check)
-async def load(ctx, extension):
-    await client.load_extension(f'cogs.{extension}')
-    await ctx.send("Succesfully loaded `" + extension + '`')
+# # Loads extension
+# @client.command()
+# @commands.check(admin_check)
+# async def load(ctx, extension):
+#     await client.load_extension(f'cogs.{extension}')
+#     await ctx.send("Succesfully loaded `" + extension + '`')
 
 
-# Unloads extension
-@client.command()
-@commands.check(admin_check)
-async def unload(ctx, extension):
-    await client.unload_extension(f'cogs.{extension}')
-    await ctx.send("Succesfully unloaded `" + extension + '`')
+# # Unloads extension
+# @client.command()
+# @commands.check(admin_check)
+# async def unload(ctx, extension):
+#     await client.unload_extension(f'cogs.{extension}')
+#     await ctx.send("Succesfully unloaded `" + extension + '`')
 
 
-# Reloads extension
-@client.command()
-@commands.check(admin_check)
-async def reload(ctx, extension):
-    await client.unload_extension(f'cogs.{extension}')
-    await client.load_extension(f'cogs.{extension}')
-    await ctx.send("Succesfully reloaded `" + extension + '`')
+# # Reloads extension
+# @client.command()
+# @commands.check(admin_check)
+# async def reload(ctx, extension):
+#     await client.unload_extension(f'cogs.{extension}')
+#     await client.load_extension(f'cogs.{extension}')
+#     await ctx.send("Succesfully reloaded `" + extension + '`')
 
 
 # Loads every extensions in cogs
@@ -106,7 +120,7 @@ async def load_extensions():
 
 
 async def main():
-    with open('token.txt', 'r') as file:
+    with open('token_test.txt', 'r') as file:
         token = file.readline()
         print("Reading token...")
     await load_extensions()
