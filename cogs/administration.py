@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+OWNER_ID = 656916865364525067
+
 
 class Administration(commands.Cog):
     """Class for general administration commands"""
@@ -29,15 +31,35 @@ class Administration(commands.Cog):
         message : str
             Message to announce
         """
-        if ctx.author.id == 656916865364525067:
-            channel_ids = [878308113604812880, 1039877136179277864, 1054342112474316810]
+        if ctx.author.id == OWNER_ID:
+            with open("channels.txt", "r") as file:
+                lines = file.readlines()
+                channel_ids = [int(line[:-1]) for line in lines]
+
             for id in channel_ids:
                 try:
                     channel = self.client.get_channel(id)
                     embed = discord.Embed(title="Woordle announcement", description=message, color=ctx.author.color)
                     await channel.send(embed=embed)
                 except Exception:
-                    print(f"Channel with {id} not found!")
+                    embed = discord.Embed(title="Woordle announcement", description=f"Channel with {id} not found!", color=ctx.author.color)
+                    await ctx.send(embed=embed)
+        else:
+            embed = discord.Embed(title="Woordle", description="You do not have the permission for this command!", color=ctx.author.color)
+            await ctx.send(embed=embed)
+
+    @commands.command(usage="=addchannel <channel_id>",
+                      description="Add a channel to the channels that broadcast WoordleGames")
+    async def addchannel(self, ctx: commands.Context, id: int):
+        if ctx.author.id == OWNER_ID:
+            with open("channels.txt", "a+") as file:
+                print(id)
+                file.write(str(id) + "\n")
+            embed = discord.Embed(title="Woordle", description="The channel has been added succesfully!", color=ctx.author.color)
+            await ctx.send(embed=embed)
+        else:
+            embed = discord.Embed(title="Woordle", description="You do not have the permission for this command!", color=ctx.author.color)
+            await ctx.send(embed=embed)
 
 
 # Allows to connect cog to bot

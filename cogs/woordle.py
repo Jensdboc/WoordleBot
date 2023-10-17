@@ -73,9 +73,13 @@ class Woordle(commands.Cog):
         # Emilia server: 1039877136179277864
         # Tom en Jerry: 1054342112474316810
         # Woordle server: 1161262990989991936
-
-        channel_ids = [878308113604812880, 1039877136179277864, 1054342112474316810, 1161262990989991936]
         # channel_ids = [954028573830811703] # Bot-test
+        # channel_ids = [878308113604812880, 1039877136179277864, 1054342112474316810, 1161262990989991936]
+
+        with open("channels.txt", "r") as file:
+            lines = file.readlines()
+            channel_ids = [int(line[:-1]) for line in lines]
+
         # Check if there is a current word
         if self.games.word is None:
             embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=ctx.author.color)

@@ -22,8 +22,15 @@ class Database(commands.Cog):
         self.cur = self.db.cursor()
 
     @commands.command()
-    async def get_games(self):
-        """Retrieve the tables woordle_games"""
+    async def get_games(self, ctx: commands.Context):
+        """
+        Retrieve the tables woordle_games
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        """
         self.cur.execute('''
             SELECT * from woordle_games
         ''')
@@ -32,10 +39,34 @@ class Database(commands.Cog):
         self.cur.close
 
     @commands.command()
-    async def get_game(self):
-        """Retrieve the tables game"""
+    async def get_game(self, ctx: commands.Context):
+        """
+        Retrieve the tables game
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        """
         self.cur.execute('''
             SELECT * from game
+        ''')
+        print("Fetching")
+        print(self.cur.fetchall())
+        self.cur.close
+
+    @commands.command()
+    async def get_player(self, ctx: commands.Context):
+        """
+        Retrieve the tables player
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        """
+        self.cur.execute('''
+            SELECT * from player
         ''')
         print("Fetching")
         print(self.cur.fetchall())
@@ -189,6 +220,27 @@ class Database(commands.Cog):
         message += f"Total wrong guesses: {str(wrong_guess_count)}\n"
         message += f"Favourite letter: {str(collections.Counter(all_words).most_common(1)[0][0])}\n"
         embed = discord.Embed(title=f"Woordle stats {member.display_name}", description=message, color=member.color)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def shop(self, ctx: commands.Context, member: discord.Member):
+        """
+        Show the shop of a member
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        member : discord.Member
+            Member the show the shop of
+        """
+        self.cur.execute('''
+            SELECT * from player WHERE id = ?
+        ''', (member.id,))
+        datas = self.cur.fetchall()
+        print(datas)
+        message = ""
+        embed = discord.Embed(title=f"Woordle shop {member.display_name}", description=message, color=member.color)
         await ctx.send(embed=embed)
 
 

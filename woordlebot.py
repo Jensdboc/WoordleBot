@@ -53,6 +53,7 @@ cur.execute('''
 CREATE TABLE IF NOT EXISTS player (
     id integer NOT NULL,
     credits integer NOT NULL,
+    xp integer NOT NULL,
     PRIMARY KEY (id)
     )
 ''')
