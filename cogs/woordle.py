@@ -29,8 +29,14 @@ class Woordle(commands.Cog):
         cur = self.db.cursor()
         self.wordstring = ""
         self.wrong_guesses = 0
-        self.counter = int(cur.execute('SELECT id FROM woordle_games WHERE id = (SELECT max(id) FROM woordle_games)').fetchall()[0][0])
-        self.games.set_word(cur.execute('SELECT word FROM woordle_games WHERE id = (SELECT max(id) FROM woordle_games)').fetchall()[0][0])
+        self.counter = int(cur.execute("""
+                                       SELECT id FROM woordle_games
+                                       WHERE id = (SELECT max(id) FROM woordle_games)
+                                       """).fetchall()[0][0])
+        self.games.set_word(cur.execute("""
+                                        SELECT word FROM woordle_games
+                                        WHERE id = (SELECT max(id) FROM woordle_games)
+                                        """).fetchall()[0][0])
         print("Counter: ", self.counter)
         print("Word: ", self.games.word)
         cur.close()
@@ -118,13 +124,15 @@ class Woordle(commands.Cog):
 
             # Process information
             cur = self.db.cursor()
-            cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)',
-                        (id, str(woordle_game.row), timediff, self.counter, self.wordstring, self.wrong_guesses))
             cur.execute("""
-                UPDATE woordle_games
-                SET number_of_people = number_of_people + 1
-                WHERE id = ?;
-            """, (str(self.counter),))  # This has to be a a string, can't insert integers
+                        INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        """, (id, str(woordle_game.row), timediff, self.counter, self.wordstring, self.wrong_guesses))
+            cur.execute("""
+                        UPDATE woordle_games
+                        SET number_of_people = number_of_people + 1
+                        WHERE id = ?;
+                        """, (str(self.counter),))  # This has to be a a string, can't insert integers
             self.db.commit()
             return embed
 
@@ -175,14 +183,23 @@ class Woordle(commands.Cog):
                     embed = discord.Embed(title=f"Woordle {str(self.counter)} X/6 by {ctx.author.name}: {timediff[:-3]}",
                                           description=woordle_game.display_end(), color=ctx.author.color)
                     await channel.send(embed=embed)
+
                 # Process information
                 cur = self.db.cursor()
-                cur.execute('INSERT INTO game VALUES (?, ?, ?, ?, ?, ?)', (ctx.author.id, "failed", timediff, self.counter, self.wordstring, self.wrong_guesses))
                 cur.execute("""
-                    UPDATE woordle_games
-                    SET number_of_people = number_of_people + 1
-                    WHERE id = ?;
-                """, str(self.counter))  # This has to be a a string, can't insert integers
+                            INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                            """, (ctx.author.id, "failed", timediff, self.counter, self.wordstring, self.wrong_guesses))
+                cur.execute("""
+                            UPDATE woordle_games
+                            SET number_of_people = number_of_people + 1
+                            WHERE id = ?;
+                            """, str(self.counter))  # This has to be a a string, can't insert integers
+                player_data = cur.execute("""
+                                          SELECT * FROM player
+                                          WHERE id = ?
+                                          """, id)
+                print(player_data)
                 self.db.commit()
 
     @commands.command(usage="=woordlereset",

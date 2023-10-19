@@ -22,41 +22,41 @@ cur = db.cursor()
 # Create table for woordlegames if it does not exist
 # This contains the general information for a daily game
 # Date has to be unique
-cur.execute('''
-CREATE TABLE IF NOT EXISTS woordle_games (
-    id integer PRIMARY KEY AUTOINCREMENT,
-    date text UNIQUE NOT NULL,
-    number_of_people integer NOT NULL,
-    word text NOT NULL
-    )
-''')
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS woordle_games (
+                id integer PRIMARY KEY AUTOINCREMENT,
+                date text UNIQUE NOT NULL,
+                number_of_people integer NOT NULL,
+                word text NOT NULL
+                )
+            """)
 
 # Create table for a game if it does not exist
 # This contains the information per person for each game
-cur.execute('''
-CREATE TABLE IF NOT EXISTS game (
-    person integer NOT NULL,
-    guesses integer NOT NULL,
-    time timestamp NOT NULL,
-    id integer NOT NULL,
-    wordstring NOT NULL,
-    wrong_guesses NOT NULL,
-    PRIMARY KEY (person, id),
-    FOREIGN KEY (id)
-        REFERENCES woordle_games (id)
-    )
-''')
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS game (
+                person integer NOT NULL,
+                guesses integer NOT NULL,
+                time timestamp NOT NULL,
+                id integer NOT NULL,
+                wordstring NOT NULL,
+                wrong_guesses NOT NULL,
+                PRIMARY KEY (person, id),
+                FOREIGN KEY (id)
+                    REFERENCES woordle_games (id)
+                )
+            """)
 
 # Create table for a player if it does not exist
 # This contains the information about each player
-cur.execute('''
-CREATE TABLE IF NOT EXISTS player (
-    id integer NOT NULL,
-    credits integer NOT NULL,
-    xp integer NOT NULL,
-    PRIMARY KEY (id)
-    )
-''')
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS player (
+                id integer NOT NULL,
+                credits integer NOT NULL,
+                xp integer NOT NULL,
+                PRIMARY KEY (id)
+                )
+            """)
 
 # Make sure transaction is ended and changes have been made final
 db.commit()
@@ -80,10 +80,10 @@ def pick_word() -> str:
 
 # Create new woordle game if it does not exist already
 # If there is a game for the current date already, ignore the new word
-cur.execute('''
-INSERT OR IGNORE INTO woordle_games (date, number_of_people, word)
-    VALUES (?,?,?)
-''', [datetime.now().strftime("%D"), 0, pick_word()])
+cur.execute("""
+            INSERT OR IGNORE INTO woordle_games (date, number_of_people, word)
+            VALUES (?,?,?)
+            """, [datetime.now().strftime("%D"), 0, pick_word()])
 
 # Make sure transaction is ended and changes have been made final
 db.commit()

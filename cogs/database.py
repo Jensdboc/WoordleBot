@@ -31,9 +31,9 @@ class Database(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        self.cur.execute('''
-            SELECT * from woordle_games
-        ''')
+        self.cur.execute("""
+                         SELECT * from woordle_games
+                         """)
         print("Fetching")
         print(self.cur.fetchall())
         self.cur.close
@@ -48,9 +48,9 @@ class Database(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        self.cur.execute('''
-            SELECT * from game
-        ''')
+        self.cur.execute("""
+                         SELECT * from game
+                         """)
         print("Fetching")
         print(self.cur.fetchall())
         self.cur.close
@@ -65,9 +65,9 @@ class Database(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        self.cur.execute('''
-            SELECT * from player
-        ''')
+        self.cur.execute("""
+                         SELECT * from player
+                         """)
         print("Fetching")
         print(self.cur.fetchall())
         self.cur.close
@@ -110,10 +110,10 @@ class Database(commands.Cog):
             won : bool
                 Returns True if won, else False
             """
-            self.cur.execute('''
-                SELECT guesses from game
-                WHERE id = ?
-            ''', (id,))
+            self.cur.execute("""
+                             SELECT guesses from game
+                             WHERE id = ?
+                             """, (id,))
             guess = self.cur.fetchall()[0][0]
             return guess != "failed"
 
@@ -182,9 +182,10 @@ class Database(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        self.cur.execute('''
-            SELECT * from game WHERE person = ?
-        ''', (member.id,))
+        self.cur.execute("""
+                         SELECT * from game
+                         WHERE person = ?
+                         """, (member.id,))
         datas = self.cur.fetchall()
         game_count = len(datas)
         if game_count == 0:
@@ -234,9 +235,9 @@ class Database(commands.Cog):
         member : discord.Member
             Member the show the shop of
         """
-        self.cur.execute('''
-            SELECT * from player WHERE id = ?
-        ''', (member.id,))
+        self.cur.execute("""
+                         SELECT * from player WHERE id = ?
+                         """, (member.id,))
         datas = self.cur.fetchall()
         print(datas)
         message = ""
