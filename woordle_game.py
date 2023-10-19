@@ -11,7 +11,7 @@ COLORS = {"green": "🟩", "yellow": "🟨", "gray": "⬛"}
 class WoordleGame:
     """Class representing a woordle game"""
 
-    def __init__(self, word, author: discord.member,
+    def __init__(self, word, author: discord.member, id: int,
                  message: discord.message, time: Timestamp) -> None:
         """
         Initializes a WoordleGame
@@ -22,6 +22,8 @@ class WoordleGame:
             Word for the current WoordleGame
         author : discord.member
             Author who created the WoordleGame
+        id : int
+            ID of current WoordleGames
         message : discord.message
             Discord message with the first guess
         time : Timestamps
@@ -30,6 +32,7 @@ class WoordleGame:
         self.word = word
         self.woordle_list = [letter for letter in self.word] if self.word is not None else None
         self.author = author
+        self.id = id
         self.message = message
         self.board = [['⬛'] * WORD_LENGTH for _ in range(MAX_GUESSES)]
         self.row = 1

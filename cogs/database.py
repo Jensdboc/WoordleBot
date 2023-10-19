@@ -34,7 +34,7 @@ class Database(commands.Cog):
         self.cur.execute("""
                          SELECT * from woordle_games
                          """)
-        print("Fetching")
+        print("Fetching games")
         print(self.cur.fetchall())
         self.cur.close
 
@@ -51,7 +51,7 @@ class Database(commands.Cog):
         self.cur.execute("""
                          SELECT * from game
                          """)
-        print("Fetching")
+        print("Fetching game")
         print(self.cur.fetchall())
         self.cur.close
 
@@ -68,7 +68,7 @@ class Database(commands.Cog):
         self.cur.execute("""
                          SELECT * from player
                          """)
-        print("Fetching")
+        print("Fetching player")
         print(self.cur.fetchall())
         self.cur.close
 
@@ -115,7 +115,7 @@ class Database(commands.Cog):
                              WHERE id = ?
                              """, (id,))
             guess = self.cur.fetchall()[0][0]
-            return guess != "failed"
+            return guess != "X"
 
         def longest_streak(ids: list[int]) -> int:
             """
@@ -200,7 +200,7 @@ class Database(commands.Cog):
         ids = []
         game_id = {}
         for data in datas:
-            guess_count += data[1] if data[1] != 'failed' else 6
+            guess_count += data[1] if data[1] != 'X' else 6
             game_time = convert_str_to_time(data[2])
             total_time += game_time
             if fastest_time is None:

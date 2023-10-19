@@ -1,4 +1,4 @@
 __pycache__
 *.txt
-*.db
+*.db*
 *.sqlite
