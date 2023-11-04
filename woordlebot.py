@@ -54,6 +54,7 @@ cur.execute("""
                 id integer NOT NULL,
                 credits integer NOT NULL,
                 xp integer NOT NULL,
+                current_streak integer NOT NULL,
                 PRIMARY KEY (id)
                 )
             """)

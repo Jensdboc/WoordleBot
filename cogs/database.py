@@ -32,7 +32,7 @@ class Database(commands.Cog):
             Context the command is represented in
         """
         self.cur.execute("""
-                         SELECT * from woordle_games
+                         SELECT * FROM woordle_games
                          """)
         print("Fetching games")
         print(self.cur.fetchall())
@@ -49,7 +49,7 @@ class Database(commands.Cog):
             Context the command is represented in
         """
         self.cur.execute("""
-                         SELECT * from game
+                         SELECT * FROM game
                          """)
         print("Fetching game")
         print(self.cur.fetchall())
@@ -66,7 +66,7 @@ class Database(commands.Cog):
             Context the command is represented in
         """
         self.cur.execute("""
-                         SELECT * from player
+                         SELECT * FROM player
                          """)
         print("Fetching player")
         print(self.cur.fetchall())
@@ -111,7 +111,7 @@ class Database(commands.Cog):
                 Returns True if won, else False
             """
             self.cur.execute("""
-                             SELECT guesses from game
+                             SELECT guesses FROM game
                              WHERE id = ?
                              """, (id,))
             guess = self.cur.fetchall()[0][0]
@@ -183,7 +183,7 @@ class Database(commands.Cog):
             return
 
         self.cur.execute("""
-                         SELECT * from game
+                         SELECT * FROM game
                          WHERE person = ?
                          """, (member.id,))
         datas = self.cur.fetchall()
@@ -236,10 +236,9 @@ class Database(commands.Cog):
             Member the show the shop of
         """
         self.cur.execute("""
-                         SELECT * from player WHERE id = ?
+                         SELECT * FROM player WHERE id = ?
                          """, (member.id,))
         datas = self.cur.fetchall()
-        print(datas)
         message = ""
         embed = discord.Embed(title=f"Woordle shop {member.display_name}", description=message, color=member.color)
         await ctx.send(embed=embed)
