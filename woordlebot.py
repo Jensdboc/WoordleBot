@@ -13,7 +13,7 @@ intents = discord.Intents.all()
 client = commands.Bot(command_prefix="=", help_command=CustomHelpCommand(),
                       case_insensitive=True, intents=intents)
 client.mute_message = None
-client.activity = discord.Game(name="=help")
+client.activity = discord.Game(name="Join https://discord.gg/wD6TYZFk")
 
 # Connect to db and make cursor
 db = sqlite3.connect("woordle.db")
