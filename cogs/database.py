@@ -244,10 +244,8 @@ class Database(commands.Cog):
         embed = discord.Embed(title=f"Woordle shop {ctx.author.display_name}", description=f"You have {credits} credits!", color=ctx.author.color)
         await ctx.send(embed=embed)
 
-    @commands.command(usage="=rank",
-                      description="""
-                                  Show the ranking
-                                  """,
+    @commands.command(usage="=rank <member>",
+                      description="""Show the ranking. If no member is provided, show the author itself """,
                       aliases=['credit', 'credits'])
     async def rank(self, ctx: commands.Context, member: discord.Member=None):
         """
@@ -268,8 +266,37 @@ class Database(commands.Cog):
         except Exception as e:
             print(e)
 
-    @commands.command()
-    async def add_game(self, ctx, date, id, guesses, timediff, counter, wordstring, wrong_guesses, credits_gained):
+    @commands.command(usage="""
+                            =add_game "2023-11-10" "656916865364525067" "5" "0:00:10.000" "3" "TESTSPAARDBOVEN" "0" "30"
+                            """,
+                      description="""
+                                  Add a manual game to the database. This can only be done by the owner.
+                                  """)
+    async def add_game(self, ctx, date: str, id: str, guesses: str, 
+                       timediff: str, counter: str, wordstring: str, 
+                       wrong_guesses: str, credits_gained: str):
+        """
+        Add a manual game to the database
+
+        Parameters
+        ----------
+        date: str
+            Date to be inserted
+        id: str
+            Id to be inserted
+        guesses: str
+            Guesses to be inserted
+        timediff: str
+            Timediff to be inserted
+        counter: str
+            Counter to be inserted
+        wordstring: str
+            Wordstring to be inserted
+        wrong_guesses: str
+            Wrong_guesses to be inserted
+        credits_gained: str
+            Credits to be inserted
+        """
         # =add_game "2023-11-10" "656916865364525067" "5" "0:00:10.000" "3" "TESTSPAARDBOVEN" "0" "30"
         # Change "2023-11-10" and "3"
         if ctx.author.id == OWNER_ID:
@@ -314,6 +341,20 @@ class Database(commands.Cog):
             
 class Ranking(discord.ui.View):
     def __init__(self, id: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
+        """
+        Initialize the Ranking UI
+
+        Parameters
+        ----------
+        id : int
+            Id of the requested user
+        db: sqlite3.Connection
+            Database with games and player info
+        cur: sqlite3.Cursor
+            Cursor to access the database
+        client: discord.Client
+            Bot itself
+        """
         super().__init__()
         self.value = None
         self.id = id
@@ -323,6 +364,16 @@ class Ranking(discord.ui.View):
 
     @discord.ui.button(label="All time", style=discord.ButtonStyle.blurple)
     async def all(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """
+        Show to UI for the all time stats
+
+        Parameters
+        ----------
+        interaction: discord.Interaction 
+            Used to handle button interaction
+        button: discord.ui.Button
+            Button object
+        """
         try:
             self.cur.execute("""
                             SELECT id, credits FROM player
@@ -356,6 +407,16 @@ class Ranking(discord.ui.View):
 
     @discord.ui.button(label="Monthly", style=discord.ButtonStyle.green)
     async def month(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """
+        Show to UI for the monthly stats
+
+        Parameters
+        ----------
+        interaction: discord.Interaction 
+            Used to handle button interaction
+        button: discord.ui.Button
+            Button object
+        """
         try:
             self.cur.execute("""
                              SELECT game.person, SUM(game.credits_earned) FROM game
@@ -394,6 +455,16 @@ class Ranking(discord.ui.View):
 
     # @discord.ui.button(label="Progress", style=discord.ButtonStyle.red)
     # async def progress(self, interaction: discord.Interaction, button: discord.ui.Button):
+    #     """
+    #     Show to UI for the progress of a certain user
+
+    #     Parameters
+    #     ----------
+    #     interaction: discord.Interaction 
+    #         Used to handle button interaction
+    #     button: discord.ui.Button
+    #         Button object
+    #     """
     #     try:
     #         requested_user = await self.client.fetch_user(self.id)
     #         embed = discord.Embed(title=f"Progress of **{requested_user.display_name}**:", description="Currently WIP")
