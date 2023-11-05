@@ -167,15 +167,16 @@ class Woordle(commands.Cog):
             else:
                 current_streak = 0
 
-            cur.execute("""
+            self.cur.execute("""
                         UPDATE player
                         SET credits = credits + ?, xp = xp + ?, current_streak = ?
-                        """, (credits_gained, xp_gained, current_streak))
-            cur.execute("""
-                        INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                        """, (id, guesses, timediff, self.counter, self.wordstring, self.wrong_guesses))
-            cur.execute("""
+                        WHERE id = ?
+                        """, (credits_gained, xp_gained, current_streak, id))
+            self.cur.execute("""
+                        INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_earned)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """, (id, guesses, timediff, self.counter, self.wordstring, self.wrong_guesses, credits_gained))
+            self.cur.execute("""
                         UPDATE woordle_games
                         SET number_of_people = number_of_people + 1
                         WHERE id = ?;

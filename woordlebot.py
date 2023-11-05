@@ -25,7 +25,7 @@ cur = db.cursor()
 cur.execute("""
             CREATE TABLE IF NOT EXISTS woordle_games (
                 id integer PRIMARY KEY AUTOINCREMENT,
-                date text UNIQUE NOT NULL,
+                date date UNIQUE NOT NULL,
                 number_of_people integer NOT NULL,
                 word text NOT NULL
                 )
@@ -41,6 +41,7 @@ cur.execute("""
                 id integer NOT NULL,
                 wordstring NOT NULL,
                 wrong_guesses NOT NULL,
+                credits_earned NOT NULL,
                 PRIMARY KEY (person, id),
                 FOREIGN KEY (id)
                     REFERENCES woordle_games (id)
@@ -84,7 +85,7 @@ def pick_word() -> str:
 cur.execute("""
             INSERT OR IGNORE INTO woordle_games (date, number_of_people, word)
             VALUES (?,?,?)
-            """, [datetime.now().strftime("%D"), 0, pick_word()])
+            """, [datetime.now().strftime("%F"), 0, pick_word()])
 
 # Make sure transaction is ended and changes have been made final
 db.commit()
