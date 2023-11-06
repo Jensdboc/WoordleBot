@@ -254,9 +254,9 @@ class Database(commands.Cog):
         ----------
         ctx : commands.Context
             Context the command is represented in
-        type: str
+        type : str
             Type of stats
-        member: discord.Member
+        member : discord.Member
             The member to show the ranking of
             Only needed in case of progress     
         """
@@ -351,13 +351,13 @@ class Ranking(discord.ui.View):
         ----------
         id : int
             Id of the requested user
-        type: str
+        type : str
             Type of stats
-        db: sqlite3.Connection
+        db : sqlite3.Connection
             Database with games and player info
-        cur: sqlite3.Cursor
+        cur : sqlite3.Cursor
             Cursor to access the database
-        client: discord.Client
+        client : discord.Client
             Bot itself
         """
         super().__init__()
@@ -380,9 +380,9 @@ class Ranking(discord.ui.View):
 
         Parameters
         ----------
-        interaction: discord.Interaction 
+        interaction : discord.Interaction 
             Used to handle button interaction
-        button: discord.ui.Button
+        button : discord.ui.Button
             Button object
         """
         self.view = "all"
@@ -397,9 +397,9 @@ class Ranking(discord.ui.View):
 
         Parameters
         ----------
-        interaction: discord.Interaction 
+        interaction : discord.Interaction 
             Used to handle button interaction
-        button: discord.ui.Button
+        button : discord.ui.Button
             Button object
         """
         self.view = "month"
@@ -414,9 +414,9 @@ class Ranking(discord.ui.View):
 
         Parameters
         ----------
-        interaction: discord.Interaction 
+        interaction : discord.Interaction 
             Used to handle button interaction
-        button: discord.ui.Button
+        button : discord.ui.Button
             Button object
         """
         self.index = (self.index + 1) % len(self.list)
@@ -431,6 +431,18 @@ class Ranking(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=self)
 
     def get_all_data(self):
+        """
+        Get data for view all
+
+        Returns
+        -------
+        datas : list 
+            Data containing the users information
+        title : str
+            Title of the embed
+        currency : str
+            Unit of the data
+        """
         try:
             title = f"Top users (all time) in {self.type}"
             if self.type == "credit":
@@ -484,6 +496,18 @@ class Ranking(discord.ui.View):
             print(e)
 
     def get_month_data(self):
+        """
+        Get data for view month
+
+        Returns
+        -------
+        datas : list 
+            Data containing the users information
+        title : str
+            Title of the embed
+        currency : str
+            Unit of the data
+        """
         try:
             title = f"Top users (monthly) in {self.type}"
             if self.type == "credit":
