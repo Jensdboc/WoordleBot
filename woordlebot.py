@@ -41,7 +41,8 @@ cur.execute("""
                 id integer NOT NULL,
                 wordstring NOT NULL,
                 wrong_guesses NOT NULL,
-                credits_earned NOT NULL,
+                credits_gained NOT NULL,
+                xp_gained NOT NULL,
                 PRIMARY KEY (person, id),
                 FOREIGN KEY (id)
                     REFERENCES woordle_games (id)

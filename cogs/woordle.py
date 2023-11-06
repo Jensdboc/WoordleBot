@@ -173,9 +173,9 @@ class Woordle(commands.Cog):
                         WHERE id = ?
                         """, (credits_gained, xp_gained, current_streak, id))
             self.cur.execute("""
-                        INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_earned)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                        """, (id, guesses, timediff, self.counter, self.wordstring, self.wrong_guesses, credits_gained))
+                        INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (id, guesses, timediff, self.counter, self.wordstring, self.wrong_guesses, credits_gained, xp_gained))
             self.cur.execute("""
                         UPDATE woordle_games
                         SET number_of_people = number_of_people + 1
