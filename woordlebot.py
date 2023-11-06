@@ -39,10 +39,10 @@ cur.execute("""
                 guesses integer NOT NULL,
                 time timestamp NOT NULL,
                 id integer NOT NULL,
-                wordstring NOT NULL,
-                wrong_guesses NOT NULL,
-                credits_gained NOT NULL,
-                xp_gained NOT NULL,
+                wordstring text NOT NULL,
+                wrong_guesses integer NOT NULL,
+                credits_gained integer NOT NULL,
+                xp_gained integer NOT NULL,
                 PRIMARY KEY (person, id),
                 FOREIGN KEY (id)
                     REFERENCES woordle_games (id)
@@ -61,9 +61,73 @@ cur.execute("""
                 )
             """)
 
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS achievements (
+                name text NOT NULL,
+                description text NOT NULL,
+                rarity text NOT NULL,
+                PRIMARY KEY (name)
+                )
+            """)
+
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS skins (
+                name text NOT NULL,
+                description text NOT NULL,
+                cost integer NOT NULL,
+                rarity text NOT NULL,
+                PRIMARY KEY (name)
+                )
+            """)
+
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                name text NOT NULL,
+                description text NOT NULL,
+                cost integer NOT NULL,
+                rarity text NOT NULL,
+                PRIMARY KEY (name)
+                )
+            """)
+
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS achievements_player (
+                name text NOT NULL,
+                id integer NOT NULL,
+                PRIMARY KEY (name, id),
+                FOREIGN KEY (id)
+                    REFERENCES player (id)
+                FOREIGN KEY (name)
+                    REFERENCES achievements (name)
+                )
+            """)
+
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS skins_player (
+                name text NOT NULL,
+                id integer NOT NULL,
+                PRIMARY KEY (name, id),
+                FOREIGN KEY (id)
+                    REFERENCES player (id)
+                FOREIGN KEY (name)
+                    REFERENCES skins (name)
+                )
+            """)
+
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS items_player (
+                name text NOT NULL,
+                id integer NOT NULL,
+                PRIMARY KEY (name, id),
+                FOREIGN KEY (id)
+                    REFERENCES player (id)
+                FOREIGN KEY (name)
+                    REFERENCES items (name)
+                )
+            """)
+
 # Make sure transaction is ended and changes have been made final
 db.commit()
-
 
 # Add word to woordle_game if not in the database already
 def pick_word() -> str:
