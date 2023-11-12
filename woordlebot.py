@@ -19,6 +19,7 @@ client.activity = discord.Game(name="Join https://discord.gg/wD6TYZFk")
 db = sqlite3.connect("woordle.db")
 cur = db.cursor()
 
+
 def create_database():
     """
     Create all the tables for woordle.db
@@ -64,7 +65,7 @@ def create_database():
                     PRIMARY KEY (id)
                     )
                 """)
-    
+
     # Create table for achievement if it does not exist
     # This contains the information about each achievement
     cur.execute("""
@@ -75,7 +76,7 @@ def create_database():
                     PRIMARY KEY (name)
                     )
                 """)
-    
+
     # Create table for skins if it does not exist
     # This contains the information about each skin
     cur.execute("""
@@ -96,6 +97,7 @@ def create_database():
                     description text NOT NULL,
                     cost integer NOT NULL,
                     rarity text NOT NULL,
+                    max integer NOT NULL,
                     PRIMARY KEY (name)
                     )
                 """)
@@ -105,6 +107,7 @@ def create_database():
     cur.execute("""
                 CREATE TABLE IF NOT EXISTS colors (
                     name text NOT NULL,
+                    description text NOT NULL,
                     cost integer NOT NULL,
                     rarity text NOT NULL,
                     PRIMARY KEY (name)
@@ -131,6 +134,7 @@ def create_database():
                 CREATE TABLE IF NOT EXISTS skins_player (
                     name text NOT NULL,
                     id integer NOT NULL,
+                    selected bool NOT NULL,
                     PRIMARY KEY (name, id),
                     FOREIGN KEY (id)
                         REFERENCES player (id)
@@ -145,6 +149,7 @@ def create_database():
                 CREATE TABLE IF NOT EXISTS items_player (
                     name text NOT NULL,
                     id integer NOT NULL,
+                    amount integer NOT NULL,
                     PRIMARY KEY (name, id),
                     FOREIGN KEY (id)
                         REFERENCES player (id)
@@ -159,6 +164,7 @@ def create_database():
                 CREATE TABLE IF NOT EXISTS colors_player (
                     name text NOT NULL,
                     id integer NOT NULL,
+                    selected bool NOT NULL,
                     PRIMARY KEY (name, id),
                     FOREIGN KEY (id)
                         REFERENCES player (id)
@@ -169,6 +175,7 @@ def create_database():
 
     # Make sure transaction is ended and changes have been made final
     db.commit()
+
 
 def fill_database():
     """
@@ -251,7 +258,11 @@ def fill_database():
                 INSERT OR IGNORE INTO achievements (name, description, rarity)
                 VALUES (?, ?, ?)
                 """, ("Mr. Clean", "Win a game without making a wrong guess", "epic"))
-    
+    cur.execute("""
+                INSERT OR IGNORE INTO achievements (name, description, rarity)
+                VALUES (?, ?, ?)
+                """, ("Haaa, poor!", "Try to buy an item but do not have the required credits", "rare"))
+
     # General stat achievements
     cur.execute("""
                 INSERT OR IGNORE INTO achievements (name, description, rarity)
@@ -287,7 +298,7 @@ def fill_database():
                 INSERT OR IGNORE INTO achievements (name, description, rarity)
                 VALUES (?, ?, ?)
                 """, ("That was on purpose", "Spend more than 10 hours on a game", "legendary"))
-    
+
     # Shop achievements
     cur.execute("""
                 INSERT OR IGNORE INTO achievements (name, description, rarity)
@@ -301,7 +312,7 @@ def fill_database():
                 INSERT OR IGNORE INTO achievements (name, description, rarity)
                 VALUES (?, ?, ?)
                 """, ("Cold as ice", "Buy max freeze streaks", "rare"))
-    
+
     # Credit achievements
     cur.execute("""
                 INSERT OR IGNORE INTO achievements (name, description, rarity)
@@ -321,7 +332,7 @@ def fill_database():
                 INSERT OR IGNORE INTO skins (name, description, cost, rarity)
                 VALUES (?, ?, ?, ?)
                 """, ("Colorblind", "Blue and orange", "250", "common"))
-    
+
     # Emoji skins
     cur.execute("""
                 INSERT OR IGNORE INTO skins (name, description, cost, rarity)
@@ -347,7 +358,7 @@ def fill_database():
                 INSERT OR IGNORE INTO skins (name, description, cost, rarity)
                 VALUES (?, ?, ?, ?)
                 """, ("Fruit (tropical edition)", "Pineapple and avocado", "500", "common"))
-    
+
     # Themed skins
     cur.execute("""
                 INSERT OR IGNORE INTO skins (name, description, cost, rarity)
@@ -361,6 +372,10 @@ def fill_database():
                 INSERT OR IGNORE INTO skins (name, description, cost, rarity)
                 VALUES (?, ?, ?, ?)
                 """, ("Summer Time", "Sun, palmtree", "500", "rare"))
+    cur.execute("""
+                INSERT OR IGNORE INTO skins (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Dipping time", "Cookie, milk", "750", "epic"))
 
     # Special skins
     cur.execute("""
@@ -370,61 +385,63 @@ def fill_database():
 
     # Items
     cur.execute("""
-                INSERT OR IGNORE INTO items (name, description, cost, rarity)
-                VALUES (?, ?, ?, ?)
-                """, ("Freeze streak", "Keep your streak when missing a day", "250", "common"))
+                INSERT OR IGNORE INTO items (name, description, cost, rarity, max)
+                VALUES (?, ?, ?, ?, ?)
+                """, ("Freeze streak", "Keep your streak when missing a day", "250", "common", "2"))
 
     # Colors
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Red", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Red", "Red", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Green", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Green", "Green", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Yellow", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Yellow", "Yellow", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Orange", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Orange", "Orange", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Blue", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Blue", "Blue", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Purple", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Purple", "Purple", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Pink", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Pink", "Pink", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Black", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Black", "Black", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("White", "150", "common"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("White", "White", "150", "common"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Your color", "250", "rare"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Your color", "Your color", "250", "rare"))
     cur.execute("""
-                INSERT OR IGNORE INTO colors (name, cost, rarity)
-                VALUES (?, ?, ?)
-                """, ("Random", "250", "epic"))
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
+                """, ("Random", "Random", "250", "epic"))
 
     # Make sure transaction is ended and changes have been made final
     db.commit()
 
+
 create_database()
 fill_database()
+
 
 # Add word to woordle_game if not in the database already
 def pick_word() -> str:

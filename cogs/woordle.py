@@ -88,7 +88,7 @@ class Woordle(commands.Cog):
             embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=ctx.author.color)
             await ctx.send(embed=embed)
             return
-        
+
         # Delete message and check if the guess is valid
         if guess is None:
             embed = discord.Embed(title="Woordle", description="Please insert a guess!", color=ctx.author.color)
@@ -126,23 +126,23 @@ class Woordle(commands.Cog):
                 guesses = "X"
                 xp_gained = 1
             public_embed = discord.Embed(title=f"Woordle {str(self.counter)} {guesses}/6 by {ctx.author.name}: {timediff}",
-                                  description=woordle_game.display_end(), color=ctx.author.color)
+                                         description=woordle_game.display_end(), color=ctx.author.color)
 
             # Process information
             cur = self.db.cursor()
             self.cur.execute("""
-                             SELECT * FROM player 
+                             SELECT * FROM player
                              WHERE id = ?
                              """, (id,))
             player_data = self.cur.fetchall()
-            
+
             # If player not in the database yet, create player profile
             if player_data == []:
                 cur.execute("""
                             INSERT INTO player (id, credits, xp, current_streak)
                             VALUES (?, ?, ?, ?)
                             """, (id, "0", "0", "0"))
-            
+
             # Get current streak to calculate the credits gained
             # Every 10 streaks increase the multiplier by 5%
             self.cur.execute("""
@@ -153,13 +153,13 @@ class Woordle(commands.Cog):
                 current_streak = self.cur.fetchall()[0][0] + 1
                 if current_streak < 10:
                     streak_credits = 0
-                elif current_streak > 10 and current_streak < 25: 
+                elif current_streak > 10 and current_streak < 25:
                     streak_credits = 3
-                elif current_streak > 25 and current_streak < 50: 
-                    streak_credits = 5 
-                elif current_streak > 50 and current_streak < 100: 
+                elif current_streak > 25 and current_streak < 50:
+                    streak_credits = 5
+                elif current_streak > 50 and current_streak < 100:
                     streak_credits = 10
-                elif current_streak > 100 and current_streak < 356: 
+                elif current_streak > 100 and current_streak < 356:
                     streak_credits = 15
                 else:
                     streak_credits = 20

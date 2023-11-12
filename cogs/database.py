@@ -6,6 +6,8 @@ from datetime import datetime
 from discord.ext import commands
 
 OWNER_ID = 656916865364525067
+ELEMENTS_ON_PAGE = 5
+
 
 class Database(commands.Cog):
     """Class for interactions with the database"""
@@ -236,17 +238,26 @@ class Database(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        self.cur.execute("""
-                         SELECT credits FROM player
-                         WHERE id = ?
-                         """, (ctx.author.id,))
-        credits = self.cur.fetchall()[0][0]
-        embed = discord.Embed(title=f"Woordle shop {ctx.author.display_name}", description=f"You have {credits} credits!", color=ctx.author.color)
-        await ctx.send(embed=embed)
+        try:
+            self.cur.execute("""
+                            SELECT credits FROM player
+                            WHERE id = ?
+                            """, (ctx.author.id,))
+            datas = self.cur.fetchall()
+
+            if datas == []:
+                credits = 0
+            else:
+                credits = datas[0][0]
+
+            view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
+            await ctx.reply(view=view)
+        except Exception as e:
+            print(e)
 
     @commands.command(usage="=rank <type> <member>",
                       description="""Show the ranking. If no member is provided, show the author itself.""")
-    async def rank(self, ctx: commands.Context, type: str="credit", member: discord.Member=None):
+    async def rank(self, ctx: commands.Context, type: str = "credit", member: discord.Member = None):
         """
         Show the ranking
 
@@ -258,7 +269,7 @@ class Database(commands.Cog):
             Type of stats
         member : discord.Member
             The member to show the ranking of
-            Only needed in case of progress     
+            Only needed in case of progress
         """
         id = ctx.author.id if member is None else member.id
         view = Ranking(id, type, self.db, self.cur, self.client)
@@ -273,8 +284,8 @@ class Database(commands.Cog):
                       description="""
                                   Add a manual game to the database. This can only be done by the owner.
                                   """)
-    async def add_game(self, ctx, date: str, id: str, guesses: str, 
-                       timediff: str, counter: str, wordstring: str, 
+    async def add_game(self, ctx, date: str, id: str, guesses: str,
+                       timediff: str, counter: str, wordstring: str,
                        wrong_guesses: str, credits_gained: str, xp_gained: str):
         """
         Add a manual game to the database
@@ -317,9 +328,9 @@ class Database(commands.Cog):
                                  """, (id, guesses, timediff, counter, wordstring, wrong_guesses, credits_gained, xp_gained))
             except Exception as e:
                 await ctx.send(e)
-            try:    
+            try:
                 self.cur.execute("""
-                                SELECT * FROM player 
+                                SELECT * FROM player
                                 WHERE id = ?
                                 """, (id,))
                 player_data = self.cur.fetchall()
@@ -333,7 +344,7 @@ class Database(commands.Cog):
             try:
                 self.cur.execute("""
                                  UPDATE player
-                                 SET credits = credits + ? 
+                                 SET credits = credits + ?
                                  WHERE id = ?
                                  """, (int(credits_gained), id))
             except Exception as e:
@@ -341,6 +352,261 @@ class Database(commands.Cog):
 
             self.db.commit()
             await ctx.send("Game added")
+
+    @commands.command()
+    async def query(self, ctx: commands.Context, query: str):
+        try:
+            if ctx.author.id == OWNER_ID:
+                self.cur.execute(query)
+                datas = self.cur.fetchall()
+                self.db.commit()
+                if datas != []:
+                    await ctx.send(datas)
+            await ctx.message.add_reaction("✔️")
+        except Exception as e:
+            await ctx.send(e)
+            await ctx.message.add_reaction("❌")
+
+
+class Shop(discord.ui.View):
+    def __init__(self, id: int, credits: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
+        """
+        Initialize the Shop UI
+
+        Parameters
+        ----------
+        id : int
+            Id of the requested user
+        credits : int
+            Amount of credits from the user
+        db : sqlite3.Connection
+            Database with games and player info
+        cur : sqlite3.Cursor
+            Cursor to access the database
+        client : discord.Client
+            Bot itself
+        """
+        super().__init__()
+        self.value = None
+        self.id = id
+        self.credits = credits
+        self.db = db
+        self.cur = cur
+        self.client = client
+        self.view = None
+        self.page = 0
+
+    @discord.ui.button(label="Skins", style=discord.ButtonStyle.blurple, row=1)
+    async def skin(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.view = "skins"
+        self.page = 0
+        embed = self.make_embed(self.view)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Items", style=discord.ButtonStyle.blurple, row=1)
+    async def item(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.view = "items"
+        self.page = 0
+        embed = self.make_embed(self.view)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Colors", style=discord.ButtonStyle.blurple, row=1)
+    async def color(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.view = "colors"
+        self.page = 0
+        embed = self.make_embed(self.view)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="<", style=discord.ButtonStyle.grey, row=1)
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.page > 0:
+            self.page -= 1
+        embed = self.make_embed(self.view)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label=">", style=discord.ButtonStyle.grey, row=1)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page += 1
+        embed = self.make_embed(self.view)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Buy/Select 1", style=discord.ButtonStyle.blurple, row=2)
+    async def one(self, interaction: discord.Interaction, button: discord.ui.Button):
+        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE)
+        embed = self.make_embed(self.view, feedback)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Buy/Select 2", style=discord.ButtonStyle.blurple, row=2)
+    async def two(self, interaction: discord.Interaction, button: discord.ui.Button):
+        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE + 1)
+        embed = self.make_embed(self.view, feedback)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Buy/Select 3", style=discord.ButtonStyle.blurple, row=2)
+    async def three(self, interaction: discord.Interaction, button: discord.ui.Button):
+        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE + 2)
+        embed = self.make_embed(self.view, feedback)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Buy/Select 4", style=discord.ButtonStyle.blurple, row=2)
+    async def four(self, interaction: discord.Interaction, button: discord.ui.Button):
+        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE + 3)
+        embed = self.make_embed(self.view, feedback)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="Buy/Select 5", style=discord.ButtonStyle.blurple, row=2)
+    async def five(self, interaction: discord.Interaction, button: discord.ui.Button):
+        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE + 4)
+        embed = self.make_embed(self.view, feedback)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    def buy_item(self, index: int) -> str:
+        """
+        Update the database when buying an item
+
+        Parameters
+        ----------
+        index : int
+            Index of the item shown in embed
+
+        Returns
+        -------
+        feedback : str
+            Feedback message
+        """
+        try:
+            # Retrieve item
+            self.cur.execute("""
+                             SELECT * FROM {}
+                             """.format(self.view))
+            datas = self.cur.fetchall()
+            if (index >= len(datas)):
+                return "No such item available!"
+            item_to_buy = datas[index]
+
+            # Check if item is already present or reached max
+            self.cur.execute("""
+                             SELECT * FROM {}
+                             WHERE name = ? AND id = ?
+                             """.format(f"{self.view}_player"), (item_to_buy[0], self.id))
+            old_player_data = self.cur.fetchall()
+
+            if old_player_data != []:
+                if self.view == "items" and old_player_data[0][2] >= item_to_buy[4]:
+                    return f"You have reached the maximum amount of **{item_to_buy[0]}** already!"
+                elif self.view == "skins" or self.view == "colors":
+                    # Unselect all the previous ones
+                    self.cur.execute("""
+                                     UPDATE {}
+                                     SET selected = False
+                                     WHERE selected = True
+                                     """.format(f"{self.view}_player"))
+                    # Select current one
+                    self.cur.execute("""
+                                     UPDATE {}
+                                     SET selected = True
+                                     WHERE name = ? AND id = ?
+                                     """.format(f"{self.view}_player"), (item_to_buy[0], self.id))
+                    return f"You selected **{item_to_buy[0]}**!"
+
+            # Check if player has enough credits
+            if (self.credits - item_to_buy[2] < 0):
+                return f"You don't have enough credits. You have **{self.credits}**!"
+            self.credits -= item_to_buy[2]
+            self.cur.execute("""
+                             UPDATE player
+                             SET credits = ?
+                             WHERE id = ?
+                             """, (self.credits, self.id))
+            if self.view == "items":
+                if old_player_data != []:
+                    self.cur.execute("""
+                                    UPDATE {}
+                                    SET amount = amount + 1
+                                    WHERE name = ? AND id = ?
+                                    """.format(f"{self.view}_player"), (item_to_buy[0], self.id))
+                else:
+                    self.cur.execute("""
+                                    INSERT INTO {} (name, id, amount)
+                                    VALUES (?, ?, ?)
+                                    """.format(f"{self.view}_player"), (item_to_buy[0], self.id, 1))
+            elif self.view == "skins" or self.view == "colors":
+                # Unselect all the previous ones
+                self.cur.execute("""
+                                 UPDATE {}
+                                 SET selected = False
+                                 WHERE selected = True
+                                 """.format(f"{self.view}_player"))
+                # Insert and select current one
+                self.cur.execute("""
+                                 INSERT INTO {} (name, id, selected)
+                                 VALUES (?, ?, ?)
+                                 """.format(f"{self.view}_player"), (item_to_buy[0], self.id, True))
+            self.db.commit()
+        except Exception as e:
+            print(e)
+        return f"Succesfully bought **{item_to_buy[0]}**!"
+
+    def make_embed(self, type: str, feedback: str = None) -> discord.Embed:
+        """
+        Return the current shop embed
+
+        Parameters
+        ----------
+        type : str
+            The type of items
+        feedback : str
+            Optional string for feedback
+
+        Returns
+        -------
+        embed : discord.Embed
+            The embed that will be showed
+        """
+        title = f"Shop {type} - Credits: {self.credits}"
+        message = ""
+        try:
+            self.cur.execute("""
+                             SELECT * FROM {}
+                             """.format(type))
+            datas = self.cur.fetchall()
+            self.cur.execute("""
+                             SELECT * FROM {}
+                             WHERE id = ?
+                             """.format(f"{type}_player"), (self.id,))
+            player_datas = self.cur.fetchall()
+            inventory = []
+            selected = None
+            for player_data in player_datas:
+                inventory.append(player_data[0])
+                if type != "items" and player_data[2] == 1:
+                    selected = player_data[0]
+            # Set the page number if necessary
+            if self.page > len(datas) // ELEMENTS_ON_PAGE:
+                self.page = len(datas) // ELEMENTS_ON_PAGE
+            for i, data in enumerate(datas):
+                if i >= self.page * ELEMENTS_ON_PAGE and i < (self.page + 1) * ELEMENTS_ON_PAGE:
+                    rank = i + 1 - self.page * ELEMENTS_ON_PAGE
+                    if selected == data[0]:
+                        message += "*__"
+                    message += f"{rank}: {data[0]} **[{data[3]}]**: {data[2]} credits"
+                    if data[0] in inventory:
+                        # Print amount of checkmarks in case of item
+                        if type == "items":
+                            for _ in range(player_datas[0][2]):
+                                message += "\t :white_check_mark:"
+                        elif selected == data[0]:
+                            message += "\t :white_check_mark: __*"
+                        else:
+                            message += "\t :white_check_mark:"
+                    message += "\n"
+            if feedback:
+                message += feedback
+        except Exception as e:
+            print(e)
+        embed = discord.Embed(title=title, description=message)
+        return embed
+
 
 class Ranking(discord.ui.View):
     def __init__(self, id: int, type: str, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
@@ -380,7 +646,7 @@ class Ranking(discord.ui.View):
 
         Parameters
         ----------
-        interaction : discord.Interaction 
+        interaction : discord.Interaction
             Used to handle button interaction
         button : discord.ui.Button
             Button object
@@ -397,7 +663,7 @@ class Ranking(discord.ui.View):
 
         Parameters
         ----------
-        interaction : discord.Interaction 
+        interaction : discord.Interaction
             Used to handle button interaction
         button : discord.ui.Button
             Button object
@@ -414,7 +680,7 @@ class Ranking(discord.ui.View):
 
         Parameters
         ----------
-        interaction : discord.Interaction 
+        interaction : discord.Interaction
             Used to handle button interaction
         button : discord.ui.Button
             Button object
@@ -436,7 +702,7 @@ class Ranking(discord.ui.View):
 
         Returns
         -------
-        datas : list 
+        datas : list
             Data containing the users information
         title : str
             Title of the embed
@@ -478,7 +744,7 @@ class Ranking(discord.ui.View):
                 self.cur.execute("""
                                  SELECT person, COUNT(*) FROM game
                                  WHERE guesses != "X"
-                                 GROUP BY person 
+                                 GROUP BY person
                                  ORDER BY COUNT(*) DESC
                                  """)
                 datas = self.cur.fetchall()
@@ -501,7 +767,7 @@ class Ranking(discord.ui.View):
 
         Returns
         -------
-        datas : list 
+        datas : list
             Data containing the users information
         title : str
             Title of the embed
@@ -559,13 +825,13 @@ class Ranking(discord.ui.View):
             elif self.type == "games won":
                 self.cur.execute("""
                                     SELECT person, COUNT(*) FROM game
-                                    WHERE guesses != "X" AND 
+                                    WHERE guesses != "X" AND
                                     game.id IN (
                                     SELECT woordle_games.id FROM woordle_games
                                     WHERE strftime("%m", woordle_games.date) = ?
                                         AND strftime("%Y", woordle_games.date) = ?
                                     )
-                                    GROUP BY person 
+                                    GROUP BY person
                                     ORDER BY COUNT(*) DESC
                                     """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
                 datas = self.cur.fetchall()
@@ -582,18 +848,18 @@ class Ranking(discord.ui.View):
                                     ORDER BY AVG(guesses) DESC
                                     """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
                 datas = self.cur.fetchall()
-                currency = "guesses"    
+                currency = "guesses"
             return datas, title, currency
         except Exception as e:
             print(e)
-    
+
     async def make_embed(self, datas: list, title: str, currency: str):
         """
         Make embed for requested stats
 
         Parameters
         ----------
-        datas : list 
+        datas : list
             Data containing the users information
         title : str
             Title of the embed
@@ -616,7 +882,7 @@ class Ranking(discord.ui.View):
                     rank = ":second_place:"
                 elif i == 2:
                     rank = ":third_place:"
-                else: 
+                else:
                     rank = str(i+1)
                 if user == requested_user:
                     message += f"{rank}: **{user.display_name}**: {str(data[1])} {currency}\n"
@@ -626,6 +892,7 @@ class Ranking(discord.ui.View):
             print(e)
         embed = discord.Embed(title=title, description=message)
         return embed
+
 
 # Allows to connect cog to bot
 async def setup(client):
