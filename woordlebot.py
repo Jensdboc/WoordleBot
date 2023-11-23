@@ -421,10 +421,6 @@ def fill_database():
     cur.execute("""
                 INSERT OR IGNORE INTO colors (name, description, cost, rarity)
                 VALUES (?, ?, ?, ?)
-                """, ("Black", "Black", "150", "common"))
-    cur.execute("""
-                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                VALUES (?, ?, ?, ?)
                 """, ("White", "White", "150", "common"))
     cur.execute("""
                 INSERT OR IGNORE INTO colors (name, description, cost, rarity)
