@@ -4,26 +4,25 @@ from typing import Union
 from woordle_game import WoordleGame
 
 
-def check_word(word: str) -> bool:
-    """
-    Check if a given word appears in "woorden.txt"
-
-    Returns
-    -------
-    check : bool
-        Return True if word in file, otherwise False
-    """
-    with open("woorden.txt", 'r') as all_words:
-        words = all_words.read().splitlines()
-        return word.upper() in words
-
-
 class WoordleGames:
     """Class representing the collection of woordle games of a certain date"""
 
     def __init__(self):
         self.games = []
         self.word = None
+
+    def check_word(self, word: str) -> bool:
+        """
+        Check if a given word appears in "woorden.txt"
+
+        Returns
+        -------
+        check : bool
+            Return True if word in file, otherwise False
+        """
+        with open("woorden.txt", 'r') as all_words:
+            words = all_words.read().splitlines()
+            return word.upper() in words
 
     def set_word(self, word: str) -> bool:
         """
@@ -38,7 +37,7 @@ class WoordleGames:
         set : bool
             Return True if succeeded, otherwise False
         """
-        if len(word) == 5 and check_word(word):
+        if len(word) == 5 and self.check_word(word):
             self.word = word
             return True
         else:
