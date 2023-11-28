@@ -393,6 +393,10 @@ def fill_database():
     cur.execute("""
                 INSERT OR IGNORE INTO colors (name, description, cost, rarity)
                 VALUES (?, ?, ?, ?)
+                """, ("Black", "Black", "0", "common"))
+    cur.execute("""
+                INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
                 """, ("Red", "Red", "150", "common"))
     cur.execute("""
                 INSERT OR IGNORE INTO colors (name, description, cost, rarity)
@@ -429,7 +433,7 @@ def fill_database():
     cur.execute("""
                 INSERT OR IGNORE INTO colors (name, description, cost, rarity)
                 VALUES (?, ?, ?, ?)
-                """, ("Random", "Random", "250", "epic"))
+                """, ("Random", "Random", "1000", "legendary"))
 
     # Make sure transaction is ended and changes have been made final
     db.commit()

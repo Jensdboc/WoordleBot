@@ -9,8 +9,17 @@ from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 
 CHANNEL_ID = 1161262990989991936
-RED_COLOR = 0xff0000
-BLACK_COLOR = 0x000000
+COLOR_MAP = {
+    "Red": 0xFF0000,
+    "Green": 0x00FF00,
+    "Yellow": 0xFFFF00,
+    "Orange": 0xFFA500,
+    "Blue": 0x0000FF,
+    "Purple": 0x800080,
+    "Pink": 0xFFC0CB,
+    "White": 0xFFFFFF,
+    "Black": 0x000000
+}
 
 
 class Woordle(commands.Cog):
@@ -32,15 +41,14 @@ class Woordle(commands.Cog):
         self.wordstring = ""
         self.wrong_guesses = 0
         self.counter = int(self.cur.execute("""
-                                       SELECT id FROM woordle_games
-                                       WHERE id = (SELECT max(id) FROM woordle_games)
-                                       """).fetchall()[0][0])
+                                            SELECT id FROM woordle_games
+                                            WHERE id = (SELECT max(id) FROM woordle_games)
+                                            """).fetchall()[0][0])
         self.games.set_word(self.cur.execute("""
-                                        SELECT word FROM woordle_games
-                                        WHERE id = (SELECT max(id) FROM woordle_games)
-                                        """).fetchall()[0][0])
-        # TODO: set player color
-        self.color = BLACK_COLOR
+                                             SELECT word FROM woordle_games
+                                             WHERE id = (SELECT max(id) FROM woordle_games)
+                                             """).fetchall()[0][0])
+        self.color = COLOR_MAP["Black"]
 
         with open("channels.txt", "r") as file:
             lines = file.readlines()
@@ -68,13 +76,13 @@ class Woordle(commands.Cog):
         embed = None
         # Check if the game is private
         if ctx.channel.type != discord.ChannelType.private:
-            embed = discord.Embed(title="Woordle", description="Woops, maybe you should start a game in private!", color=RED_COLOR)
+            embed = discord.Embed(title="Woordle", description="Woops, maybe you should start a game in private!", color=COLOR_MAP["Red"])
         # Check if there is a current word
         elif self.games.word is None:
-            embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=RED_COLOR)
+            embed = discord.Embed(title="Woordle", description="Woops, there is no word yet!", color=COLOR_MAP["Red"])
         # Delete message and check if the guess is valid
         elif guess is None:
-            embed = discord.Embed(title="Woordle", description="Please insert a guess!", color=RED_COLOR)
+            embed = discord.Embed(title="Woordle", description="Please insert a guess!", color=COLOR_MAP["Red"])
         if embed is not None:
             await ctx.send(embed=embed)
         return embed is None
@@ -238,6 +246,28 @@ class Woordle(commands.Cog):
         if not await self.check_valid_guess(ctx, guess):
             return
 
+        # Set color of author
+        color = self.cur.execute("""
+                                 SELECT * FROM colors_player
+                                 WHERE id = ? AND selected = ?
+                                 """, (ctx.author.id, True)).fetchall()
+        # First time the user has ever played a game
+        if color == []:
+            self.cur.execute("""
+                             INSERT INTO colors_player (name, id, selected)
+                             VALUES (?, ?, ?)
+                             """, ("Black", ctx.author.id, True))
+            self.db.commit()
+            self.color = COLOR_MAP["Black"]
+        else:
+            # Handle special colors
+            if color[0][0] == "Your color":
+                self.color = ctx.author.color
+            elif color[0][0] == "Random":
+                self.color = discord.Colour.random()
+            else:
+                self.color = COLOR_MAP[color[0][0]]
+
         # Get woordle_game and check if the game is being played
         woordle_game = self.games.get_woordle_game(ctx.author)
         if woordle_game is None:
@@ -267,10 +297,10 @@ class Woordle(commands.Cog):
                             await channel.send(embed=result_embed)
                     woordle_game.add_row()
             else:
-                embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=RED_COLOR)
+                embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=COLOR_MAP["Red"])
                 await ctx.send(embed=embed)
         elif not woordle_game.playing:
-            embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=RED_COLOR)
+            embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=COLOR_MAP["Red"])
             await ctx.send(embed=embed)
         else:
             # Update board with guess, edit message
@@ -291,7 +321,7 @@ class Woordle(commands.Cog):
         """
         # Check if author is admin
         if ctx.author.id != 656916865364525067:
-            embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=RED_COLOR)
+            embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=COLOR_MAP["Red"])
             await ctx.send(embed=embed)
         else:
             # Clear all games
@@ -315,7 +345,7 @@ class Woordle(commands.Cog):
             Word to set
         """
         if ctx.author.id != 656916865364525067:
-            embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=RED_COLOR)
+            embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=COLOR_MAP["Red"])
             await ctx.send(embed=embed)
         else:
             # Set current word

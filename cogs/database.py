@@ -85,11 +85,6 @@ class Database(commands.Cog):
         id : int
             Id of the user
         """
-        self.cur.execute("""
-                         SELECT FROM colors
-                         WHERE selected = True
-                         """.format(f"{self.view}_player"))
-
 
     def get_skin(self, id: int):
         """
@@ -532,6 +527,7 @@ class Shop(discord.ui.View):
                                      SET selected = True
                                      WHERE name = ? AND id = ?
                                      """.format(f"{self.view}_player"), (item_to_buy[0], self.id))
+                    self.db.commit()
                     return f"You selected **{item_to_buy[0]}**!"
 
             # Check if player has enough credits
