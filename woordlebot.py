@@ -249,7 +249,7 @@ def fill_database():
     cur.execute("""
                 INSERT OR IGNORE INTO achievements (name, description, rarity)
                 VALUES (?, ?, ?)
-                """, ("I don't like yellow", "Win a game with only green pieces", "epic"))
+                """, ("I don't like yellow", "Win a game with only green pieces but not in the first try", "epic"))
     cur.execute("""
                 INSERT OR IGNORE INTO achievements (name, description, rarity)
                 VALUES (?, ?, ?)

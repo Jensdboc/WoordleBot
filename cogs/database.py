@@ -2,11 +2,185 @@ import discord
 import sqlite3
 # import collections
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from discord.ext import commands
 
+from woordle_game import WoordleGame
+
 OWNER_ID = 656916865364525067
+CHANNEL_ID = 1161262990989991936
 ELEMENTS_ON_PAGE = 5
+
+
+def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
+    db = sqlite3.connect("woordle.db")
+    cur = db.cursor()
+    return db, cur
+
+
+def get_amount_of_games(id: int) -> int:
+    db, cur = get_db_and_cur()
+    try:
+        datas = cur.execute("""
+                            SELECT COUNT(*) FROM game
+                            WHERE person = ?
+                            """, (id,)).fetchall()
+        if datas == []:
+            amount = 0
+        else:
+            amount = datas[0][0]
+        return amount
+    except Exception as e:
+        print("Exception in get_amount_of_games: ", e)
+    return 0
+
+
+def get_amount_of_credits(id: int) -> int:
+    db, cur = get_db_and_cur()
+    try:
+        cur.execute("""
+                    SELECT credits FROM player
+                    WHERE id = ?
+                    """, (id,))
+        datas = cur.fetchall()
+
+        if datas == []:
+            credits = 0
+        else:
+            credits = datas[0][0]
+        return credits
+    except Exception as e:
+        print("Exception in get_amount_of_credits: ", e)
+
+
+def get_amount_of_wrong_guesses(id: int) -> int:
+    try:
+        db, cur = get_db_and_cur()
+        datas = cur.execute("""
+                            SELECT SUM(wrong_guesses) FROM game
+                            WHERE person = ?
+                            """, (id,)).fetchall()
+        if datas == []:
+            amount = 0
+        else:
+            amount = datas[0][0]
+        return amount
+    except Exception as e:
+        print("Exception in get_amount_of_wrong_guesses:", e)
+
+
+def get_game_from_today(id: int) -> list:
+    db, cur = get_db_and_cur()
+    try:
+        game = cur.execute("""
+                           SELECT * FROM game
+                           WHERE person = ? and id = (
+                               SELECT MAX(id) FROM game
+                               WHERE person = ?
+                           );
+                           """, (id, id)).fetchall()[0]
+        return game
+    except Exception as e:
+        print("Exception in get_game_from_today: ", e)
+
+
+async def add_achievement(client: discord.Client, name: str, id: int) -> None:
+    db, cur = get_db_and_cur()
+    try:
+        cur.execute("""
+                    INSERT OR IGNORE INTO achievements_player (name, id)
+                    VALUES(?, ?)
+                    """, (name, id))
+        db.commit()
+        if cur.rowcount > 0:
+            description = cur.execute("""
+                                      SELECT description FROM achievements
+                                      WHERE name = ?
+                                      """, (name,)).fetchall()[0][0]
+            embed = discord.Embed(title=f"New achievement unlocked: ***{name}***", description=description)
+            with open("channels.txt", "r") as file:
+                lines = file.readlines()
+                for id in [int(line[:-1]) for line in lines]:
+                    channel = client.get_channel(id)
+                    await channel.send(embed=embed)
+    except Exception as e:
+        print("Exception in add_achievement: ", e)
+
+
+async def check_achievements_after_game(client: discord.Client, id: int, woordlegame: WoordleGame):
+    # Amount of games achievements
+    amount_of_games = get_amount_of_games(id)
+
+    if amount_of_games >= 1:
+        await add_achievement(client, "Beginner", id)
+    if amount_of_games >= 10:
+        await add_achievement(client, "Getting started", id)
+    if amount_of_games >= 50:
+        await add_achievement(client, "Getting there", id)
+    if amount_of_games >= 100:
+        await add_achievement(client, "Getting addicted?", id)
+    if amount_of_games >= 500:
+        await add_achievement(client, "Addicted", id)
+    if amount_of_games >= 1000:
+        await add_achievement(client, "Time to stop", id)
+
+    # TODO: Monthly achievements
+
+    # Special achievements
+    if woordlegame.row == 1:
+        await add_achievement(client, "It's called skill", id)
+    if woordlegame.row == 6:
+        await add_achievement(client, "That was the last chance", id)
+
+    if woordlegame.wrong_guesses >= 100:
+        await add_achievement(client, "Whoops, my finger slipped", id)
+
+    words_in_game = [woordlegame.wordstring[i:i+5] for i in range(0, len(woordlegame.wordstring), 5)]
+    yellow_count = 0
+    green_count = 0
+    for word in words_in_game:
+        for index, letter in enumerate(word):
+            if letter.upper() == woordlegame.word[index].upper():
+                green_count += 1
+            elif letter.upper() in woordlegame.word.upper():
+                yellow_count += 1
+    if not yellow_count and woordlegame.row > 1:
+        await add_achievement(client, "I don't like yellow", id)
+    if green_count == 5:
+        await add_achievement(client, "They said it couldn't be done", id)
+
+    if woordlegame.wrong_guesses == 0:
+        await add_achievement(client, "Mr. Clean", id)
+
+    # General stat achievements
+    amount_of_wrong_guesses = get_amount_of_wrong_guesses(id)
+
+    if amount_of_wrong_guesses[0][0] > 100:
+        add_achievement("Learning from mistakes", id)
+
+    # Timed achievements
+    if datetime.now().month == 12 and datetime.now().day == 25 and not woordlegame.failed:
+        await add_achievement(client, "Merry Christmas!", id)
+    elif datetime.now().month == 4 and datetime.now().day == 1:
+        await add_achievement(client, "Jokes on you", id)
+    if datetime.now().hour < 7:
+        await add_achievement(client, "Early bird", id)
+    elif datetime.now().hour >= 23:
+        await add_achievement(client, "Definitely past your bedtime", id)
+    if woordlegame.time < timedelta(seconds=10):
+        await add_achievement(client, "I'm fast as F boi", id)
+    if woordlegame.time > timedelta(hours=1):
+        await add_achievement("Were you even playing?", id)
+    if woordlegame.time > timedelta(hours=10):
+        await add_achievement(client, "That was on purpose", id)
+
+    # Credit achievements
+    amount_of_credits = get_amount_of_credits(id)
+
+    if amount_of_credits > 500:
+        await add_achievement(client, "Time to spend", id)
+    if amount_of_credits > 10000:
+        await add_achievement(client, "What are you saving them for?", id)
 
 
 class Database(commands.Cog):
@@ -76,177 +250,6 @@ class Database(commands.Cog):
         print(self.cur.fetchall())
         self.cur.close
 
-    def get_color(self, id: int):
-        """
-        Get the selected color of a user
-
-        Parameters
-        ----------
-        id : int
-            Id of the user
-        """
-
-    def get_skin(self, id: int):
-        """
-        Get the selected skin of a user
-
-        Parameters
-        ----------
-        id : int
-            Id of the user
-        """
-
-    # @commands.command()
-    # async def stats(self, ctx: commands.Context, member: discord.Member):
-    #     """
-    #     Send the statistics of a member
-
-    #     Parameters
-    #     ----------
-    #     ctx : commands.Context
-    #         Context the command is represented in
-    #     member : discord.Member
-    #         Member the show the statistics of
-    #     """
-    #     def convert_str_to_time(str: str):
-    #         """
-    #         Converts a string to a float representing time
-
-    #         Parameters
-    #         ----------
-    #         str: str
-    #             String to be converted
-    #         """
-    #         str_split = str.split(":")
-    #         return float(str_split[0])*3600 + float(str_split[1])*60 + float(str_split[2])
-
-    #     def game_won(id: int) -> bool:
-    #         """
-    #         Check if the game was won or not
-
-    #         Parameters
-    #         ----------
-    #         id: int
-    #             ID of game played
-
-    #         Return
-    #         ------
-    #         won : bool
-    #             Returns True if won, else False
-    #         """
-    #         self.cur.execute("""
-    #                          SELECT guesses FROM game
-    #                          WHERE id = ?
-    #                          """, (id,))
-    #         guess = self.cur.fetchall()[0][0]
-    #         return guess != "X"
-
-    #     def longest_streak(ids: list[int]) -> int:
-    #         """
-    #         Return the longest streak of games played
-
-    #         Parameters
-    #         ----------
-    #         ids : list[int]
-    #             List of games played
-
-    #         Return
-    #         ------
-    #         streak : int
-    #             Longest streak of games played
-    #         """
-    #         sorted(ids)
-    #         streaks = []
-    #         start_id = ids[0]
-    #         streak = 1
-    #         for id in ids[1:]:
-    #             if id == start_id + 1:
-    #                 streak += 1
-    #             else:
-    #                 streaks.append(streak)
-    #                 streak = 1
-    #             start_id = id
-    #         streaks.append(streak)
-    #         return max(streaks)
-
-    #     def longest_win_streak(ids: list[int]) -> int:
-    #         """
-    #         Return the longest win streak of games played
-
-    #         Parameters
-    #         ----------
-    #         ids : list[int]
-    #             List of games played
-
-    #         Return
-    #         ------
-    #         streak : int
-    #             Longest win streak of games played
-    #         """
-    #         sorted(ids)
-    #         streaks = []
-    #         first = True
-    #         streak = 0
-    #         start_id = -1
-    #         # Check if the first game has been won or not
-    #         for id in ids:
-    #             if (first or id == start_id + 1) and game_won(id):
-    #                 streak += 1
-    #                 start_id = id
-    #                 first = False
-    #             else:
-    #                 streaks.append(streak)
-    #                 streak = 0
-    #                 first = True
-    #         streaks.append(streak)
-    #         return max(streaks)
-
-    #     if member is None:
-    #         embed = discord.Embed(title="Woordle stats", description="You have to provide a member!", color=ctx.author.color)
-    #         await ctx.send(embed=embed)
-    #         return
-
-    #     self.cur.execute("""
-    #                      SELECT * FROM game
-    #                      WHERE person = ?
-    #                      """, (member.id,))
-    #     datas = self.cur.fetchall()
-    #     game_count = len(datas)
-    #     if game_count == 0:
-    #         embed = discord.Embed(title=f"Woordle stats from {member.display_name}", description="This user hasn't played any games so far!", color=ctx.author.color)
-    #         return
-
-    #     guess_count = 0
-    #     total_time = 0
-    #     all_words = ""
-    #     wrong_guess_count = 0
-    #     fastest_time = None
-    #     ids = []
-    #     game_id = {}
-    #     for data in datas:
-    #         guess_count += data[1] if data[1] != 'X' else 6
-    #         game_time = convert_str_to_time(data[2])
-    #         total_time += game_time
-    #         if fastest_time is None:
-    #             fastest_time = total_time
-    #         elif fastest_time > game_time:
-    #             fastest_time = game_time
-    #         ids.append(data[3])
-    #         all_words += data[4]
-    #         game_id.update({data[3]: data[4]})
-    #         wrong_guess_count += data[5]
-
-    #     message = f"Total games: {str(game_count)}\n"
-    #     message += f"Average number of guesses: {str(round(guess_count/game_count, 3))}\n"
-    #     message += f"Average time of guesses: {str(round(total_time/game_count, 3))} seconds\n"
-    #     message += f"Highest streak: {str(longest_streak(ids))}\n"
-    #     message += f"Highest win streak: {str(longest_win_streak(ids))}\n"
-    #     message += f"Fastest time: {str(fastest_time)} seconds \n"
-    #     message += f"Total wrong guesses: {str(wrong_guess_count)}\n"
-    #     message += f"Favourite letter: {str(collections.Counter(all_words).most_common(1)[0][0])}\n"
-    #     embed = discord.Embed(title=f"Woordle stats {member.display_name}", description=message, color=member.color)
-    #     await ctx.send(embed=embed)
-
     @commands.command(usage="=shop",
                       description="Show which items the user can buy")
     async def shop(self, ctx: commands.Context):
@@ -258,22 +261,9 @@ class Database(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        try:
-            self.cur.execute("""
-                            SELECT credits FROM player
-                            WHERE id = ?
-                            """, (ctx.author.id,))
-            datas = self.cur.fetchall()
-
-            if datas == []:
-                credits = 0
-            else:
-                credits = datas[0][0]
-
-            view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
-            await ctx.reply(view=view)
-        except Exception as e:
-            print(e)
+        credits = get_amount_of_credits(ctx.author.id)
+        view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
+        await ctx.reply(view=view)
 
     @commands.command(usage="=rank <type> <member>",
                       description="""Show the ranking. If no member is provided, show the author itself.""")
@@ -452,35 +442,35 @@ class Shop(discord.ui.View):
 
     @discord.ui.button(label="Buy/Select 1", style=discord.ButtonStyle.blurple, row=2)
     async def one(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE)
+        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE)
         embed = self.make_embed(self.view, feedback)
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 2", style=discord.ButtonStyle.blurple, row=2)
     async def two(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE + 1)
+        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 1)
         embed = self.make_embed(self.view, feedback)
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 3", style=discord.ButtonStyle.blurple, row=2)
     async def three(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE + 2)
+        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 2)
         embed = self.make_embed(self.view, feedback)
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 4", style=discord.ButtonStyle.blurple, row=2)
     async def four(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE + 3)
+        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 3)
         embed = self.make_embed(self.view, feedback)
         await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 5", style=discord.ButtonStyle.blurple, row=2)
     async def five(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = self.buy_item(self.page * ELEMENTS_ON_PAGE + 4)
+        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 4)
         embed = self.make_embed(self.view, feedback)
         await interaction.response.edit_message(embed=embed, view=self)
 
-    def buy_item(self, index: int) -> str:
+    async def buy_item(self, index: int) -> str:
         """
         Update the database when buying an item
 
@@ -532,6 +522,9 @@ class Shop(discord.ui.View):
 
             # Check if player has enough credits
             if (self.credits - item_to_buy[2] < 0):
+                """-----ACHIEVEMENT CHECK-----"""
+                await add_achievement(self.client, "Haaa, poor!", self.id)
+                """-----ACHIEVEMENT CHECK-----"""
                 return f"You don't have enough credits. You have **{self.credits}**!"
             self.credits -= item_to_buy[2]
             self.cur.execute("""

@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
+from cogs.database import check_achievements_after_game
 
 CHANNEL_ID = 1161262990989991936
 COLOR_MAP = {
@@ -111,7 +112,7 @@ class Woordle(commands.Cog):
             await ctx.message.add_reaction("❌")
         return valid
 
-    def show_results_and_push_database(self, ctx: commands.Context, id: int, woordle_game: WoordleGame, failed: bool = False) -> discord.Embed:
+    async def show_results_and_push_database(self, ctx: commands.Context, woordle_game: WoordleGame, failed: bool = False) -> discord.Embed:
         """
         Process WoordleGame information
 
@@ -119,8 +120,6 @@ class Woordle(commands.Cog):
         ----------
         ctx : commands.Context
             Context of the message
-        id : int
-            ID of the player of the WoordleGame
         woordle_game : WoordleGame
             Current woordle game being played
         failed: bool
@@ -131,40 +130,48 @@ class Woordle(commands.Cog):
         embed : discord.Embed
             Ending message of a WoordleGame
         """
-        # Make embed
+        # End WoordleGame
+        woordle_game.wrong_guesses = self.wrong_guesses
+        woordle_game.failed = failed
+        woordle_game.time = timedelta(seconds=(time.time() - woordle_game.timestart))
         woordle_game.stop()
         woordle_game.display_end()
-        timediff = str(timedelta(seconds=(time.time() - woordle_game.timestart)))[:-3]
+
+        # Make embed
         if not failed:
             guesses = str(woordle_game.row)
             xp_gained = 5 if woordle_game.row < 4 else 3
         else:
             guesses = "X"
             xp_gained = 1
-        public_embed = discord.Embed(title=f"Woordle {str(self.counter)} {guesses}/6 by {ctx.author.name}: {timediff}",
+        public_embed = discord.Embed(title=f"Woordle {str(self.counter)} {guesses}/6 by {ctx.author.name}: {str(woordle_game.time)[:-3]}",
                                      description=woordle_game.display_end(), color=self.color)
 
         # Process information
-        cur = self.db.cursor()
-        self.cur.execute("""
+        try:
+            cur = self.db.cursor()
+            self.cur.execute("""
                             SELECT * FROM player
                             WHERE id = ?
-                            """, (id,))
-        player_data = self.cur.fetchall()
+                            """, (ctx.author.id,))
+            player_data = self.cur.fetchall()
 
-        # If player not in the database yet, create player profile
-        if player_data == []:
-            cur.execute("""
-                        INSERT INTO player (id, credits, xp, current_streak)
-                        VALUES (?, ?, ?, ?)
-                        """, (id, "0", "0", "0"))
+            # If player not in the database yet, create player profile
+            if player_data == []:
+                cur.execute("""
+                            INSERT INTO player (id, credits, xp, current_streak)
+                            VALUES (?, ?, ?, ?)
+                            """, (ctx.author.id, "0", "0", "0"))
 
-        # Get current streak to calculate the credits gained
-        # Every 10 streaks increase the multiplier by 5%
-        self.cur.execute("""
+            # Get current streak to calculate the credits gained
+            # Every 10 streaks increase the multiplier by 5%
+            self.cur.execute("""
                             SELECT current_streak FROM player
                             WHERE id = ?
-                            """, (id,))
+                            """, (ctx.author.id,))
+        except Exception as e:
+            print("Exception (1) in updating database after a game: ", e)
+
         if not failed:
             current_streak = self.cur.fetchall()[0][0] + 1
             if current_streak < 10:
@@ -183,30 +190,41 @@ class Woordle(commands.Cog):
         else:
             current_streak = 0
 
-        self.cur.execute("""
-                    UPDATE player
-                    SET credits = credits + ?, xp = xp + ?, current_streak = ?
-                    WHERE id = ?
-                    """, (credits_gained, xp_gained, current_streak, id))
-        self.cur.execute("""
-                    INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (id, guesses, timediff, self.counter, self.wordstring, self.wrong_guesses, credits_gained, xp_gained))
-        self.cur.execute("""
-                    UPDATE woordle_games
-                    SET number_of_people = number_of_people + 1
-                    WHERE id = ?;
-                    """, (str(self.counter),))  # This has to be a a string, can't insert integers
-        self.db.commit()
+        try:
+            self.cur.execute("""
+                             UPDATE player
+                             SET credits = credits + ?, xp = xp + ?, current_streak = ?
+                             WHERE id = ?
+                             """, (credits_gained, xp_gained, current_streak, ctx.author.id))
+            self.cur.execute("""
+                             INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                             """, (ctx.author.id, guesses, str(woordle_game.time)[:-3], self.counter, self.wordstring, self.wrong_guesses, credits_gained, xp_gained))
+            self.cur.execute("""
+                             UPDATE woordle_games
+                             SET number_of_people = number_of_people + 1
+                             WHERE id = ?;
+                             """, (str(self.counter),))  # This has to be a a string, can't insert integers
+        except Exception as e:
+            print("Exception (2) in updating database after a game: ", e)
+
+        """-----ACHIEVEMENT CHECK-----"""
+        await check_achievements_after_game(self.client, ctx.author.id, woordle_game)
+        """-----ACHIEVEMENT CHECK-----"""
+
         return public_embed
 
-    async def update_and_edit_game(self, ctx: commands.Context, guess: str, woordle_game: WoordleGame):
+    async def update_and_edit_game(self, ctx: commands.Context, guess: str, woordle_game: WoordleGame, first: bool):
         woordle_game.update_board(guess, self.client)
         embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=self.color)
         self.wordstring += guess
-        await woordle_game.message.edit(embed=embed)
+        woordle_game.wordstring += guess
+        if first:
+            woordle_game.message = await ctx.send(embed=embed)
+        else:
+            await woordle_game.message.edit(embed=embed)
         if woordle_game.right_guess(guess):
-            result_embed = self.show_results_and_push_database(ctx.author.id)
+            result_embed = await self.show_results_and_push_database(ctx, woordle_game, False)
             for id in self.channel_ids:
                 channel = self.client.get_channel(id)
                 await channel.send(embed=result_embed)
@@ -215,7 +233,7 @@ class Woordle(commands.Cog):
         else:
             embed_private = discord.Embed(title="Woordle", description=f"Better luck next time, the word was {woordle_game.word}!", color=self.color)
             await ctx.send(embed=embed_private)
-            result_embed = self.show_results_and_push_database(ctx.author.id, failed=True)
+            result_embed = await self.show_results_and_push_database(ctx, woordle_game, True)
             for id in self.channel_ids:
                 channel = self.client.get_channel(id)
                 await channel.send(embed=result_embed)
@@ -285,17 +303,7 @@ class Woordle(commands.Cog):
                     embed = discord.Embed(title="Woordle", description=message, color=self.color)
                     await ctx.send(embed=embed)
                 else:
-                    # Update board with guess, create message and add row
-                    woordle_game.update_board(guess, self.client)
-                    embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=self.color)
-                    self.wordstring += guess
-                    woordle_game.message = await ctx.send(embed=embed)
-                    if woordle_game.right_guess(guess):
-                        result_embed = self.show_results_and_push_database(ctx.author.id)
-                        for id in self.channel_ids:
-                            channel = self.client.get_channel(id)
-                            await channel.send(embed=result_embed)
-                    woordle_game.add_row()
+                    await self.update_and_edit_game(ctx, guess, woordle_game, True)
             else:
                 embed = discord.Embed(title="Woordle", description="You have already finished the Woordle!", color=COLOR_MAP["Red"])
                 await ctx.send(embed=embed)
@@ -304,7 +312,7 @@ class Woordle(commands.Cog):
             await ctx.send(embed=embed)
         else:
             # Update board with guess, edit message
-            await self.update_and_edit_game(ctx, guess, woordle_game)
+            await self.update_and_edit_game(ctx, guess, woordle_game, False)
 
     @commands.command(usage="=woordlereset",
                       description="Reset all current wordlegames",

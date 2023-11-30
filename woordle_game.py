@@ -38,6 +38,10 @@ class WoordleGame:
         self.row = 1
         self.playing = True
         self.timestart = time
+        self.wrong_guesses = 0
+        self.wordstring = ""
+        self.failed = True
+        self.time = 0
         self.letters = {"a": ":regional_indicator_a:", "b": ":regional_indicator_b:", "c": ":regional_indicator_c:",
                         "d": ":regional_indicator_d:", "e": ":regional_indicator_e:", "f": ":regional_indicator_f:",
                         "g": ":regional_indicator_g:", "h": ":regional_indicator_h:", "i": ":regional_indicator_i:",
