@@ -25,6 +25,7 @@ def get_amount_of_games(id: int) -> int:
                             SELECT COUNT(*) FROM game
                             WHERE person = ?
                             """, (id,)).fetchall()
+        cur.close()
         if datas == []:
             amount = 0
         else:
@@ -43,7 +44,7 @@ def get_amount_of_credits(id: int) -> int:
                     WHERE id = ?
                     """, (id,))
         datas = cur.fetchall()
-
+        cur.close()
         if datas == []:
             credits = 0
         else:
@@ -60,6 +61,7 @@ def get_amount_of_wrong_guesses(id: int) -> int:
                             SELECT SUM(wrong_guesses) FROM game
                             WHERE person = ?
                             """, (id,)).fetchall()
+        cur.close()
         if datas == []:
             amount = 0
         else:
@@ -79,6 +81,7 @@ def get_game_from_today(id: int) -> list:
                                WHERE person = ?
                            );
                            """, (id, id)).fetchall()[0]
+        cur.close()
         return game
     except Exception as e:
         print("Exception in get_game_from_today: ", e)
@@ -86,6 +89,7 @@ def get_game_from_today(id: int) -> list:
 
 async def add_achievement(client: discord.Client, name: str, id: int) -> None:
     db, cur = get_db_and_cur()
+    user = client.get_user(id)
     try:
         cur.execute("""
                     INSERT OR IGNORE INTO achievements_player (name, id)
@@ -97,12 +101,13 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
                                       SELECT description FROM achievements
                                       WHERE name = ?
                                       """, (name,)).fetchall()[0][0]
-            embed = discord.Embed(title=f"New achievement unlocked: ***{name}***", description=description)
+            embed = discord.Embed(title=f"{user.global_name} unlocked: ***{name}***", description=description)
             with open("channels.txt", "r") as file:
                 lines = file.readlines()
                 for id in [int(line[:-1]) for line in lines]:
                     channel = client.get_channel(id)
                     await channel.send(embed=embed)
+        cur.close()
     except Exception as e:
         print("Exception in add_achievement: ", e)
 
@@ -214,7 +219,7 @@ class Database(commands.Cog):
                          """)
         print("Fetching games")
         print(self.cur.fetchall())
-        self.cur.close
+        self.cur.close()
 
     @commands.command()
     async def get_game(self, ctx: commands.Context):
@@ -231,7 +236,7 @@ class Database(commands.Cog):
                          """)
         print("Fetching game")
         print(self.cur.fetchall())
-        self.cur.close
+        self.cur.close()
 
     @commands.command()
     async def get_player(self, ctx: commands.Context):
@@ -248,7 +253,7 @@ class Database(commands.Cog):
                          """)
         print("Fetching player")
         print(self.cur.fetchall())
-        self.cur.close
+        self.cur.close()
 
     @commands.command(usage="=shop",
                       description="Show which items the user can buy")

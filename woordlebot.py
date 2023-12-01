@@ -468,6 +468,7 @@ cur.execute("""
 
 # Make sure transaction is ended and changes have been made final
 db.commit()
+cur.close()
 
 # # Loads extension
 # @client.command()

@@ -205,6 +205,8 @@ class Woordle(commands.Cog):
                              SET number_of_people = number_of_people + 1
                              WHERE id = ?;
                              """, (str(self.counter),))  # This has to be a a string, can't insert integers
+            self.db.commit()
+            self.cur.close()
         except Exception as e:
             print("Exception (2) in updating database after a game: ", e)
 
