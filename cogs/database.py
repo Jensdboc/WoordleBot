@@ -503,6 +503,10 @@ class Shop(discord.ui.View):
 
             if old_player_data != []:
                 if self.view == "items" and old_player_data[0][2] >= item_to_buy[4]:
+                    if item_to_buy[0] == "Freeze streak":
+                        """-----ACHIEVEMENT CHECK-----"""
+                        await add_achievement(self.client, "Cold as ice", self.id)
+                        """-----ACHIEVEMENT CHECK-----"""
                     return f"You have reached the maximum amount of **{item_to_buy[0]}** already!"
                 elif self.view == "skins" or self.view == "colors":
                     # Unselect all the previous ones
@@ -518,6 +522,10 @@ class Shop(discord.ui.View):
                                      WHERE name = ? AND id = ?
                                      """.format(f"{self.view}_player"), (item_to_buy[0], self.id))
                     self.db.commit()
+                    if self.view == "skins":
+                        """-----ACHIEVEMENT CHECK-----"""
+                        await add_achievement(self.client, "Look how fancy", self.id)
+                        """-----ACHIEVEMENT CHECK-----"""
                     return f"You selected **{item_to_buy[0]}**!"
 
             # Check if player has enough credits
@@ -557,6 +565,10 @@ class Shop(discord.ui.View):
                                  VALUES (?, ?, ?)
                                  """.format(f"{self.view}_player"), (item_to_buy[0], self.id, True))
             self.db.commit()
+
+            """-----ACHIEVEMENT CHECK-----"""
+            await add_achievement(self.client, "Thank you, come again", self.id)
+            """-----ACHIEVEMENT CHECK-----"""
         except Exception as e:
             print(e)
         return f"Succesfully bought **{item_to_buy[0]}**!"
