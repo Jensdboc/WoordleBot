@@ -3,7 +3,7 @@ import sqlite3
 # import collections
 
 from datetime import datetime, timedelta
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from woordle_game import WoordleGame
 
@@ -381,6 +381,12 @@ class Database(commands.Cog):
         except Exception as e:
             await ctx.send(e)
             await ctx.message.add_reaction("❌")
+
+    @tasks.loop(hours=24)
+    async def DateChecker(self):
+        # Check if it is the first day of the month
+        if datetime.now().day == 1:
+            pass
 
 
 class Shop(discord.ui.View):
@@ -809,75 +815,75 @@ class Ranking(discord.ui.View):
             title = f"Top users (monthly) in {self.type}"
             if self.type == "credit":
                 self.cur.execute("""
-                                    SELECT game.person, SUM(game.credits_gained) FROM game
-                                    WHERE game.id IN (
-                                    SELECT woordle_games.id FROM woordle_games
-                                    WHERE strftime("%m", woordle_games.date) = ?
-                                        AND strftime("%Y", woordle_games.date) = ?
-                                    )
-                                    GROUP BY game.person
-                                    ORDER BY SUM(game.credits_gained) DESC
-                                    """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+                                 SELECT game.person, SUM(game.credits_gained) FROM game
+                                 WHERE game.id IN (
+                                 SELECT woordle_games.id FROM woordle_games
+                                 WHERE strftime("%m", woordle_games.date) = ?
+                                     AND strftime("%Y", woordle_games.date) = ?
+                                 )
+                                 GROUP BY game.person
+                                 ORDER BY SUM(game.credits_gained) DESC
+                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
                 datas = self.cur.fetchall()
                 currency = "credits"
             elif self.type == "xp":
                 self.cur.execute("""
-                                    SELECT game.person, SUM(game.xp_gained) FROM game
-                                    WHERE game.id IN (
-                                    SELECT woordle_games.id FROM woordle_games
-                                    WHERE strftime("%m", woordle_games.date) = ?
-                                        AND strftime("%Y", woordle_games.date) = ?
-                                    )
-                                    GROUP BY game.person
-                                    ORDER BY SUM(game.xp_gained) DESC
-                                    """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+                                 SELECT game.person, SUM(game.xp_gained) FROM game
+                                 WHERE game.id IN (
+                                 SELECT woordle_games.id FROM woordle_games
+                                 WHERE strftime("%m", woordle_games.date) = ?
+                                     AND strftime("%Y", woordle_games.date) = ?
+                                 )
+                                 GROUP BY game.person
+                                 ORDER BY SUM(game.xp_gained) DESC
+                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
                 datas = self.cur.fetchall()
                 currency = "xp"
             elif self.type == "current streak":
                 self.cur.execute("""
-                                    SELECT id, current_streak FROM player
-                                    ORDER BY current_streak DESC
-                                    """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+                                 SELECT id, current_streak FROM player
+                                 ORDER BY current_streak DESC
+                                 """)
                 datas = self.cur.fetchall()
                 currency = "days"
             elif self.type == "games played":
                 self.cur.execute("""
-                                    SELECT person, COUNT(*) FROM game
-                                    WHERE game.id IN (
-                                    SELECT woordle_games.id FROM woordle_games
-                                    WHERE strftime("%m", woordle_games.date) = ?
-                                        AND strftime("%Y", woordle_games.date) = ?
-                                    )
-                                    GROUP BY person
-                                    ORDER BY COUNT(*) DESC
-                                    """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+                                 SELECT person, COUNT(*) FROM game
+                                 WHERE game.id IN (
+                                 SELECT woordle_games.id FROM woordle_games
+                                 WHERE strftime("%m", woordle_games.date) = ?
+                                     AND strftime("%Y", woordle_games.date) = ?
+                                 )
+                                 GROUP BY person
+                                 ORDER BY COUNT(*) DESC
+                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
                 datas = self.cur.fetchall()
                 currency = "games"
             elif self.type == "games won":
                 self.cur.execute("""
-                                    SELECT person, COUNT(*) FROM game
-                                    WHERE guesses != "X" AND
-                                    game.id IN (
-                                    SELECT woordle_games.id FROM woordle_games
-                                    WHERE strftime("%m", woordle_games.date) = ?
-                                        AND strftime("%Y", woordle_games.date) = ?
-                                    )
-                                    GROUP BY person
-                                    ORDER BY COUNT(*) DESC
-                                    """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+                                 SELECT person, COUNT(*) FROM game
+                                 WHERE guesses != "X" AND
+                                 game.id IN (
+                                 SELECT woordle_games.id FROM woordle_games
+                                 WHERE strftime("%m", woordle_games.date) = ?
+                                     AND strftime("%Y", woordle_games.date) = ?
+                                 )
+                                 GROUP BY person
+                                 ORDER BY COUNT(*) DESC
+                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
                 datas = self.cur.fetchall()
                 currency = "games"
             elif self.type == "average guesses":
                 self.cur.execute("""
-                                    SELECT person, AVG(guesses) FROM game
-                                    WHERE game.id IN (
-                                    SELECT woordle_games.id FROM woordle_games
-                                    WHERE strftime("%m", woordle_games.date) = ?
-                                        AND strftime("%Y", woordle_games.date) = ?
-                                    )
-                                    GROUP BY person
-                                    ORDER BY AVG(guesses) DESC
-                                    """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+                                 SELECT person, AVG(guesses) FROM game
+                                 WHERE game.id IN (
+                                 SELECT woordle_games.id FROM woordle_games
+                                 WHERE strftime("%m", woordle_games.date) = ?
+                                     AND strftime("%Y", woordle_games.date) = ?
+                                 )
+                                 GROUP BY person
+                                 ORDER BY AVG(guesses) DESC
+                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
                 datas = self.cur.fetchall()
                 currency = "guesses"
             return datas, title, currency
