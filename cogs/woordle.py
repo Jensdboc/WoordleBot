@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
+from cogs.database import UseFreezeStreak
 from access_database import check_achievements_after_game
 
 CHANNEL_ID = 1161262990989991936
@@ -206,9 +207,26 @@ class Woordle(commands.Cog):
                              WHERE id = ?;
                              """, (str(self.counter),))  # This has to be a a string, can't insert integers
             self.db.commit()
-            self.cur.close()
         except Exception as e:
             print("Exception (2) in updating database after a game: ", e)
+
+        # Check if user missed game of yesterday
+        try:
+            datas = self.cur.execute("""
+                             SELECT id from game
+                             WHERE person = ? and id = ?
+                             """, (ctx.author.id, woordle_game.id - 1)).fetchall()
+            self.cur.close()
+        except Exception as e:
+            print("Exception while checking game of yesterday: ", e)
+
+        if datas == []:
+            view = UseFreezeStreak(ctx.author.id, self.db, self.cur, self.client)
+            try:
+                embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?")
+                await ctx.reply(embed=embed, view=view)
+            except Exception as e:
+                print("Exception in sending UseFreezeStreak after a game: ", e)
 
         """-----ACHIEVEMENT CHECK-----"""
         await check_achievements_after_game(self.client, ctx.author.id, woordle_game)

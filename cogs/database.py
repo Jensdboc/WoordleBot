@@ -754,6 +754,69 @@ class Ranking(discord.ui.View):
         return embed
 
 
+class UseFreezeStreak(discord.ui.View):
+    def __init__(self, id: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
+        """
+        Initialize the UseFreezeStreak UI
+
+        Parameters
+        ----------
+        id : int
+            Id of the requested user
+        db : sqlite3.Connection
+            Database with games and player info
+        cur : sqlite3.Cursor
+            Cursor to access the database
+        client : discord.Client
+            Bot itself
+        """
+        super().__init__()
+        self.value = None
+        self.id = id
+        self.db = db
+        self.cur = cur
+        self.client = client
+        self.amount_of_freeze = 0
+        self.buttons_disabled = False
+
+    @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
+    async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """
+        Use a freezestreak
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            Used to handle button interaction
+        button : discord.ui.Button
+            Button object
+        """
+        if not self.buttons_disabled:
+            # TODO:
+            # descrease amount of freeze streaks
+            # implement way of adding fake game to increase the streak
+            embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has been used. {self.amount_of_freeze} freeze streaks left.")
+            await interaction.response.edit_message(embed=embed, view=self)
+            self.buttons_disabled = True
+
+    @discord.ui.button(label="No", style=discord.ButtonStyle.red)
+    async def no(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """
+        Do not use a freezestreak
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            Used to handle button interaction
+        button : discord.ui.Button
+            Button object
+        """
+        if not self.buttons_disabled:
+            embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has not been used. {self.amount_of_freeze} freeze streaks left.")
+            await interaction.response.edit_message(embed=embed, view=self)
+            self.buttons_disabled = True
+
+
 # Allows to connect cog to bot
 async def setup(client):
     await client.add_cog(Database(client))
