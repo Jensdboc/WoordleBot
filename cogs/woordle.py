@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
-from cogs.database import check_achievements_after_game
+from access_database import check_achievements_after_game
 
 CHANNEL_ID = 1161262990989991936
 COLOR_MAP = {
