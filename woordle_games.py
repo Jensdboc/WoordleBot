@@ -20,7 +20,7 @@ class WoordleGames:
         check : bool
             Return True if word in file, otherwise False
         """
-        with open("woorden.txt", 'r') as all_words:
+        with open("data/woorden.txt", 'r') as all_words:
             words = all_words.read().splitlines()
             return word.upper() in words
 

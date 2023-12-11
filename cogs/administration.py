@@ -32,7 +32,7 @@ class Administration(commands.Cog):
             Message to announce
         """
         if ctx.author.id == OWNER_ID:
-            with open("channels.txt", "r") as file:
+            with open("data/channels.txt", "r") as file:
                 lines = file.readlines()
                 channel_ids = [int(line[:-1]) for line in lines]
 
@@ -52,7 +52,7 @@ class Administration(commands.Cog):
                       description="Add a channel to the channels that broadcast WoordleGames")
     async def addchannel(self, ctx: commands.Context, id: int):
         if ctx.author.id == OWNER_ID:
-            with open("channels.txt", "a+") as file:
+            with open("data/channels.txt", "a+") as file:
                 print(id)
                 file.write(str(id) + "\n")
             embed = discord.Embed(title="Woordle", description="The channel has been added succesfully!", color=ctx.author.color)

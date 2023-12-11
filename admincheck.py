@@ -8,8 +8,8 @@ def file_exist(name):
 
 
 def admin_check(ctx):
-    file_exist('Admin.txt')
-    with open('Admin.txt', 'r') as admin_file:
+    file_exist('data/Admin.txt')
+    with open('data/Admin.txt', 'r') as admin_file:
         for admin in admin_file.readlines():
             if str(ctx.message.author.id) == str(admin)[:-1]:
                 return True

@@ -453,7 +453,7 @@ def pick_word() -> str:
     word : str
         Word for the next WoordleGame
     """
-    with open("woorden.txt", 'r') as all_words:
+    with open("data/woorden.txt", 'r') as all_words:
         words = all_words.read().splitlines()
         word = random.choice(words)
     return word
@@ -503,7 +503,7 @@ async def load_extensions():
 
 
 async def main():
-    with open('token_test.txt', 'r') as file:
+    with open('data/token_test.txt', 'r') as file:
         token = file.readline()
         print("Reading token...")
     await load_extensions()

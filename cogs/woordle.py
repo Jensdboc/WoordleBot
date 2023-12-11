@@ -51,7 +51,7 @@ class Woordle(commands.Cog):
                                              """).fetchall()[0][0])
         self.color = COLOR_MAP["Black"]
 
-        with open("channels.txt", "r") as file:
+        with open("data/channels.txt", "r") as file:
             lines = file.readlines()
             self.channel_ids = [int(line[:-1]) for line in lines]
 
@@ -104,7 +104,7 @@ class Woordle(commands.Cog):
         valid : bool
             If the guess is valid or not
         """
-        with open("all_words.txt", 'r') as all_words:
+        with open("data/all_words.txt", 'r') as all_words:
             words = all_words.read().splitlines()
         valid = guess.upper() in words and len(guess) == 5
         if not valid:
@@ -372,7 +372,7 @@ class Woordle(commands.Cog):
         """
         Loop changing the word every 24 hours
         """
-        with open("woorden.txt", 'r') as all_words:
+        with open("data/woorden.txt", 'r') as all_words:
             words = all_words.read().splitlines()
             word = random.choice(words)
             self.games.set_word(word)

@@ -102,7 +102,7 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
                                       WHERE name = ?
                                       """, (name,)).fetchall()[0][0]
             embed = discord.Embed(title=f"{user.global_name} unlocked: ***{name}***", description=description)
-            with open("channels.txt", "r") as file:
+            with open("data/channels.txt", "r") as file:
                 lines = file.readlines()
                 for id in [int(line[:-1]) for line in lines]:
                     channel = client.get_channel(id)
