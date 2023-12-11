@@ -210,17 +210,21 @@ class Woordle(commands.Cog):
         except Exception as e:
             print("Exception (2) in updating database after a game: ", e)
 
-        # Check if user missed game of yesterday
+        # Check if user missed game of yesterday and has played a game two days ago
         try:
-            datas = self.cur.execute("""
-                             SELECT id from game
-                             WHERE person = ? and id = ?
-                             """, (ctx.author.id, woordle_game.id - 1)).fetchall()
+            data_one_day_ago = self.cur.execute("""
+                                                SELECT id from game
+                                                WHERE person = ? and id = ?
+                                                """, (ctx.author.id, woordle_game.id - 1)).fetchall()
+            data_two_days_ago = self.cur.execute("""
+                                                 SELECT id from game
+                                                 WHERE person = ? and id = ?
+                                                 """, (ctx.author.id, woordle_game.id - 2)).fetchall()
             self.cur.close()
         except Exception as e:
             print("Exception while checking game of yesterday: ", e)
 
-        if datas == []:
+        if data_one_day_ago == [] and data_two_days_ago != []:
             view = UseFreezeStreak(ctx.author.id, self.db, self.cur, self.client)
             try:
                 embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?")
