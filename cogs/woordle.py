@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
-from cogs.database import UseFreezeStreak
+from cogs.database import UseFreezeStreak, UseLossStreak
 from access_database import check_achievements_after_game
 
 CHANNEL_ID = 1161262990989991936
@@ -163,18 +163,67 @@ class Woordle(commands.Cog):
                             INSERT INTO player (id, credits, xp, current_streak)
                             VALUES (?, ?, ?, ?)
                             """, (ctx.author.id, "0", "0", "0"))
-
-            # Get current streak to calculate the credits gained
-            # Every 10 streaks increase the multiplier by 5%
-            self.cur.execute("""
-                            SELECT current_streak FROM player
-                            WHERE id = ?
-                            """, (ctx.author.id,))
         except Exception as e:
             print("Exception (1) in updating database after a game: ", e)
 
+        # Check if user has freeze streaks
+        try:
+            datas = self.cur.execute("""
+                                     SELECT amount FROM items_player
+                                     WHERE name = "Freeze streak" AND id = ?
+                                     """, (ctx.author.id,)).fetchall()
+            if datas == []:
+                amount_of_freeze = 0
+            else:
+                amount_of_freeze = datas[0][0]
+        except Exception as e:
+            print("Exception while checking amount of freeze streaks: ", e)
+
+        # Check if user missed game of yesterday and has played a game two days ago
+        # User has to have freeze streaks
+        if amount_of_freeze > 0:
+            try:
+                data_one_day_ago = self.cur.execute("""
+                                                    SELECT id from game
+                                                    WHERE person = ? and id = ?
+                                                    """, (ctx.author.id, woordle_game.id - 1)).fetchall()
+                data_two_days_ago = self.cur.execute("""
+                                                    SELECT id from game
+                                                    WHERE person = ? and id = ?
+                                                    """, (ctx.author.id, woordle_game.id - 2)).fetchall()
+            except Exception as e:
+                print("Exception while checking previous games: ", e)
+
+            if data_one_day_ago == [] and data_two_days_ago != []:
+                view = UseFreezeStreak(ctx.author.id, self.counter, self.db, self.cur, self.client)
+                try:
+                    embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?")
+                    await ctx.reply(embed=embed, view=view)
+                except Exception as e:
+                    print("Exception in sending UseFreezeStreak after a game: ", e)
+
         if not failed:
-            current_streak = self.cur.fetchall()[0][0] + 1
+            try:
+                games_data = self.cur.execute("""
+                                              SELECT * from game
+                                              WHERE person = ?
+                                              """, (ctx.author.id,)).fetchall()
+                if games_data == []:
+                    current_streak = 0
+                else:
+                    current_streak = 1
+                    ids_games = [game_data[3] for game_data in games_data]
+                    sorted(ids_games, reverse=True)
+                    start_id = ids_games[0]
+                    for id in ids_games[1:]:
+                        if id == start_id - 1:
+                            current_streak += 1
+                        else:
+                            pass
+                        start_id = id
+            except Exception as e:
+                print("Exception in calculating currentstreak: ", e)
+
             if current_streak < 10:
                 streak_credits = 0
             elif current_streak > 10 and current_streak < 25:
@@ -189,14 +238,8 @@ class Woordle(commands.Cog):
                 streak_credits = 20
             credits_gained = int(10 * (6 - woordle_game.row) + streak_credits)
         else:
-            current_streak = 0
-
+            credits_gained = 0
         try:
-            self.cur.execute("""
-                             UPDATE player
-                             SET credits = credits + ?, xp = xp + ?, current_streak = ?
-                             WHERE id = ?
-                             """, (credits_gained, xp_gained, current_streak, ctx.author.id))
             self.cur.execute("""
                              INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -208,29 +251,64 @@ class Woordle(commands.Cog):
                              """, (str(self.counter),))  # This has to be a a string, can't insert integers
             self.db.commit()
         except Exception as e:
-            print("Exception (2) in updating database after a game: ", e)
+            print("Exception (3) in updating database after a game: ", e)
 
-        # Check if user missed game of yesterday and has played a game two days ago
+        # Check if user has loss streaks
         try:
-            data_one_day_ago = self.cur.execute("""
-                                                SELECT id from game
-                                                WHERE person = ? and id = ?
-                                                """, (ctx.author.id, woordle_game.id - 1)).fetchall()
-            data_two_days_ago = self.cur.execute("""
-                                                 SELECT id from game
-                                                 WHERE person = ? and id = ?
-                                                 """, (ctx.author.id, woordle_game.id - 2)).fetchall()
-            self.cur.close()
+            datas = self.cur.execute("""
+                                     SELECT amount FROM items_player
+                                     WHERE name = "Loss streak" AND id = ?
+                                     """, (ctx.author.id,)).fetchall()
+            if datas == []:
+                amount_of_loss = 0
+            else:
+                amount_of_loss = datas[0][0]
         except Exception as e:
-            print("Exception while checking game of yesterday: ", e)
+            print("Exception while checking amount of loss streaks: ", e)
 
-        if data_one_day_ago == [] and data_two_days_ago != []:
-            view = UseFreezeStreak(ctx.author.id, self.db, self.cur, self.client)
+        # User has to have loss streaks
+        if amount_of_loss > 0:
+            view = UseLossStreak(ctx.author.id, str(woordle_game.time)[:-3], self.counter, self.wordstring,
+                                 woordle_game.wrong_guesses, credits_gained, xp_gained,
+                                 self.db, self.cur, self.client)
             try:
-                embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?")
+                embed = discord.Embed(title=f"Better luck next time, the word was {woordle_game.word}!", description="Do you want to use a loss streak?")
                 await ctx.reply(embed=embed, view=view)
             except Exception as e:
-                print("Exception in sending UseFreezeStreak after a game: ", e)
+                print("Exception in sending UseLossStreak after a game: ", e)
+
+        # Recalculate and update currentstreak
+        try:
+            games_data = self.cur.execute("""
+                                          SELECT * from game
+                                          WHERE person = ?
+                                          """, (ctx.author.id,)).fetchall()
+            if games_data == []:
+                current_streak = 0
+            else:
+                current_streak = 1
+                ids_games = [game_data[3] for game_data in games_data]
+                sorted(ids_games, reverse=True)
+                start_id = ids_games[0]
+                for id in ids_games[1:]:
+                    if id == start_id - 1:
+                        current_streak += 1
+                    else:
+                        pass
+                    start_id = id
+        except Exception as e:
+            print("Exception in calculating currentstreak: ", e)
+
+        # Update player entry
+        try:
+            self.cur.execute("""
+                             UPDATE player
+                             SET credits = credits + ?, xp = xp + ?, current_streak = ?
+                             WHERE id = ?
+                             """, (credits_gained, xp_gained, current_streak, ctx.author.id))
+            self.db.commit()
+        except Exception as e:
+            print("Exception in updating player after a game: ", e)
 
         """-----ACHIEVEMENT CHECK-----"""
         await check_achievements_after_game(self.client, ctx.author.id, woordle_game)
@@ -255,8 +333,6 @@ class Woordle(commands.Cog):
         elif woordle_game.row < 6:
             woordle_game.add_row()
         else:
-            embed_private = discord.Embed(title="Woordle", description=f"Better luck next time, the word was {woordle_game.word}!", color=self.color)
-            await ctx.send(embed=embed_private)
             result_embed = await self.show_results_and_push_database(ctx, woordle_game, True)
             for id in self.channel_ids:
                 channel = self.client.get_channel(id)

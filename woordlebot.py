@@ -387,7 +387,11 @@ def fill_database():
     cur.execute("""
                 INSERT OR IGNORE INTO items (name, description, cost, rarity, max)
                 VALUES (?, ?, ?, ?, ?)
-                """, ("Freeze streak", "Keep your streak when missing a day", "250", "common", "2"))
+                """, ("Freeze streak", "Keep your streak when missing a day", "250", "rare", "2"))
+    cur.execute("""
+                INSERT OR IGNORE INTO items (name, description, cost, rarity, max)
+                VALUES (?, ?, ?, ?, ?)
+                """, ("Loss streak", "Keep your streak when losing a game", "150", "common", "2"))
 
     # Colors
     cur.execute("""

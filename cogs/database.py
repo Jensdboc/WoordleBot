@@ -1,7 +1,7 @@
 import discord
 import sqlite3
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from discord.ext import commands, tasks
 
 import access_database
@@ -26,6 +26,16 @@ class Database(commands.Cog):
         self.client = client
         self.db = sqlite3.connect("woordle.db")
         self.cur = self.db.cursor()
+
+    @commands.command()
+    async def freeze(self, ctx):
+        test_counter = 10
+        view = UseFreezeStreak(ctx.author.id, test_counter, self.db, self.cur, self.client)
+        try:
+            embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?")
+            await ctx.reply(embed=embed, view=view)
+        except Exception as e:
+            print("Exception in sending UseFreezeStreak after a game: ", e)
 
     @commands.command()
     async def get_games(self, ctx: commands.Context):
@@ -453,7 +463,7 @@ class Shop(discord.ui.View):
                     if data[0] in inventory:
                         # Print amount of checkmarks in case of item
                         if type == "items":
-                            for _ in range(player_datas[0][2]):
+                            for _ in range(player_datas[i][2]):
                                 message += "\t :white_check_mark:"
                         elif selected == data[0]:
                             message += "\t :white_check_mark: __*"
@@ -755,7 +765,7 @@ class Ranking(discord.ui.View):
 
 
 class UseFreezeStreak(discord.ui.View):
-    def __init__(self, id: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
+    def __init__(self, id: int, counter: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
         """
         Initialize the UseFreezeStreak UI
 
@@ -763,6 +773,8 @@ class UseFreezeStreak(discord.ui.View):
         ----------
         id : int
             Id of the requested user
+        counter : int
+            Id of current WoordleGame
         db : sqlite3.Connection
             Database with games and player info
         cur : sqlite3.Cursor
@@ -773,10 +785,21 @@ class UseFreezeStreak(discord.ui.View):
         super().__init__()
         self.value = None
         self.id = id
+        self.counter = counter
         self.db = db
         self.cur = cur
         self.client = client
-        self.amount_of_freeze = 0
+        try:
+            datas = self.cur.execute("""
+                                     SELECT amount FROM items_player
+                                     WHERE name = "Freeze streak" AND id = ?
+                                     """, (self.id,)).fetchall()
+            if datas == []:
+                self.amount_of_freeze = 0
+            else:
+                self.amount_of_freeze = datas[0][0]
+        except Exception as e:
+            print("Exception in UseFreezeStreak: ", e)
         self.buttons_disabled = False
 
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
@@ -792,10 +815,31 @@ class UseFreezeStreak(discord.ui.View):
             Button object
         """
         if not self.buttons_disabled:
-            # TODO:
             # descrease amount of freeze streaks
-            # implement way of adding fake game to increase the streak
-            embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has been used. {self.amount_of_freeze} freeze streaks left.")
+            try:
+                self.cur.execute("""
+                                 UPDATE items_player
+                                 SET amount = amount - 1
+                                 WHERE name = "Freeze streak" AND id = ?
+                                 """, (self.id, ))
+                self.db.commit()
+                self.amount_of_freeze -= 1
+            except Exception as e:
+                print("Exception in lowering amount of freeze streaks: ", e)
+            # Add fake freeze game with guesses field equal to FREEZE
+            try:
+                self.cur.execute("""
+                                 INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
+                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                 """, (self.id, "FREEZE", "99:99:99.999", self.counter - 1, "", 0, 0, 0))
+                self.db.commit()
+            except Exception as e:
+                print("Exception in adding freeze game: ", e)
+
+            if self.amount_of_freeze == 1:
+                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has been used. {self.amount_of_freeze} freeze streak left.")
+            else:
+                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has been used. {self.amount_of_freeze} freeze streaks left.")
             await interaction.response.edit_message(embed=embed, view=self)
             self.buttons_disabled = True
 
@@ -812,7 +856,132 @@ class UseFreezeStreak(discord.ui.View):
             Button object
         """
         if not self.buttons_disabled:
-            embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has not been used. {self.amount_of_freeze} freeze streaks left.")
+            if self.amount_of_freeze == 1:
+                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has not been used. {self.amount_of_freeze} freeze streak left.")
+            else:
+                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has not been used. {self.amount_of_freeze} freeze streaks left.")
+            await interaction.response.edit_message(embed=embed, view=self)
+            self.buttons_disabled = True
+
+
+class UseLossStreak(discord.ui.View):
+    def __init__(self, id: int, timediff: timedelta, counter: int, wordstring: str,
+                 wrong_guesses: int, credits_gained: int, xp_gained: int,
+                 db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
+        """
+        Initialize the UseFreezeStreak UI
+
+        Parameters
+        ----------
+        id : int
+            Id of the requested user
+        timediff : str
+            Timediff to be inserted
+        counter : str
+            Counter to be inserted
+        wordstring : str
+            Wordstring to be inserted
+        wrong_guesses : str
+            Wrong_guesses to be inserted
+        credits_gained : int
+            Credits_gained to be inserted
+        xp_gained : int
+            Xp_gained to be inserted
+        db : sqlite3.Connection
+            Database with games and player info
+        cur : sqlite3.Cursor
+            Cursor to access the database
+        client : discord.Client
+            Bot itself
+        """
+        super().__init__()
+        self.value = None
+        self.id = id
+        self.timediff = timediff
+        self.counter = counter
+        self.wordstring = wordstring
+        self.wrong_guesses = wrong_guesses
+        self.credits_gained = credits_gained
+        self.xp_gained = xp_gained
+        self.db = db
+        self.cur = cur
+        self.client = client
+        try:
+            datas = self.cur.execute("""
+                                     SELECT amount FROM items_player
+                                     WHERE name = "Loss streak" AND id = ?
+                                     """, (self.id,)).fetchall()
+            if datas == []:
+                self.amount_of_loss = 0
+            else:
+                self.amount_of_loss = datas[0][0]
+        except Exception as e:
+            print("Exception in UseLossStreak: ", e)
+        self.buttons_disabled = False
+
+    @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
+    async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """
+        Use a lossstreak
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            Used to handle button interaction
+        button : discord.ui.Button
+            Button object
+        """
+        if not self.buttons_disabled:
+            # descrease amount of freeze streaks
+            try:
+                self.cur.execute("""
+                                 UPDATE items_player
+                                 SET amount = amount - 1
+                                 WHERE name = "Loss streak" AND id = ?
+                                 """, (self.id, ))
+                self.db.commit()
+                self.amount_of_loss -= 1
+            except Exception as e:
+                print("Exception in lowering amount of loss streaks: ", e)
+            # Change guess field to LOSS
+            try:
+                self.cur.execute("""
+                                 UPDATE game
+                                 SET guesses = "LOSS"
+                                 WHERE person = ? and id = ?
+                                 """, (self.id, self.counter))
+                # self.cur.execute("""
+                #                  INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
+                #                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                #                  """, (self.id, "XX", self.timediff, self.counter, self.wordstring, self.wrong_guesses, self.credits_gained, self.xp_gained))
+                self.db.commit()
+            except Exception as e:
+                print("Exception in adding loss game: ", e)
+
+            if self.amount_of_loss == 1:
+                embed = discord.Embed(title="Loss streak", description=f"Loss streak has been used. {self.amount_of_loss} loss streak left.")
+            else:
+                embed = discord.Embed(title="Loss streak", description=f"Loss streak has been used. {self.amount_of_loss} loss streaks left.")
+            await interaction.response.edit_message(embed=embed, view=self)
+            self.buttons_disabled = True
+
+    @discord.ui.button(label="No", style=discord.ButtonStyle.red)
+    async def no(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """
+        Do not use a lossstreak
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            Used to handle button interaction
+        button : discord.ui.Button
+            Button object
+        """
+        if not self.buttons_disabled:
+            if self.amount_of_loss == 1:
+                embed = discord.Embed(title="Loss streak", description=f"Loss streak has not been used. {self.amount_of_loss} loss streak left.")
+            else:
+                embed = discord.Embed(title="Loss streak", description=f"Loss streak has not been used. {self.amount_of_loss} loss streaks left.")
             await interaction.response.edit_message(embed=embed, view=self)
             self.buttons_disabled = True
 
