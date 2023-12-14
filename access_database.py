@@ -142,12 +142,12 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
                 green_count += 1
             elif letter.upper() in woordlegame.word.upper():
                 yellow_count += 1
-    if not yellow_count and woordlegame.row > 1:
+    if not yellow_count and woordlegame.row > 1 and not woordlegame.failed:
         await add_achievement(client, "I don't like yellow", id)
-    if green_count == 5:
+    if green_count == 5 and not woordlegame.failed:
         await add_achievement(client, "They said it couldn't be done", id)
 
-    if woordlegame.wrong_guesses == 0:
+    if woordlegame.wrong_guesses == 0 and not woordlegame.failed:
         await add_achievement(client, "Mr. Clean", id)
 
     # General stat achievements
@@ -164,7 +164,7 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
         await add_achievement(client, "Early bird", id)
     elif datetime.now().hour >= 23:
         await add_achievement(client, "Definitely past your bedtime", id)
-    if woordlegame.time < timedelta(seconds=10):
+    if woordlegame.time < timedelta(seconds=10) and not woordlegame.failed:
         await add_achievement(client, "I'm fast as F boi", id)
     if woordlegame.time > timedelta(hours=1):
         await add_achievement("Were you even playing?", id)
