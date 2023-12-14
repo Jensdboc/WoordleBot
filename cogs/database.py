@@ -865,8 +865,7 @@ class UseFreezeStreak(discord.ui.View):
 
 
 class UseLossStreak(discord.ui.View):
-    def __init__(self, id: int, timediff: timedelta, counter: int, wordstring: str,
-                 wrong_guesses: int, credits_gained: int, xp_gained: int,
+    def __init__(self, id: int, counter: int, word: str,
                  db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
         """
         Initialize the UseFreezeStreak UI
@@ -875,18 +874,8 @@ class UseLossStreak(discord.ui.View):
         ----------
         id : int
             Id of the requested user
-        timediff : str
-            Timediff to be inserted
         counter : str
             Counter to be inserted
-        wordstring : str
-            Wordstring to be inserted
-        wrong_guesses : str
-            Wrong_guesses to be inserted
-        credits_gained : int
-            Credits_gained to be inserted
-        xp_gained : int
-            Xp_gained to be inserted
         db : sqlite3.Connection
             Database with games and player info
         cur : sqlite3.Cursor
@@ -897,12 +886,8 @@ class UseLossStreak(discord.ui.View):
         super().__init__()
         self.value = None
         self.id = id
-        self.timediff = timediff
         self.counter = counter
-        self.wordstring = wordstring
-        self.wrong_guesses = wrong_guesses
-        self.credits_gained = credits_gained
-        self.xp_gained = xp_gained
+        self.word = word
         self.db = db
         self.cur = cur
         self.client = client
@@ -950,18 +935,14 @@ class UseLossStreak(discord.ui.View):
                                  SET guesses = "LOSS"
                                  WHERE person = ? and id = ?
                                  """, (self.id, self.counter))
-                # self.cur.execute("""
-                #                  INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
-                #                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                #                  """, (self.id, "XX", self.timediff, self.counter, self.wordstring, self.wrong_guesses, self.credits_gained, self.xp_gained))
                 self.db.commit()
             except Exception as e:
                 print("Exception in adding loss game: ", e)
 
             if self.amount_of_loss == 1:
-                embed = discord.Embed(title="Loss streak", description=f"Loss streak has been used. {self.amount_of_loss} loss streak left.")
+                embed = discord.Embed(title=f"Better luck next time, the word was {self.word}!", description=f"Loss streak has been used. {self.amount_of_loss} loss streak left.")
             else:
-                embed = discord.Embed(title="Loss streak", description=f"Loss streak has been used. {self.amount_of_loss} loss streaks left.")
+                embed = discord.Embed(title=f"Better luck next time, the word was {self.word}!", description=f"Loss streak has been used. {self.amount_of_loss} loss streaks left.")
             await interaction.response.edit_message(embed=embed, view=self)
             self.buttons_disabled = True
 
@@ -979,9 +960,9 @@ class UseLossStreak(discord.ui.View):
         """
         if not self.buttons_disabled:
             if self.amount_of_loss == 1:
-                embed = discord.Embed(title="Loss streak", description=f"Loss streak has not been used. {self.amount_of_loss} loss streak left.")
+                embed = discord.Embed(title=f"Better luck next time, the word was {self.word}!", description=f"Loss streak has not been used. {self.amount_of_loss} loss streak left.")
             else:
-                embed = discord.Embed(title="Loss streak", description=f"Loss streak has not been used. {self.amount_of_loss} loss streaks left.")
+                embed = discord.Embed(title=f"Better luck next time, the word was {self.word}!", description=f"Loss streak has not been used. {self.amount_of_loss} loss streaks left.")
             await interaction.response.edit_message(embed=embed, view=self)
             self.buttons_disabled = True
 

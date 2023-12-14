@@ -268,9 +268,7 @@ class Woordle(commands.Cog):
 
         # User has to have loss streaks
         if amount_of_loss > 0:
-            view = UseLossStreak(ctx.author.id, str(woordle_game.time)[:-3], self.counter, self.wordstring,
-                                 woordle_game.wrong_guesses, credits_gained, xp_gained,
-                                 self.db, self.cur, self.client)
+            view = UseLossStreak(ctx.author.id, self.counter, woordle_game.word, self.db, self.cur, self.client)
             try:
                 embed = discord.Embed(title=f"Better luck next time, the word was {woordle_game.word}!", description="Do you want to use a loss streak?")
                 await ctx.reply(embed=embed, view=view)
