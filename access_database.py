@@ -83,6 +83,8 @@ def get_game_from_today(id: int) -> list:
 async def add_achievement(client: discord.Client, name: str, id: int) -> None:
     db, cur = get_db_and_cur()
     user = client.get_user(id)
+    with open("prints.txt", "a") as out:
+        out.write(f"{name}\n")
     try:
         cur.execute("""
                     INSERT OR IGNORE INTO achievements_player (name, id)
@@ -97,8 +99,9 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
             embed = discord.Embed(title=f"{user.global_name} unlocked: ***{name}***", description=description)
             with open("data/channels.txt", "r") as file:
                 lines = file.readlines()
+                with open("prints.txt", "a") as out:
+                    out.write(f"{lines}\n")
                 for id in [int(line[:-1]) for line in lines]:
-                    print(id)
                     with open("prints.txt", "a") as out:
                         out.write(f"{id}\n")
                     channel = client.get_channel(id)
