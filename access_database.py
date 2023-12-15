@@ -100,7 +100,7 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
                                       """, (name,)).fetchall()[0][0]
             with open("prints.txt", "a") as out:
                 out.write(f"{cur.description}\n")
-            embed = discord.Embed(title=f"{user.global_name} unlocked: ***{name}***", description=description)
+            embed = discord.Embed(title=f"{user.display_name} unlocked: ***{name}***", description=description)
             with open("data/channels.txt", "r") as file:
                 lines = file.readlines()
                 with open("prints.txt", "a") as out:
