@@ -91,11 +91,15 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
                     VALUES(?, ?)
                     """, (name, id))
         db.commit()
+        with open("prints.txt", "a") as out:
+            out.write(f"{cur.rowcount}\n")
         if cur.rowcount > 0:
             description = cur.execute("""
                                       SELECT description FROM achievements
                                       WHERE name = ?
                                       """, (name,)).fetchall()[0][0]
+            with open("prints.txt", "a") as out:
+                out.write(f"{cur.description}\n")
             embed = discord.Embed(title=f"{user.global_name} unlocked: ***{name}***", description=description)
             with open("data/channels.txt", "r") as file:
                 lines = file.readlines()
@@ -109,6 +113,8 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
         cur.close()
     except Exception as e:
         print("Exception in add_achievement: ", e)
+        with open("prints.txt", "a") as out:
+            out.write(f"Exception in add_achievement: , {e}\n")
 
 
 async def check_achievements_after_game(client: discord.Client, id: int, woordlegame: WoordleGame):
