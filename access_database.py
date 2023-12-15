@@ -98,6 +98,7 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
             with open("data/channels.txt", "r") as file:
                 lines = file.readlines()
                 for id in [int(line[:-1]) for line in lines]:
+                    print(id)
                     channel = client.get_channel(id)
                     await channel.send(embed=embed)
         cur.close()
