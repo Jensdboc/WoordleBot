@@ -510,6 +510,8 @@ async def main():
     with open('data/token_test.txt', 'r') as file:
         token = file.readline()
         print("Reading token...")
+        with open("prints.txt", "w") as out:
+            out.write("Reading token...\n")
     await load_extensions()
     await client.start(token)
 

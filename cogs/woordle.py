@@ -58,6 +58,8 @@ class Woordle(commands.Cog):
 
         print("Counter: ", self.counter)
         print("Word: ", self.games.word)
+        with open("prints.txt", "a") as out:
+            out.write(f"{self.games.word}\n")
 
     async def check_valid_game(self, ctx: commands.Context, guess: str) -> bool:
         """
