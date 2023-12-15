@@ -53,7 +53,6 @@ class Administration(commands.Cog):
     async def addchannel(self, ctx: commands.Context, id: int):
         if ctx.author.id == OWNER_ID:
             with open("data/channels.txt", "a+") as file:
-                print(id)
                 file.write(str(id) + "\n")
             embed = discord.Embed(title="Woordle", description="The channel has been added succesfully!", color=ctx.author.color)
             await ctx.send(embed=embed)

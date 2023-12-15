@@ -1,4 +1,5 @@
 __pycache__
-*.txt
+token.txt
+token_test.txt
 *.db*
 *.sqlite
