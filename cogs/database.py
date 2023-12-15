@@ -178,15 +178,15 @@ class Database(commands.Cog):
                 await ctx.send(e)
             try:
                 self.cur.execute("""
-                                SELECT * FROM player
-                                WHERE id = ?
-                                """, (id,))
+                                 SELECT * FROM player
+                                 WHERE id = ?
+                                 """, (id,))
                 player_data = self.cur.fetchall()
                 if player_data == []:
                     self.cur.execute("""
-                                INSERT INTO player (id, credits, xp, current_streak)
-                                VALUES (?, ?, ?, ?)
-                                """, (id, "0", "0", "0"))
+                                     INSERT INTO player (id, credits, xp, current_streak)
+                                     VALUES (?, ?, ?, ?)
+                                     """, (id, "0", "0", "0"))
             except Exception as e:
                 await ctx.send(e)
             try:

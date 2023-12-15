@@ -152,7 +152,6 @@ class Woordle(commands.Cog):
 
         # Process information
         try:
-            cur = self.db.cursor()
             self.cur.execute("""
                             SELECT * FROM player
                             WHERE id = ?
@@ -161,10 +160,11 @@ class Woordle(commands.Cog):
 
             # If player not in the database yet, create player profile
             if player_data == []:
-                cur.execute("""
+                self.cur.execute("""
                             INSERT INTO player (id, credits, xp, current_streak)
                             VALUES (?, ?, ?, ?)
                             """, (ctx.author.id, "0", "0", "0"))
+                self.db.commit()
         except Exception as e:
             print("Exception (1) in updating database after a game: ", e)
 
