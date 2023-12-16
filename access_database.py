@@ -3,6 +3,7 @@ import sqlite3
 
 from datetime import datetime, timedelta
 from woordle_game import WoordleGame
+from constants import COLOR_MAP
 
 
 def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
@@ -190,3 +191,30 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
         await add_achievement(client, "Time to spend", id)
     if amount_of_credits > 10000:
         await add_achievement(client, "What are you saving them for?", id)
+
+
+def get_user_color(client: discord.Client, id: int) -> int:
+    db, cur = get_db_and_cur()
+    # Set color of author
+    datas = cur.execute("""
+                        SELECT * FROM colors_player
+                        WHERE id = ? AND selected = ?
+                        """, (id, True)).fetchall()
+    # First time the user has ever played a game
+    if datas == []:
+        cur.execute("""
+                    INSERT INTO colors_player (name, id, selected)
+                    VALUES (?, ?, ?)
+                    """, ("Black", id, True))
+        db.commit()
+        color = COLOR_MAP["Black"]
+    else:
+        # Handle special colors
+        if datas[0][0] == "Your color":
+            user = client.get_user(id)
+            color = user.color
+        elif datas[0][0] == "Random":
+            color = discord.Colour.random()
+        else:
+            color = COLOR_MAP[datas[0][0]]
+    return color

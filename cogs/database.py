@@ -31,8 +31,9 @@ class Database(commands.Cog):
     async def freeze(self, ctx):
         test_counter = 10
         view = UseFreezeStreak(ctx.author.id, test_counter, self.db, self.cur, self.client)
+        color = access_database.get_user_color(self.client, ctx.author.id)
         try:
-            embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?")
+            embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?", color=color)
             await ctx.reply(embed=embed, view=view)
         except Exception as e:
             print("Exception in sending UseFreezeStreak after a game: ", e)
@@ -249,6 +250,7 @@ class Shop(discord.ui.View):
         self.client = client
         self.view = None
         self.page = 0
+        self.color = access_database.get_user_color(self.client, self.id)
 
     @discord.ui.button(label="Skins", style=discord.ButtonStyle.blurple, row=1)
     async def skin(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -474,7 +476,7 @@ class Shop(discord.ui.View):
                 message += feedback
         except Exception as e:
             print(e)
-        embed = discord.Embed(title=title, description=message)
+        embed = discord.Embed(title=title, description=message, color=self.color)
         return embed
 
 
@@ -508,6 +510,7 @@ class Ranking(discord.ui.View):
         for index, type in enumerate(self.list):
             if self.type == type:
                 self.index = index
+        self.color = access_database.get_user_color(self.client, self.id)
 
     @discord.ui.button(label="All time", style=discord.ButtonStyle.blurple)
     async def all(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -760,7 +763,7 @@ class Ranking(discord.ui.View):
                     message += f"{rank}: {user.display_name}: {str(data[1])} {currency}\n"
         except Exception as e:
             print(e)
-        embed = discord.Embed(title=title, description=message)
+        embed = discord.Embed(title=title, description=message, color=self.color)
         return embed
 
 
@@ -801,6 +804,7 @@ class UseFreezeStreak(discord.ui.View):
         except Exception as e:
             print("Exception in UseFreezeStreak: ", e)
         self.buttons_disabled = False
+        self.color = access_database.get_user_color(self.client, self.id)
 
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
     async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -837,9 +841,9 @@ class UseFreezeStreak(discord.ui.View):
                 print("Exception in adding freeze game: ", e)
 
             if self.amount_of_freeze == 1:
-                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has been used. {self.amount_of_freeze} freeze streak left.")
+                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has been used. {self.amount_of_freeze} freeze streak left.", color=self.color)
             else:
-                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has been used. {self.amount_of_freeze} freeze streaks left.")
+                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has been used. {self.amount_of_freeze} freeze streaks left.", color=self.color)
             await interaction.response.edit_message(embed=embed, view=self)
             self.buttons_disabled = True
 
@@ -857,9 +861,9 @@ class UseFreezeStreak(discord.ui.View):
         """
         if not self.buttons_disabled:
             if self.amount_of_freeze == 1:
-                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has not been used. {self.amount_of_freeze} freeze streak left.")
+                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has not been used. {self.amount_of_freeze} freeze streak left.", color=self.color)
             else:
-                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has not been used. {self.amount_of_freeze} freeze streaks left.")
+                embed = discord.Embed(title="Freeze streak", description=f"Freeze streak has not been used. {self.amount_of_freeze} freeze streaks left.", color=self.color)
             await interaction.response.edit_message(embed=embed, view=self)
             self.buttons_disabled = True
 
@@ -903,6 +907,7 @@ class UseLossStreak(discord.ui.View):
         except Exception as e:
             print("Exception in UseLossStreak: ", e)
         self.buttons_disabled = False
+        self.color = access_database.get_user_color(self.client, self.id)
 
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
     async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -960,9 +965,11 @@ class UseLossStreak(discord.ui.View):
         """
         if not self.buttons_disabled:
             if self.amount_of_loss == 1:
-                embed = discord.Embed(title=f"Better luck next time, the word was {self.word}!", description=f"Loss streak has not been used. {self.amount_of_loss} loss streak left.")
+                embed = discord.Embed(title=f"Better luck next time, the word was {self.word}!",
+                                      description=f"Loss streak has not been used. {self.amount_of_loss} loss streak left.", color=self.color)
             else:
-                embed = discord.Embed(title=f"Better luck next time, the word was {self.word}!", description=f"Loss streak has not been used. {self.amount_of_loss} loss streaks left.")
+                embed = discord.Embed(title=f"Better luck next time, the word was {self.word}!",
+                                      description=f"Loss streak has not been used. {self.amount_of_loss} loss streaks left.", color=self.color)
             await interaction.response.edit_message(embed=embed, view=self)
             self.buttons_disabled = True
 

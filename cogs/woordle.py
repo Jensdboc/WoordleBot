@@ -8,20 +8,8 @@ from datetime import timedelta
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 from cogs.database import UseFreezeStreak, UseLossStreak
-from access_database import check_achievements_after_game
-
-CHANNEL_ID = 1161262990989991936
-COLOR_MAP = {
-    "Red": 0xFF0000,
-    "Green": 0x00FF00,
-    "Yellow": 0xFFFF00,
-    "Orange": 0xFFA500,
-    "Blue": 0x0000FF,
-    "Purple": 0x800080,
-    "Pink": 0xFFC0CB,
-    "White": 0xFFFFFF,
-    "Black": 0x000000
-}
+from access_database import check_achievements_after_game, get_user_color
+from constants import COLOR_MAP
 
 
 class Woordle(commands.Cog):
@@ -364,27 +352,7 @@ class Woordle(commands.Cog):
         if not await self.check_valid_guess(ctx, guess):
             return
 
-        # Set color of author
-        color = self.cur.execute("""
-                                 SELECT * FROM colors_player
-                                 WHERE id = ? AND selected = ?
-                                 """, (ctx.author.id, True)).fetchall()
-        # First time the user has ever played a game
-        if color == []:
-            self.cur.execute("""
-                             INSERT INTO colors_player (name, id, selected)
-                             VALUES (?, ?, ?)
-                             """, ("Black", ctx.author.id, True))
-            self.db.commit()
-            self.color = COLOR_MAP["Black"]
-        else:
-            # Handle special colors
-            if color[0][0] == "Your color":
-                self.color = ctx.author.color
-            elif color[0][0] == "Random":
-                self.color = discord.Colour.random()
-            else:
-                self.color = COLOR_MAP[color[0][0]]
+        self.color = get_user_color(self.client, ctx.author.id)
 
         # Get woordle_game and check if the game is being played
         woordle_game = self.games.get_woordle_game(ctx.author)
