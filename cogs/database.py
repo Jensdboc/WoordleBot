@@ -623,7 +623,7 @@ class Ranking(discord.ui.View):
                 self.cur.execute("""
                                  SELECT person, AVG(guesses) FROM game
                                  GROUP BY person
-                                 ORDER BY AVG(guesses) DESC
+                                 ORDER BY AVG(guesses)
                                  """)
                 datas = self.cur.fetchall()
                 currency = "guesses"
