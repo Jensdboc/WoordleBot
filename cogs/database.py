@@ -100,6 +100,8 @@ class Database(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
+        with open("prints.txt", "a") as out:
+            out.write(f"{ctx.author.id} trying to write")
         credits = access_database.get_amount_of_credits(ctx.author.id)
         view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
         await ctx.reply(view=view)
