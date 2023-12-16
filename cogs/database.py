@@ -1,7 +1,7 @@
 import discord
 import sqlite3
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from discord.ext import commands, tasks
 
 import access_database
@@ -715,7 +715,7 @@ class Ranking(discord.ui.View):
                                      AND strftime("%Y", woordle_games.date) = ?
                                  )
                                  GROUP BY person
-                                 ORDER BY AVG(guesses) DESC
+                                 ORDER BY AVG(guesses)
                                  """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
                 datas = self.cur.fetchall()
                 currency = "guesses"
