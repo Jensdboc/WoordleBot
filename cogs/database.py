@@ -101,9 +101,13 @@ class Database(commands.Cog):
             Context the command is represented in
         """
         with open("prints.txt", "a") as out:
-            out.write(f"{ctx.author.id} trying to write")
+            out.write(f"{ctx.author.id} trying to write\n")
         credits = access_database.get_amount_of_credits(ctx.author.id)
+        with open("prints.txt", "a") as out:
+            out.write(f"{ctx.author.id} with credits {credits}\n")
         view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
+        with open("prints.txt", "a") as out:
+            out.write(f"{ctx.author.id} after view\n")
         await ctx.reply(view=view)
 
     @commands.command(usage="=rank <type> <member>",
