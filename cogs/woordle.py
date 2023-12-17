@@ -28,8 +28,6 @@ class Woordle(commands.Cog):
         self.games = WoordleGames()
         self.db = sqlite3.connect("woordle.db")
         self.cur = self.db.cursor()
-        self.wordstring = ""
-        self.wrong_guesses = 0
         self.counter = int(self.cur.execute("""
                                             SELECT id FROM woordle_games
                                             WHERE id = (SELECT max(id) FROM woordle_games)
@@ -79,7 +77,7 @@ class Woordle(commands.Cog):
             await ctx.send(embed=embed)
         return embed is None
 
-    async def check_valid_guess(self, ctx: commands.Context, guess: str) -> bool:
+    async def check_valid_guess(self, ctx: commands.Context, guess: str, woordle_game: WoordleGame) -> bool:
         """
         Check if the guess is a valid guess
 
@@ -89,6 +87,8 @@ class Woordle(commands.Cog):
             Context of the message
         guess : str
             The user's guess
+        woordle_game: WoordleGame
+            Current woordlegame
 
         Returns
         -------
@@ -99,7 +99,8 @@ class Woordle(commands.Cog):
             words = all_words.read().splitlines()
         valid = guess.upper() in words and len(guess) == 5
         if not valid:
-            self.wrong_guesses += 1
+            if woordle_game is not None:
+                woordle_game.wrong_guesses += 1
             await ctx.message.add_reaction("❌")
         return valid
 
@@ -122,7 +123,6 @@ class Woordle(commands.Cog):
             Ending message of a WoordleGame
         """
         # End WoordleGame
-        woordle_game.wrong_guesses = self.wrong_guesses
         woordle_game.failed = failed
         woordle_game.time = timedelta(seconds=(time.time() - woordle_game.timestart))
         woordle_game.stop()
@@ -233,7 +233,7 @@ class Woordle(commands.Cog):
             self.cur.execute("""
                              INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                             """, (ctx.author.id, guesses, str(woordle_game.time)[:-3], self.counter, self.wordstring, self.wrong_guesses, credits_gained, xp_gained))
+                             """, (ctx.author.id, guesses, str(woordle_game.time)[:-3], self.counter, woordle_game.wordstring, woordle_game.wrong_guesses, credits_gained, xp_gained))
             self.cur.execute("""
                              UPDATE woordle_games
                              SET number_of_people = number_of_people + 1
@@ -307,7 +307,6 @@ class Woordle(commands.Cog):
     async def update_and_edit_game(self, ctx: commands.Context, guess: str, woordle_game: WoordleGame, first: bool):
         woordle_game.update_board(guess, self.client)
         embed = discord.Embed(title="Woordle", description=woordle_game.display(self.client), color=self.color)
-        self.wordstring += guess
         woordle_game.wordstring += guess
         if first:
             woordle_game.message = await ctx.send(embed=embed)
@@ -346,16 +345,17 @@ class Woordle(commands.Cog):
         # Woordle server: 1161262990989991936
         # channel_ids = [878308113604812880, 1039877136179277864, 1054342112474316810, 1161262990989991936]
 
+        # Get woordle_game
+        woordle_game = self.games.get_woordle_game(ctx.author)
+
         # Perform checks
         if not await self.check_valid_game(ctx, guess):
             return
-        if not await self.check_valid_guess(ctx, guess):
+        if not await self.check_valid_guess(ctx, guess, woordle_game):
             return
-
         self.color = get_user_color(self.client, ctx.author.id)
 
-        # Get woordle_game and check if the game is being played
-        woordle_game = self.games.get_woordle_game(ctx.author)
+        # Check if the game is being played
         if woordle_game is None:
             # Check if (author, id) are already present in the database
             # This could happen if the bot was restarted and the author plays a second time this day
