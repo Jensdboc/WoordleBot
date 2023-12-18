@@ -459,6 +459,8 @@ class Shop(discord.ui.View):
                 inventory.append(player_data[0])
                 if type != "items" and player_data[2] == 1:
                     selected = player_data[0]
+            player_data_dict = {item[0]: item[2] for item in player_datas}
+
             # Set the page number if necessary
             if self.page > len(datas) // ELEMENTS_ON_PAGE:
                 self.page = len(datas) // ELEMENTS_ON_PAGE
@@ -471,7 +473,7 @@ class Shop(discord.ui.View):
                     if data[0] in inventory:
                         # Print amount of checkmarks in case of item
                         if type == "items":
-                            for _ in range(player_datas[i][2]):
+                            for _ in range(player_data_dict[data[0]]):
                                 message += "\t :white_check_mark:"
                         elif selected == data[0]:
                             message += "\t :white_check_mark: __*"
