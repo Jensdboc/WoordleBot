@@ -140,7 +140,7 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
     # Special achievements
     if woordlegame.row == 1:
         await add_achievement(client, "It's called skill", id)
-    if woordlegame.row == 6:
+    if woordlegame.row == 6 and not woordlegame.failed:
         await add_achievement(client, "That was the last chance", id)
 
     if woordlegame.wrong_guesses >= 100:
