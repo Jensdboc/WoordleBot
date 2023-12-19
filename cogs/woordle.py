@@ -258,19 +258,16 @@ class Woordle(commands.Cog):
 
         # User has to have loss streaks
         print(amount_of_loss)
-        if amount_of_loss > 0:
+        if amount_of_loss > 0 and woordle_game.failed:
             view = UseLossStreak(ctx.author.id, self.counter, woordle_game.word, self.db, self.cur, self.client)
             try:
                 embed = discord.Embed(title=f"Better luck next time, the word was {woordle_game.word}!", description="Do you want to use a loss streak?", color=COLOR_MAP["Red"])
                 await ctx.reply(embed=embed, view=view)
             except Exception as e:
                 print("Exception in sending UseLossStreak after a game: ", e)
-        else:
-            try:
-                embed = discord.Embed(title=f"Better luck next time, the word was {woordle_game.word}!", color=COLOR_MAP["Red"])
-                await ctx.reply(embed=embed)
-            except Exception as e:
-                print("Exception in sending UseLossStreak after a game: ", e)
+        elif woordle_game.failed:
+            embed = discord.Embed(title=f"Better luck next time, the word was {woordle_game.word}!", color=COLOR_MAP["Red"])
+            await ctx.reply(embed=embed)
 
         # Recalculate and update currentstreak
         try:
