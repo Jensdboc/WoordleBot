@@ -105,14 +105,8 @@ class Database(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        with open("prints.txt", "a") as out:
-            out.write(f"{ctx.author.id} trying to write\n")
         credits = access_database.get_amount_of_credits(ctx.author.id)
-        with open("prints.txt", "a") as out:
-            out.write(f"{ctx.author.id} with credits {credits}\n")
         view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
-        with open("prints.txt", "a") as out:
-            out.write(f"{ctx.author.id} after view\n")
         await ctx.reply(view=view)
 
     @commands.command(usage="=rank <type> <member>",
@@ -252,9 +246,7 @@ class Shop(discord.ui.View):
         client : discord.Client
             Bot itself
         """
-        debug("Init Shop")
         super().__init__()
-        debug("Init base values")
         self.value = None
         self.id = id
         self.credits = credits
@@ -263,9 +255,7 @@ class Shop(discord.ui.View):
         self.client = client
         self.view = None
         self.page = 0
-        debug("Init color")
         self.color = access_database.get_user_color(self.client, self.id)
-        debug("Init done")
 
     @discord.ui.button(label="Skins", style=discord.ButtonStyle.blurple, row=1)
     async def skin(self, interaction: discord.Interaction, button: discord.ui.Button):
