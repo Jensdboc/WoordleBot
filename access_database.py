@@ -211,7 +211,7 @@ def get_user_color(client: discord.Client, id: int) -> int:
     if datas == []:
         debug("Color2")
         cur.execute("""
-                    INSERT INTO colors_player (name, id, selected)
+                    INSERT OR IGNORE INTO colors_player (name, id, selected)
                     VALUES (?, ?, ?)
                     """, ("Black", id, True))
         db.commit()
