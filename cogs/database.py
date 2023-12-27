@@ -13,7 +13,7 @@ ELEMENTS_ON_PAGE = 5
 
 def debug(message):
     with open("prints.txt", "a") as out:
-        out.write(message)
+        out.write(message + "\n")
 
 
 class Database(commands.Cog):
