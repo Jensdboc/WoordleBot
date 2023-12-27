@@ -8,7 +8,7 @@ from constants import COLOR_MAP
 
 def debug(message):
     with open("prints.txt", "a") as out:
-        out.write(message)
+        out.write(message + "\n")
 
 
 def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
