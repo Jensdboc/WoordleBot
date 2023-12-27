@@ -4,7 +4,11 @@ import sqlite3
 from datetime import datetime, timedelta
 from woordle_game import WoordleGame
 from constants import COLOR_MAP
-from cogs.database import debug
+
+
+def debug(message):
+    with open("prints.txt", "a") as out:
+        out.write(message)
 
 
 def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
