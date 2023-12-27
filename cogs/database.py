@@ -11,6 +11,11 @@ CHANNEL_ID = 1161262990989991936
 ELEMENTS_ON_PAGE = 5
 
 
+def debug(message):
+    with open("prints.txt", "a") as out:
+        out.write(message)
+
+
 class Database(commands.Cog):
     """Class for interactions with the database"""
 
@@ -247,7 +252,9 @@ class Shop(discord.ui.View):
         client : discord.Client
             Bot itself
         """
+        debug("Init Shop")
         super().__init__()
+        debug("Init base values")
         self.value = None
         self.id = id
         self.credits = credits
@@ -256,7 +263,9 @@ class Shop(discord.ui.View):
         self.client = client
         self.view = None
         self.page = 0
+        debug("Init color")
         self.color = access_database.get_user_color(self.client, self.id)
+        debug("Init done")
 
     @discord.ui.button(label="Skins", style=discord.ButtonStyle.blurple, row=1)
     async def skin(self, interaction: discord.Interaction, button: discord.ui.Button):

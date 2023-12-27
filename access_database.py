@@ -4,6 +4,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from woordle_game import WoordleGame
 from constants import COLOR_MAP
+from cogs.database import debug
 
 
 def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
@@ -194,21 +195,26 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
 
 
 def get_user_color(client: discord.Client, id: int) -> int:
+    debug("Getting color")
     db, cur = get_db_and_cur()
     # Set color of author
     datas = cur.execute("""
                         SELECT * FROM colors_player
                         WHERE id = ? AND selected = ?
                         """, (id, True)).fetchall()
+    debug("Color1")
     # First time the user has ever played a game
     if datas == []:
+        debug("Color2")
         cur.execute("""
                     INSERT INTO colors_player (name, id, selected)
                     VALUES (?, ?, ?)
                     """, ("Black", id, True))
         db.commit()
         color = COLOR_MAP["Black"]
+        debug("Color3")
     else:
+        debug("Color4")
         # Handle special colors
         if datas[0][0] == "Your color":
             user = client.get_user(id)
@@ -217,4 +223,5 @@ def get_user_color(client: discord.Client, id: int) -> int:
             color = discord.Colour.random()
         else:
             color = COLOR_MAP[datas[0][0]]
+    debug("Color5")
     return color
