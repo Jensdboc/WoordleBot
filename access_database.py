@@ -89,38 +89,26 @@ def get_game_from_today(id: int) -> list:
 async def add_achievement(client: discord.Client, name: str, id: int) -> None:
     db, cur = get_db_and_cur()
     user = client.get_user(id)
-    with open("prints.txt", "a") as out:
-        out.write(f"{name}\n")
     try:
         cur.execute("""
                     INSERT OR IGNORE INTO achievements_player (name, id)
                     VALUES(?, ?)
                     """, (name, id))
         db.commit()
-        with open("prints.txt", "a") as out:
-            out.write(f"{cur.rowcount}\n")
         if cur.rowcount > 0:
             description = cur.execute("""
                                       SELECT description FROM achievements
                                       WHERE name = ?
                                       """, (name,)).fetchall()[0][0]
-            with open("prints.txt", "a") as out:
-                out.write(f"{cur.description}\n")
             embed = discord.Embed(title=f"{user.display_name} unlocked: ***{name}***", description=description)
             with open("data/channels.txt", "r") as file:
                 lines = file.readlines()
-                with open("prints.txt", "a") as out:
-                    out.write(f"{lines}\n")
                 for id in [int(line[:-1]) for line in lines]:
-                    with open("prints.txt", "a") as out:
-                        out.write(f"{id}\n")
                     channel = client.get_channel(id)
                     await channel.send(embed=embed)
         cur.close()
     except Exception as e:
         print("Exception in add_achievement: ", e)
-        with open("prints.txt", "a") as out:
-            out.write(f"Exception in add_achievement: , {e}\n")
 
 
 async def check_achievements_after_game(client: discord.Client, id: int, woordlegame: WoordleGame):
@@ -199,26 +187,21 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
 
 
 def get_user_color(client: discord.Client, id: int) -> int:
-    debug("Getting color")
     db, cur = get_db_and_cur()
     # Set color of author
     datas = cur.execute("""
                         SELECT * FROM colors_player
                         WHERE id = ? AND selected = ?
                         """, (id, True)).fetchall()
-    debug("Color1")
     # First time the user has ever played a game
     if datas == []:
-        debug("Color2")
         cur.execute("""
                     INSERT OR IGNORE INTO colors_player (name, id, selected)
                     VALUES (?, ?, ?)
                     """, ("Black", id, True))
         db.commit()
         color = COLOR_MAP["Black"]
-        debug("Color3")
     else:
-        debug("Color4")
         # Handle special colors
         if datas[0][0] == "Your color":
             user = client.get_user(id)
@@ -227,5 +210,4 @@ def get_user_color(client: discord.Client, id: int) -> int:
             color = discord.Colour.random()
         else:
             color = COLOR_MAP[datas[0][0]]
-    debug("Color5")
     return color
