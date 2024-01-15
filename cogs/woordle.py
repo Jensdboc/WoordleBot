@@ -178,9 +178,9 @@ class Woordle(commands.Cog):
                                                     WHERE person = ? and id = ?
                                                     """, (ctx.author.id, woordle_game.id - 1)).fetchall()
                 data_two_days_ago = self.cur.execute("""
-                                                    SELECT id from game
-                                                    WHERE person = ? and id = ?
-                                                    """, (ctx.author.id, woordle_game.id - 2)).fetchall()
+                                                     SELECT id from game
+                                                     WHERE person = ? and id = ?
+                                                     """, (ctx.author.id, woordle_game.id - 2)).fetchall()
             except Exception as e:
                 print("Exception while checking previous games: ", e)
 
@@ -280,7 +280,7 @@ class Woordle(commands.Cog):
             else:
                 current_streak = 1
                 ids_games = [game_data[3] for game_data in games_data]
-                sorted(ids_games, reverse=True)
+                ids_games = sorted(ids_games, reverse=True)
                 start_id = ids_games[0]
                 for id in ids_games[1:]:
                     if id == start_id - 1:

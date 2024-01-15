@@ -35,6 +35,23 @@ def get_amount_of_games(id: int) -> int:
     return 0
 
 
+def get_current_streak(id: int) -> int:
+    db, cur = get_db_and_cur()
+    try:
+        cur.execute("""
+                    SELECT current_streak FROM player
+                    WHERE id = ?
+                    """, (id,))
+        datas = cur.fetchall()
+        if datas == []:
+            current_streak = 0
+        else:
+            current_streak = datas[0][0]
+        return current_streak
+    except Exception as e:
+        print("Exception in get_streak: ", e)
+
+
 def get_amount_of_credits(id: int) -> int:
     db, cur = get_db_and_cur()
     try:
