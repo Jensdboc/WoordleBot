@@ -38,18 +38,53 @@ def get_amount_of_games(id: int) -> int:
 def get_current_streak(id: int) -> int:
     db, cur = get_db_and_cur()
     try:
-        cur.execute("""
-                    SELECT current_streak FROM player
-                    WHERE id = ?
-                    """, (id,))
-        datas = cur.fetchall()
-        if datas == []:
-            current_streak = 0
-        else:
-            current_streak = datas[0][0]
+        current_game_id = cur.execute("""
+                                      SELECT MAX(id) from woordle_games
+                                      """).fetchall()[0][0]
+        games_data = cur.execute("""
+                                 SELECT * from game
+                                 WHERE person = ?
+                                 """, (id,)).fetchall()
+        ids_games = sorted([game_data[3] for game_data in games_data], reverse=True)
+        if len(ids_games) == 0:
+            return 0
+
+        current_streak = 0
+        for id in ids_games:
+            if id == current_game_id - current_streak:
+                current_streak += 1
+            else:
+                break
         return current_streak
     except Exception as e:
-        print("Exception in get_streak: ", e)
+        print("Exception in get_current_streak: ", e)
+
+
+def get_max_streak(id: int) -> int:
+    db, cur = get_db_and_cur()
+    try:
+        games_data = cur.execute("""
+                                 SELECT * from game
+                                 WHERE person = ?
+                                 """, (id,)).fetchall()
+        ids_games = sorted([game_data[3] for game_data in games_data], reverse=True)
+        if len(ids_games) == 0:
+            return 0
+
+        current_id = ids_games[0]
+        current_streak = 0
+        highest_streak = 0
+        for id in ids_games:
+            if id == current_id - current_streak:
+                current_streak += 1
+            else:
+                if current_streak > highest_streak:
+                    highest_streak = current_streak
+                current_streak = 1
+                current_id = id
+        return highest_streak
+    except Exception as e:
+        print("Exception in get_current_streak: ", e)
 
 
 def get_amount_of_credits(id: int) -> int:

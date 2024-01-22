@@ -41,6 +41,14 @@ class Database(commands.Cog):
         await ctx.reply(embed=embed)
 
     @commands.command()
+    async def maxstreak(self, ctx, id=None):
+        if id is None:
+            id = ctx.author.id
+        max_streak = access_database.get_max_streak(id)
+        embed = discord.Embed(title="Max streak", description=f"Your max streak is {max_streak}")
+        await ctx.reply(embed=embed)
+
+    @commands.command()
     async def freeze(self, ctx):
         test_counter = 10
         view = UseFreezeStreak(ctx.author.id, test_counter, self.db, self.cur, self.client)
