@@ -38,12 +38,14 @@ def get_amount_of_games(id: int) -> int:
 def get_current_streak(id: int) -> int:
     db, cur = get_db_and_cur()
     try:
+        # Check if game was not lost
+        # FREEZE and LOSS is fine
         current_game_id = cur.execute("""
                                       SELECT MAX(id) from woordle_games
                                       """).fetchall()[0][0]
         games_data = cur.execute("""
                                  SELECT * from game
-                                 WHERE person = ?
+                                 WHERE person = ? AND guesses != "X"
                                  """, (id,)).fetchall()
         ids_games = sorted([game_data[3] for game_data in games_data], reverse=True)
         if len(ids_games) == 0:
@@ -63,9 +65,11 @@ def get_current_streak(id: int) -> int:
 def get_max_streak(id: int) -> int:
     db, cur = get_db_and_cur()
     try:
+        # Check if game was not lost
+        # FREEZE and LOSS is fine
         games_data = cur.execute("""
                                  SELECT * from game
-                                 WHERE person = ?
+                                 WHERE person = ? AND guesses != "X"
                                  """, (id,)).fetchall()
         ids_games = sorted([game_data[3] for game_data in games_data], reverse=True)
         if len(ids_games) == 0:

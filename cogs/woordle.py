@@ -8,7 +8,7 @@ from datetime import timedelta
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 from cogs.database import UseFreezeStreak, UseLossStreak
-from access_database import check_achievements_after_game, get_user_color
+from access_database import check_achievements_after_game, get_user_color, get_current_streak
 from constants import COLOR_MAP
 
 
@@ -141,17 +141,17 @@ class Woordle(commands.Cog):
         # Process information
         try:
             self.cur.execute("""
-                            SELECT * FROM player
-                            WHERE id = ?
-                            """, (ctx.author.id,))
+                             SELECT * FROM player
+                             WHERE id = ?
+                             """, (ctx.author.id,))
             player_data = self.cur.fetchall()
 
             # If player not in the database yet, create player profile
             if player_data == []:
                 self.cur.execute("""
-                            INSERT INTO player (id, credits, xp, current_streak)
-                            VALUES (?, ?, ?, ?)
-                            """, (ctx.author.id, "0", "0", "0"))
+                                 INSERT INTO player (id, credits, xp, current_streak)
+                                 VALUES (?, ?, ?, ?)
+                                 """, (ctx.author.id, "0", "0", "0"))
                 self.db.commit()
         except Exception as e:
             print("Exception (1) in updating database after a game: ", e)
@@ -193,27 +193,7 @@ class Woordle(commands.Cog):
                     print("Exception in sending UseFreezeStreak after a game: ", e)
 
         if not failed:
-            try:
-                games_data = self.cur.execute("""
-                                              SELECT * from game
-                                              WHERE person = ?
-                                              """, (ctx.author.id,)).fetchall()
-                if games_data == []:
-                    current_streak = 0
-                else:
-                    current_streak = 1
-                    ids_games = [game_data[3] for game_data in games_data]
-                    sorted(ids_games, reverse=True)
-                    start_id = ids_games[0]
-                    for id in ids_games[1:]:
-                        if id == start_id - 1:
-                            current_streak += 1
-                        else:
-                            pass
-                        start_id = id
-            except Exception as e:
-                print("Exception in calculating currentstreak: ", e)
-
+            current_streak = get_current_streak(ctx.author.id)
             if current_streak < 10:
                 streak_credits = 0
             elif current_streak > 10 and current_streak < 25:
