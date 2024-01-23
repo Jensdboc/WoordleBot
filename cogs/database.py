@@ -535,6 +535,31 @@ class Ranking(discord.ui.View):
                 self.index = index
         self.color = access_database.get_user_color(self.client, self.id)
 
+    @discord.ui.button(label="<", style=discord.ButtonStyle.red, custom_id="<")
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """
+        Show to UI for the current selected stats and show the previous stat option
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            Used to handle button interaction
+        button : discord.ui.Button
+            Button object
+        """
+        self.index = (self.index - 1) % len(self.list)
+        self.type = self.list[self.index]
+        button.label = self.list[(self.index - 1) % len(self.list)].capitalize()
+        next_button = [x for x in self.children if x.custom_id == ">"][0]
+        next_button.label = self.list[(self.index + 1) % len(self.list)].capitalize()
+
+        if self.view == "all":
+            datas, title, currency = self.get_all_data()
+        elif self.view == "month":
+            datas, title, currency = self.get_month_data()
+        embed = await self.make_embed(datas, title, currency)
+        await interaction.response.edit_message(embed=embed, view=self)
+
     @discord.ui.button(label="All time", style=discord.ButtonStyle.blurple)
     async def all(self, interaction: discord.Interaction, button: discord.ui.Button):
         """
@@ -569,7 +594,7 @@ class Ranking(discord.ui.View):
         embed = await self.make_embed(datas, title, currency)
         await interaction.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(label="Next stat", style=discord.ButtonStyle.red)
+    @discord.ui.button(label=">", style=discord.ButtonStyle.red, custom_id=">")
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         """
         Show to UI for the current selected stats and show the next stat option
@@ -584,6 +609,9 @@ class Ranking(discord.ui.View):
         self.index = (self.index + 1) % len(self.list)
         self.type = self.list[self.index]
         button.label = self.list[(self.index + 1) % len(self.list)].capitalize()
+
+        previous_button = [x for x in self.children if x.custom_id == "<"][0]
+        previous_button.label = self.list[(self.index - 1) % len(self.list)].capitalize()
 
         if self.view == "all":
             datas, title, currency = self.get_all_data()
@@ -712,10 +740,10 @@ class Ranking(discord.ui.View):
                                  """)
                 datas = self.cur.fetchall()
                 currency = "days"
-            elif self.type == "max streak":
+            elif self.type == "highest streak":
                 self.cur.execute("""
-                                 SELECT id, current_streak FROM player
-                                 ORDER BY current_streak DESC
+                                 SELECT id, highest_streak FROM player
+                                 ORDER BY highest_streak DESC
                                  """)
                 datas = self.cur.fetchall()
                 currency = "days"

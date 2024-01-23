@@ -62,6 +62,7 @@ def create_database():
                     credits integer NOT NULL,
                     xp integer NOT NULL,
                     current_streak integer NOT NULL,
+                    highest_streak integer NOT NULL,
                     PRIMARY KEY (id)
                     )
                 """)
