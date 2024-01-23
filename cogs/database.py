@@ -33,18 +33,18 @@ class Database(commands.Cog):
         self.cur = self.db.cursor()
 
     @commands.command()
-    async def streak(self, ctx, id=None):
+    async def streak(self, ctx, id=None, monthly=False):
         if id is None:
             id = ctx.author.id
-        current_streak = access_database.get_current_streak(id)
+        current_streak = access_database.get_current_streak(id, monthly)
         embed = discord.Embed(title="Current streak", description=f"Your current streak is {current_streak}")
         await ctx.reply(embed=embed)
 
     @commands.command()
-    async def maxstreak(self, ctx, id=None):
+    async def maxstreak(self, ctx, id=None, monthly=True):
         if id is None:
             id = ctx.author.id
-        max_streak = access_database.get_max_streak(id)
+        max_streak = access_database.get_max_streak(id, monthly)
         embed = discord.Embed(title="Max streak", description=f"Your max streak is {max_streak}")
         await ctx.reply(embed=embed)
 
@@ -529,7 +529,7 @@ class Ranking(discord.ui.View):
         self.client = client
         self.type = type
         self.view = "all"
-        self.list = ["credit", "xp", "current streak", "games played", "games won", "average guesses"]
+        self.list = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
         for index, type in enumerate(self.list):
             if self.type == type:
                 self.index = index
@@ -628,6 +628,13 @@ class Ranking(discord.ui.View):
                                  """)
                 datas = self.cur.fetchall()
                 currency = "days"
+            elif self.type == "highest streak":
+                self.cur.execute("""
+                                 SELECT id, highest_streak FROM player
+                                 ORDER BY highest_streak DESC
+                                 """)
+                datas = self.cur.fetchall()
+                currency = "days"
             elif self.type == "games played":
                 self.cur.execute("""
                                  SELECT person, COUNT(*) FROM game
@@ -699,6 +706,13 @@ class Ranking(discord.ui.View):
                 datas = self.cur.fetchall()
                 currency = "xp"
             elif self.type == "current streak":
+                self.cur.execute("""
+                                 SELECT id, current_streak FROM player
+                                 ORDER BY current_streak DESC
+                                 """)
+                datas = self.cur.fetchall()
+                currency = "days"
+            elif self.type == "max streak":
                 self.cur.execute("""
                                  SELECT id, current_streak FROM player
                                  ORDER BY current_streak DESC

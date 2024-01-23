@@ -8,7 +8,7 @@ from datetime import timedelta
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 from cogs.database import UseFreezeStreak, UseLossStreak
-from access_database import check_achievements_after_game, get_user_color, get_current_streak
+from access_database import check_achievements_after_game, get_user_color, get_current_streak, get_max_streak
 from constants import COLOR_MAP
 
 
@@ -149,9 +149,9 @@ class Woordle(commands.Cog):
             # If player not in the database yet, create player profile
             if player_data == []:
                 self.cur.execute("""
-                                 INSERT INTO player (id, credits, xp, current_streak)
-                                 VALUES (?, ?, ?, ?)
-                                 """, (ctx.author.id, "0", "0", "0"))
+                                 INSERT INTO player (id, credits, xp, current_streak, highest_streak)
+                                 VALUES (?, ?, ?, ?, ?)
+                                 """, (ctx.author.id, "0", "0", "0", "0"))
                 self.db.commit()
         except Exception as e:
             print("Exception (1) in updating database after a game: ", e)
@@ -237,7 +237,6 @@ class Woordle(commands.Cog):
             print("Exception while checking amount of loss streaks: ", e)
 
         # User has to have loss streaks
-        print(amount_of_loss)
         if amount_of_loss > 0 and woordle_game.failed:
             view = UseLossStreak(ctx.author.id, self.counter, woordle_game.word, self.db, self.cur, self.client)
             try:
@@ -249,35 +248,14 @@ class Woordle(commands.Cog):
             embed = discord.Embed(title=f"Better luck next time, the word was {woordle_game.word}!", color=COLOR_MAP["Red"])
             await ctx.reply(embed=embed)
 
-        # Recalculate and update currentstreak
-        try:
-            games_data = self.cur.execute("""
-                                          SELECT * from game
-                                          WHERE person = ?
-                                          """, (ctx.author.id,)).fetchall()
-            if games_data == []:
-                current_streak = 0
-            else:
-                current_streak = 1
-                ids_games = [game_data[3] for game_data in games_data]
-                ids_games = sorted(ids_games, reverse=True)
-                start_id = ids_games[0]
-                for id in ids_games[1:]:
-                    if id == start_id - 1:
-                        current_streak += 1
-                    else:
-                        pass
-                    start_id = id
-        except Exception as e:
-            print("Exception in calculating currentstreak: ", e)
-
         # Update player entry
         try:
             self.cur.execute("""
                              UPDATE player
-                             SET credits = credits + ?, xp = xp + ?, current_streak = ?
+                             SET credits = credits + ?, xp = xp + ?, current_streak = ?, highest_streak = ?
                              WHERE id = ?
-                             """, (credits_gained, xp_gained, current_streak, ctx.author.id))
+                             """, (credits_gained, xp_gained,
+                                   get_current_streak(ctx.author.id), get_max_streak(ctx.author.id), ctx.author.id))
             self.db.commit()
         except Exception as e:
             print("Exception in updating player after a game: ", e)
