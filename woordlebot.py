@@ -328,6 +328,10 @@ def fill_database():
     cur.execute("""
                 INSERT OR IGNORE INTO skins (name, description, cost, rarity)
                 VALUES (?, ?, ?, ?)
+                """, ("Default", "Green and Yellow", "0", "common"))
+    cur.execute("""
+                INSERT OR IGNORE INTO skins (name, description, cost, rarity)
+                VALUES (?, ?, ?, ?)
                 """, ("Chess", "Black and white", "250", "common"))
     cur.execute("""
                 INSERT OR IGNORE INTO skins (name, description, cost, rarity)

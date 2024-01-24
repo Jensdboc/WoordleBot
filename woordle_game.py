@@ -1,11 +1,12 @@
 import discord
+import random
 from sqlite3 import Timestamp
 from discord.utils import get  # For emojis
+from constants import SKIN_MAP, LETTER_MAP
 
 WORD_LENGTH = 5
 MAX_GUESSES = 6
 ALPHABET = [letter for letter in "abcdefghijklmnopqrstuvwxyz"]
-COLORS = {"green": "🟩", "yellow": "🟨", "gray": "⬛"}
 
 
 class WoordleGame:
@@ -42,15 +43,7 @@ class WoordleGame:
         self.wordstring = ""
         self.failed = True
         self.time = 0
-        self.letters = {"a": ":regional_indicator_a:", "b": ":regional_indicator_b:", "c": ":regional_indicator_c:",
-                        "d": ":regional_indicator_d:", "e": ":regional_indicator_e:", "f": ":regional_indicator_f:",
-                        "g": ":regional_indicator_g:", "h": ":regional_indicator_h:", "i": ":regional_indicator_i:",
-                        "j": ":regional_indicator_j:", "k": ":regional_indicator_k:", "l": ":regional_indicator_l:",
-                        "m": ":regional_indicator_m:", "n": ":regional_indicator_n:", "o": ":regional_indicator_o:",
-                        "p": ":regional_indicator_p:", "q": ":regional_indicator_q:", "r": ":regional_indicator_r:",
-                        "s": ":regional_indicator_s:", "t": ":regional_indicator_t:", "u": ":regional_indicator_u:",
-                        "v": ":regional_indicator_v:", "w": ":regional_indicator_w:", "x": ":regional_indicator_x:",
-                        "y": ":regional_indicator_y:", "z": ":regional_indicator_z:"}
+        self.letters = LETTER_MAP
 
     def add_row(self) -> None:
         """
@@ -107,7 +100,7 @@ class WoordleGame:
                 board += str(get(client.emojis, name=self.letters[letter]))
         return board
 
-    def display_end(self) -> str:
+    def display_end(self, client: discord.client, skin: str = "Default") -> str:
         """
         Convert the board string to a board string with emojis
 
@@ -120,11 +113,17 @@ class WoordleGame:
         for i in range(self.row):
             for j in range(WORD_LENGTH):
                 if self.board[i][j][2:7] == "green":
-                    end_board += COLORS["green"]
+                    color = "green"
                 elif self.board[i][j][2:8] == "yellow":
-                    end_board += COLORS["yellow"]
+                    color = "yellow"
                 elif self.board[i][j][2:6] == "gray":
-                    end_board += COLORS["gray"]
+                    color = "gray"
+                # Handle special cases
+                if skin == "Random":
+                    emoji_name = f"{color}_{str(random.choice(ALPHABET)).upper()}"
+                    end_board += str(get(client.emojis, name=emoji_name))
+                else:
+                    end_board += SKIN_MAP[skin][color]
             end_board += "\n"
         end_board += "\n"
         return end_board

@@ -8,7 +8,7 @@ from datetime import timedelta
 from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 from cogs.database import UseFreezeStreak, UseLossStreak
-from access_database import check_achievements_after_game, get_user_color, get_current_streak, get_max_streak
+from access_database import check_achievements_after_game, get_user_color, get_user_skin, get_current_streak, get_max_streak
 from constants import COLOR_MAP
 
 
@@ -37,6 +37,7 @@ class Woordle(commands.Cog):
                                              WHERE id = (SELECT max(id) FROM woordle_games)
                                              """).fetchall()[0][0])
         self.color = COLOR_MAP["Black"]
+        self.skin = "Default"
 
         with open("data/channels.txt", "r") as file:
             lines = file.readlines()
@@ -126,7 +127,6 @@ class Woordle(commands.Cog):
         woordle_game.failed = failed
         woordle_game.time = timedelta(seconds=(time.time() - woordle_game.timestart))
         woordle_game.stop()
-        woordle_game.display_end()
 
         # Make embed
         if not failed:
@@ -136,7 +136,7 @@ class Woordle(commands.Cog):
             guesses = "X"
             xp_gained = 1
         public_embed = discord.Embed(title=f"Woordle {str(self.counter)} {guesses}/6 by {ctx.author.name}: {str(woordle_game.time)[:-3]}",
-                                     description=woordle_game.display_end(), color=self.color)
+                                     description=woordle_game.display_end(self.client, self.skin), color=self.color)
 
         # Process information
         try:
@@ -316,6 +316,7 @@ class Woordle(commands.Cog):
         if not await self.check_valid_guess(ctx, guess, woordle_game):
             return
         self.color = get_user_color(self.client, ctx.author.id)
+        self.skin = get_user_skin(ctx.author.id)
 
         # Check if the game is being played
         if woordle_game is None:
