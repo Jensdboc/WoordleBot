@@ -13,6 +13,11 @@ client = commands.Bot(command_prefix="=", help_command=CustomHelpCommand(),
 client.mute_message = None
 client.activity = discord.Game(name="Join https://discord.gg/wD6TYZFk")
 
+
+@client.command()
+async def test(ctx):
+    await ctx.send("Test succeeded")
+
 # # Loads extension
 # @client.command()
 # @commands.check(admin_check)
