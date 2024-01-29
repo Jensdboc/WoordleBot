@@ -24,4 +24,4 @@ jobs:
 
     - name: Restart Service
       run: |
-        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -l ${{ secrets.SSH_USER }} ${{ secrets.SSH_HOST }} "sudo systemctl restart ${{ secrets.SERVICE_NAME }}"
+        echo "${{ secrets.SSH_PASSWORD }}" | sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -l ${{ secrets.SSH_USER }} ${{ secrets.SSH_HOST }} "sudo -S systemctl restart ${{ secrets.SERVICE_NAME }}"
