@@ -17,11 +17,15 @@ jobs:
       uses: webfactory/ssh-agent@v0.5.3
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      
+
+    - name: Stop Service
+      run: |
+        echo "${{ secrets.SSH_PASSWORD }}" | sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -l ${{ secrets.SSH_USER }} ${{ secrets.SSH_HOST }} "sudo -S systemctl stop ${{ secrets.SERVICE_NAME }}"
+
     - name: SSH Pull
       run: |
         ssh -o StrictHostKeyChecking=no -l ${{ secrets.SSH_USER }} ${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && git checkout ${{ secrets.MAIN_BRANCH }} && git pull"
 
-    - name: Restart Service
+    - name: Start Service
       run: |
-        echo "${{ secrets.SSH_PASSWORD }}" | sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -l ${{ secrets.SSH_USER }} ${{ secrets.SSH_HOST }} "sudo -S systemctl restart ${{ secrets.SERVICE_NAME }}"
+        echo "${{ secrets.SSH_PASSWORD }}" | sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -l ${{ secrets.SSH_USER }} ${{ secrets.SSH_HOST }} "sudo -S systemctl start ${{ secrets.SERVICE_NAME }}"
