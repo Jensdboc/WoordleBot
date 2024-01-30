@@ -20,7 +20,7 @@ class Administration(commands.Cog):
 
     @commands.command(usage="=announce <message>",
                       description="Announce a message to the subscribed channels")
-    async def announce(self, ctx: commands.Context, *, message: str):
+    async def announce(self, ctx: commands.Context, *, message: str) -> None:
         """
         Announce a message in the dedicated Woordle channels in different guilds
 
@@ -45,19 +45,20 @@ class Administration(commands.Cog):
                     embed = discord.Embed(title="Woordle announcement", description=f"Channel with {id} not found!", color=ctx.author.color)
                     await ctx.send(embed=embed)
         else:
-            embed = discord.Embed(title="Woordle", description="You do not have the permission for this command!", color=ctx.author.color)
+            embed = discord.Embed(title="Woordle", description="You don't have permission to use this command!", color=ctx.author.color)
             await ctx.send(embed=embed)
 
     @commands.command(usage="=addchannel <channel_id>",
                       description="Add a channel to the channels that broadcast WoordleGames")
-    async def addchannel(self, ctx: commands.Context, id: int):
+    async def addchannel(self, ctx: commands.Context, id: int) -> None:
+        # TODO i.p.v. 'id' te gebruiken, gebruik 'p_id' (voor parameter id) want 'id' is een built-in naam
         if ctx.author.id == OWNER_ID:
             with open("data/channels.txt", "a+") as file:
                 file.write(str(id) + "\n")
-            embed = discord.Embed(title="Woordle", description="The channel has been added succesfully!", color=ctx.author.color)
+            embed = discord.Embed(title="Woordle", description="The channel has been added successfully!", color=ctx.author.color)
             await ctx.send(embed=embed)
         else:
-            embed = discord.Embed(title="Woordle", description="You do not have the permission for this command!", color=ctx.author.color)
+            embed = discord.Embed(title="Woordle", description="You don't have permission to use this command!", color=ctx.author.color)
             await ctx.send(embed=embed)
 
 
