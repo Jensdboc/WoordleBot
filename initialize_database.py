@@ -20,6 +20,7 @@ def pick_word() -> str:
 
 
 def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
+    # TODO ik weet niet zeker of dat hier nodig is, maar ik zou hier waarschijnlijk een try-except gebruiken
     db = sqlite3.connect("woordle.db")
     cur = db.cursor()
     return db, cur
@@ -45,6 +46,7 @@ def create_database():
 
         # Create table for games if it does not exist
         # This contains the information per person for each game
+        # TODO bij attributen die deel uitmaken van je primary key moet er geen 'not null' meer staan (geldt ook voor tabellen hieronder)
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS game (
                         person integer NOT NULL,
@@ -200,6 +202,7 @@ def fill_database():
     #   - Unique
 
     db, cur = get_db_and_cur()
+    # TODO een hele mooie manier om data toe te voegen ;-) maar een simpele loop over een lijst waar je data instaat was misschien iets cleaner
     try:
         # Amount of games achievements
         cur.execute("""
