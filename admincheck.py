@@ -11,6 +11,7 @@ def admin_check(ctx):
     file_exist('data/Admin.txt')
     with open('data/Admin.txt', 'r') as admin_file:
         for admin in admin_file.readlines():
+            # TODO i.p.v. -1 te gebruiken, kijk eens naar het gebruik van 'rstrip'
             if str(ctx.message.author.id) == str(admin)[:-1]:
                 return True
         return False
