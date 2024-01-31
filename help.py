@@ -11,6 +11,13 @@ class CustomHelpCommand(commands.HelpCommand):
         embed = discord.Embed(title="Help overview", description="Use =help <category> for more information.")
         for cog in mapping:
             if cog:
+                # TODO alles hieronder kan je vervangen door:
+                '''
+                command_name_list = []
+                for command in cog.get_commands():
+                    command_name_list.append(command.name)
+                embed.add_field(name=cog.qualified_name, value=', '.join(command_name_list))
+                '''
                 list = ""
                 for command in cog.get_commands():
                     list += f"{command.name}, "
