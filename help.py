@@ -11,10 +11,10 @@ class CustomHelpCommand(commands.HelpCommand):
         embed = discord.Embed(title="Help overview", description="Use =help <category> for more information.")
         for cog in mapping:
             if cog:
-                list = ""
+                command_name_list = []
                 for command in cog.get_commands():
-                    list += f"{command.name}, "
-                embed.add_field(name=cog.qualified_name, value=list[:-2])
+                    command_name_list.append(command.name)
+                embed.add_field(name=cog.qualified_name, value=', '.join(command_name_list))
         # get_destination: Calls destination a.k.a. where you want to send the command
         await self.get_destination().send(embed=embed)
 

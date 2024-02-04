@@ -1,3 +1,5 @@
+PREFIX = "?"
+
 COLOR_MAP = {
     "Red": 0xFF0000,
     "Green": 0x00FF00,
