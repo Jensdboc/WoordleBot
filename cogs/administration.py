@@ -49,7 +49,7 @@ class Administration(commands.Cog):
         """
         with open("data/channels.txt", "r") as file:
             lines = file.readlines()
-            channel_ids = [int(line[:-1]) for line in lines]
+            channel_ids = [int(line.rstrip()) for line in lines]
 
         for ch_id in channel_ids:
             try:
