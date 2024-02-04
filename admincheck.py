@@ -1,16 +1,31 @@
+from discord.ext import commands
 from pathlib import Path
 
+ADMIN_ID = 656916865364525067
 
-# Create file if it doesn't exist
-def file_exist(name):
+
+def file_exist(name: str) -> None:
+    """
+    Create file if it doesn't exist
+
+    name: str
+        Name of file
+    """
     file = Path(name)
     file.touch(exist_ok=True)
 
 
-def admin_check(ctx):
-    file_exist('data/Admin.txt')
-    with open('data/Admin.txt', 'r') as admin_file:
-        for admin in admin_file.readlines():
-            if str(ctx.message.author.id) == str(admin)[:-1]:
-                return True
-        return False
+def admin_check(ctx: commands.Context) -> bool:
+    """
+    Check if user has admin priveledges
+
+    Parameters
+    ----------
+    ctx : commands
+        Context the command is represented in
+    Returns
+    -------
+    is_admin : bool
+        True if admin, else False.
+    """
+    return ctx.message.author.id == ADMIN_ID

@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from admincheck import admin_check
+
 OWNER_ID = 656916865364525067
 
 
@@ -18,6 +20,19 @@ class Administration(commands.Cog):
         """
         self.client = client
 
+    @commands.command()
+    @commands.check(admin_check)
+    async def admin(self, ctx: commands.Context) -> None:
+        """
+        Confirm if user is an admin
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        """
+        await ctx.reply("Yup")
+
     @commands.command(usage="=announce <message>",
                       description="Announce a message to the subscribed channels")
     async def announce(self, ctx: commands.Context, *, message: str):
@@ -26,7 +41,7 @@ class Administration(commands.Cog):
 
         Parameters
         ----------
-        ctx: commands.Context
+        ctx : commands.Context
             Context the command is represented in
         message : str
             Message to announce
