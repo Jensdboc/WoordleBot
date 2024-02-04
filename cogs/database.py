@@ -239,7 +239,9 @@ class Database(commands.Cog):
 
     @tasks.loop(hours=24)
     async def DateChecker(self):
-        # Check if it is the first day of the month
+        """
+        Check if it is the first day of the month and reward monthly medals
+        """
         if datetime.now().day == 1:
             pass
 
@@ -554,9 +556,9 @@ class Ranking(discord.ui.View):
         next_button.label = self.list[(self.index + 1) % len(self.list)].capitalize()
 
         if self.view == "all":
-            datas, title, currency = self.get_all_data()
+            datas, title, currency = access_database.get_all_data(self.type)
         elif self.view == "month":
-            datas, title, currency = self.get_month_data()
+            datas, title, currency = access_database.get_month_data(self.type)
         embed = await self.make_embed(datas, title, currency)
         await interaction.response.edit_message(embed=embed, view=self)
 
@@ -573,7 +575,7 @@ class Ranking(discord.ui.View):
             Button object
         """
         self.view = "all"
-        datas, title, currency = self.get_all_data()
+        datas, title, currency = access_database.get_all_data(self.type)
         embed = await self.make_embed(datas, title, currency)
         await interaction.response.edit_message(embed=embed, view=self)
 
@@ -590,7 +592,7 @@ class Ranking(discord.ui.View):
             Button object
         """
         self.view = "month"
-        datas, title, currency = self.get_month_data()
+        datas, title, currency = access_database.get_month_data(self.type)
         embed = await self.make_embed(datas, title, currency)
         await interaction.response.edit_message(embed=embed, view=self)
 
@@ -614,182 +616,11 @@ class Ranking(discord.ui.View):
         previous_button.label = self.list[(self.index - 1) % len(self.list)].capitalize()
 
         if self.view == "all":
-            datas, title, currency = self.get_all_data()
+            datas, title, currency = access_database.get_all_data(self.type)
         elif self.view == "month":
-            datas, title, currency = self.get_month_data()
+            datas, title, currency = access_database.get_month_data(self.type)
         embed = await self.make_embed(datas, title, currency)
         await interaction.response.edit_message(embed=embed, view=self)
-
-    def get_all_data(self):
-        """
-        Get data for view all
-
-        Returns
-        -------
-        datas : list
-            Data containing the users information
-        title : str
-            Title of the embed
-        currency : str
-            Unit of the data
-        """
-        try:
-            title = f"Top users (all time) in {self.type}"
-            if self.type == "credit":
-                self.cur.execute("""
-                                 SELECT id, credits FROM player
-                                 ORDER BY credits DESC
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "credits"
-            elif self.type == "xp":
-                self.cur.execute("""
-                                 SELECT id, xp FROM player
-                                 ORDER BY xp DESC
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "xp"
-            elif self.type == "current streak":
-                self.cur.execute("""
-                                 SELECT id, current_streak FROM player
-                                 ORDER BY current_streak DESC
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "days"
-            elif self.type == "highest streak":
-                self.cur.execute("""
-                                 SELECT id, highest_streak FROM player
-                                 ORDER BY highest_streak DESC
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "days"
-            elif self.type == "games played":
-                self.cur.execute("""
-                                 SELECT person, COUNT(*) FROM game
-                                 GROUP BY person
-                                 ORDER BY COUNT(*) DESC
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "games"
-            elif self.type == "games won":
-                self.cur.execute("""
-                                 SELECT person, COUNT(*) FROM game
-                                 WHERE guesses != "X"
-                                 GROUP BY person
-                                 ORDER BY COUNT(*) DESC
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "games"
-            elif self.type == "average guesses":
-                self.cur.execute("""
-                                 SELECT person, AVG(guesses) FROM game
-                                 GROUP BY person
-                                 ORDER BY AVG(guesses)
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "guesses"
-            return datas, title, currency
-        except Exception as e:
-            print(e)
-
-    def get_month_data(self):
-        """
-        Get data for view month
-
-        Returns
-        -------
-        datas : list
-            Data containing the users information
-        title : str
-            Title of the embed
-        currency : str
-            Unit of the data
-        """
-        try:
-            title = f"Top users (monthly) in {self.type}"
-            if self.type == "credit":
-                self.cur.execute("""
-                                 SELECT game.person, SUM(game.credits_gained) FROM game
-                                 WHERE game.id IN (
-                                 SELECT woordle_games.id FROM woordle_games
-                                 WHERE strftime("%m", woordle_games.date) = ?
-                                     AND strftime("%Y", woordle_games.date) = ?
-                                 )
-                                 GROUP BY game.person
-                                 ORDER BY SUM(game.credits_gained) DESC
-                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
-                datas = self.cur.fetchall()
-                currency = "credits"
-            elif self.type == "xp":
-                self.cur.execute("""
-                                 SELECT game.person, SUM(game.xp_gained) FROM game
-                                 WHERE game.id IN (
-                                 SELECT woordle_games.id FROM woordle_games
-                                 WHERE strftime("%m", woordle_games.date) = ?
-                                     AND strftime("%Y", woordle_games.date) = ?
-                                 )
-                                 GROUP BY game.person
-                                 ORDER BY SUM(game.xp_gained) DESC
-                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
-                datas = self.cur.fetchall()
-                currency = "xp"
-            elif self.type == "current streak":
-                self.cur.execute("""
-                                 SELECT id, current_streak FROM player
-                                 ORDER BY current_streak DESC
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "days"
-            elif self.type == "highest streak":
-                self.cur.execute("""
-                                 SELECT id, highest_streak FROM player
-                                 ORDER BY highest_streak DESC
-                                 """)
-                datas = self.cur.fetchall()
-                currency = "days"
-            elif self.type == "games played":
-                self.cur.execute("""
-                                 SELECT person, COUNT(*) FROM game
-                                 WHERE game.id IN (
-                                 SELECT woordle_games.id FROM woordle_games
-                                 WHERE strftime("%m", woordle_games.date) = ?
-                                     AND strftime("%Y", woordle_games.date) = ?
-                                 )
-                                 GROUP BY person
-                                 ORDER BY COUNT(*) DESC
-                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
-                datas = self.cur.fetchall()
-                currency = "games"
-            elif self.type == "games won":
-                self.cur.execute("""
-                                 SELECT person, COUNT(*) FROM game
-                                 WHERE guesses != "X" AND
-                                 game.id IN (
-                                 SELECT woordle_games.id FROM woordle_games
-                                 WHERE strftime("%m", woordle_games.date) = ?
-                                     AND strftime("%Y", woordle_games.date) = ?
-                                 )
-                                 GROUP BY person
-                                 ORDER BY COUNT(*) DESC
-                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
-                datas = self.cur.fetchall()
-                currency = "games"
-            elif self.type == "average guesses":
-                self.cur.execute("""
-                                 SELECT person, AVG(guesses) FROM game
-                                 WHERE game.id IN (
-                                 SELECT woordle_games.id FROM woordle_games
-                                 WHERE strftime("%m", woordle_games.date) = ?
-                                     AND strftime("%Y", woordle_games.date) = ?
-                                 )
-                                 GROUP BY person
-                                 ORDER BY AVG(guesses)
-                                 """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
-                datas = self.cur.fetchall()
-                currency = "guesses"
-            return datas, title, currency
-        except Exception as e:
-            print(e)
 
     async def make_embed(self, datas: list, title: str, currency: str):
         """

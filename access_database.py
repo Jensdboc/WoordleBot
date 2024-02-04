@@ -311,3 +311,188 @@ def get_user_skin(id: int) -> int:
     else:
         skin = datas[0][0]
     return skin
+
+
+def get_all_data(type: str):
+    """
+    Get data for view all
+
+    Parameters
+    ----------
+    type : str
+        The type of ranking
+
+    Returns
+    -------
+    datas : list
+        Data containing the users information
+    title : str
+        Title of the embed
+    currency : str
+        Unit of the data
+    """
+    db, cur = get_db_and_cur()
+    try:
+        title = f"Top users (all time) in {type}"
+        if type == "credit":
+            cur.execute("""
+                                SELECT id, credits FROM player
+                                ORDER BY credits DESC
+                                """)
+            datas = cur.fetchall()
+            currency = "credits"
+        elif type == "xp":
+            cur.execute("""
+                                SELECT id, xp FROM player
+                                ORDER BY xp DESC
+                                """)
+            datas = cur.fetchall()
+            currency = "xp"
+        elif type == "current streak":
+            cur.execute("""
+                                SELECT id, current_streak FROM player
+                                ORDER BY current_streak DESC
+                                """)
+            datas = cur.fetchall()
+            currency = "days"
+        elif type == "highest streak":
+            cur.execute("""
+                                SELECT id, highest_streak FROM player
+                                ORDER BY highest_streak DESC
+                                """)
+            datas = cur.fetchall()
+            currency = "days"
+        elif type == "games played":
+            cur.execute("""
+                                SELECT person, COUNT(*) FROM game
+                                GROUP BY person
+                                ORDER BY COUNT(*) DESC
+                                """)
+            datas = cur.fetchall()
+            currency = "games"
+        elif type == "games won":
+            cur.execute("""
+                                SELECT person, COUNT(*) FROM game
+                                WHERE guesses != "X"
+                                GROUP BY person
+                                ORDER BY COUNT(*) DESC
+                                """)
+            datas = cur.fetchall()
+            currency = "games"
+        elif type == "average guesses":
+            cur.execute("""
+                                SELECT person, AVG(guesses) FROM game
+                                GROUP BY person
+                                ORDER BY AVG(guesses)
+                                """)
+            datas = cur.fetchall()
+            currency = "guesses"
+        return datas, title, currency
+    except Exception as e:
+        print(e)
+
+
+def get_month_data(type: str):
+    """
+    Get data for view month
+
+    Parameters
+    ----------
+    type : str
+        The type of ranking
+
+    Returns
+    -------
+    datas : list
+        Data containing the users information
+    title : str
+        Title of the embed
+    currency : str
+        Unit of the data
+    """
+    db, cur = get_db_and_cur()
+    try:
+        title = f"Top users (monthly) in {type}"
+        if type == "credit":
+            cur.execute("""
+                                SELECT game.person, SUM(game.credits_gained) FROM game
+                                WHERE game.id IN (
+                                SELECT woordle_games.id FROM woordle_games
+                                WHERE strftime("%m", woordle_games.date) = ?
+                                    AND strftime("%Y", woordle_games.date) = ?
+                                )
+                                GROUP BY game.person
+                                ORDER BY SUM(game.credits_gained) DESC
+                                """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+            datas = cur.fetchall()
+            currency = "credits"
+        elif type == "xp":
+            cur.execute("""
+                                SELECT game.person, SUM(game.xp_gained) FROM game
+                                WHERE game.id IN (
+                                SELECT woordle_games.id FROM woordle_games
+                                WHERE strftime("%m", woordle_games.date) = ?
+                                    AND strftime("%Y", woordle_games.date) = ?
+                                )
+                                GROUP BY game.person
+                                ORDER BY SUM(game.xp_gained) DESC
+                                """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+            datas = cur.fetchall()
+            currency = "xp"
+        elif type == "current streak":
+            cur.execute("""
+                                SELECT id, current_streak FROM player
+                                ORDER BY current_streak DESC
+                                """)
+            datas = cur.fetchall()
+            currency = "days"
+        elif type == "highest streak":
+            cur.execute("""
+                                SELECT id, highest_streak FROM player
+                                ORDER BY highest_streak DESC
+                                """)
+            datas = cur.fetchall()
+            currency = "days"
+        elif type == "games played":
+            cur.execute("""
+                                SELECT person, COUNT(*) FROM game
+                                WHERE game.id IN (
+                                SELECT woordle_games.id FROM woordle_games
+                                WHERE strftime("%m", woordle_games.date) = ?
+                                    AND strftime("%Y", woordle_games.date) = ?
+                                )
+                                GROUP BY person
+                                ORDER BY COUNT(*) DESC
+                                """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+            datas = cur.fetchall()
+            currency = "games"
+        elif type == "games won":
+            cur.execute("""
+                                SELECT person, COUNT(*) FROM game
+                                WHERE guesses != "X" AND
+                                game.id IN (
+                                SELECT woordle_games.id FROM woordle_games
+                                WHERE strftime("%m", woordle_games.date) = ?
+                                    AND strftime("%Y", woordle_games.date) = ?
+                                )
+                                GROUP BY person
+                                ORDER BY COUNT(*) DESC
+                                """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+            datas = cur.fetchall()
+            currency = "games"
+        elif type == "average guesses":
+            cur.execute("""
+                                SELECT person, AVG(guesses) FROM game
+                                WHERE game.id IN (
+                                SELECT woordle_games.id FROM woordle_games
+                                WHERE strftime("%m", woordle_games.date) = ?
+                                    AND strftime("%Y", woordle_games.date) = ?
+                                )
+                                GROUP BY person
+                                ORDER BY AVG(guesses)
+                                """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+            datas = cur.fetchall()
+            currency = "guesses"
+        return datas, title, currency
+    except Exception as e:
+        print(e)
