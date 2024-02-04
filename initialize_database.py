@@ -20,12 +20,15 @@ def pick_word() -> str:
 
 
 def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
-    db = sqlite3.connect("woordle.db")
-    cur = db.cursor()
-    return db, cur
+    try:
+        db = sqlite3.connect("woordle.db")
+        cur = db.cursor()
+        return db, cur
+    except Exception as e:
+        print(f"Exception in get_db_and_cur: {e}")
 
 
-def create_database():
+def create_database() -> None:
     """
     Create all the tables for woordle.db
     """
@@ -47,10 +50,10 @@ def create_database():
         # This contains the information per person for each game
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS game (
-                        person integer NOT NULL,
+                        person integer,
                         guesses integer NOT NULL,
                         time timestamp NOT NULL,
-                        id integer NOT NULL,
+                        id integer,
                         wordstring text NOT NULL,
                         wrong_guesses integer NOT NULL,
                         credits_gained integer NOT NULL,
@@ -65,7 +68,7 @@ def create_database():
         # This contains the information about each player
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS player (
-                        id integer NOT NULL,
+                        id integer,
                         credits integer NOT NULL,
                         xp integer NOT NULL,
                         current_streak integer NOT NULL,
@@ -78,7 +81,7 @@ def create_database():
         # This contains the information about each achievement
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS achievements (
-                        name text NOT NULL,
+                        name text,
                         description text NOT NULL,
                         rarity text NOT NULL,
                         PRIMARY KEY (name)
@@ -89,7 +92,7 @@ def create_database():
         # This contains the information about each skin
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS skins (
-                        name text NOT NULL,
+                        name text,
                         description text NOT NULL,
                         cost integer NOT NULL,
                         rarity text NOT NULL,
@@ -101,7 +104,7 @@ def create_database():
         # This contains the information about each item
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS items (
-                        name text NOT NULL,
+                        name text,
                         description text NOT NULL,
                         cost integer NOT NULL,
                         rarity text NOT NULL,
@@ -114,7 +117,7 @@ def create_database():
         # This contains the information about each color
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS colors (
-                        name text NOT NULL,
+                        name text,
                         description text NOT NULL,
                         cost integer NOT NULL,
                         rarity text NOT NULL,
@@ -126,8 +129,8 @@ def create_database():
         # This links information between achievements and players
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS achievements_player (
-                        name text NOT NULL,
-                        id integer NOT NULL,
+                        name text,
+                        id integer,
                         PRIMARY KEY (name, id),
                         FOREIGN KEY (id)
                             REFERENCES player (id)
@@ -140,8 +143,8 @@ def create_database():
         # This links information between skins and players
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS skins_player (
-                        name text NOT NULL,
-                        id integer NOT NULL,
+                        name text,
+                        id integer,
                         selected bool NOT NULL,
                         PRIMARY KEY (name, id),
                         FOREIGN KEY (id)
@@ -155,8 +158,8 @@ def create_database():
         # This links information between items and players
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS items_player (
-                        name text NOT NULL,
-                        id integer NOT NULL,
+                        name text,
+                        id integer,
                         amount integer NOT NULL,
                         PRIMARY KEY (name, id),
                         FOREIGN KEY (id)
@@ -170,8 +173,8 @@ def create_database():
         # This links information between colors and players
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS colors_player (
-                        name text NOT NULL,
-                        id integer NOT NULL,
+                        name text,
+                        id integer,
                         selected bool NOT NULL,
                         PRIMARY KEY (name, id),
                         FOREIGN KEY (id)
@@ -183,288 +186,153 @@ def create_database():
 
         # Make sure transaction is ended and changes have been made final
         db.commit()
+        cur.close()
     except Exception as e:
         print(f"Exception in create_database: {e}")
 
 
-def fill_database():
+def fill_database() -> None:
     """
     Fill woordle.db with achievements, skins, items, ...
+    Rarities:
+        - Common
+        - Rare
+        - Epic
+        - Legendary
+        - Unique
     """
-
-    # Rarities:
-    #   - Common
-    #   - Rare
-    #   - Epic
-    #   - Legendary
-    #   - Unique
-
     db, cur = get_db_and_cur()
     try:
-        # Amount of games achievements
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Beginner", "Play 1 Woordlegame", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Getting started", "Play 10 Woordlegames", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Getting there", "Play 50 Woordlegames", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Getting addicted?", "Play 100 Woordlegames", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Addicted", "Play 500 Woordlegames", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Time to stop", "Play 1000 Woordlegames", "epic"))
+        achievements = [
+                            # Amount of games achievements
+                            ["Beginner", "Play 1 Woordlegame", "common"],
+                            ["Getting started", "Play 10 Woordlegames", "common"],
+                            ["Getting there", "Play 50 Woordlegames", "common"],
+                            ["Getting addicted?", "Play 100 Woordlegames", "common"],
+                            ["Addicted", "Play 500 Woordlegames", "rare"],
+                            ["Time to stop", "Play 1000 Woordlegames", "epic"],
 
-        # Monthly achievements
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("That's a start", "Get top 3 in a monthly ranking", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("The best category", "Get first place in average guesses (monthly)", "epic"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("MVP", "Get first place in all the monthly rankings", "legendary"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Starting a collection", "Collect 10 medals from monthly rankings", "legendary"))
+                            # Monthly achievements
+                            ["That's a start", "Get top 3 in a monthly ranking", "common"],
+                            ["The best category", "Get first place in average guesses (monthly)", "epic"],
+                            ["MVP", "Get first place in all the monthly rankings", "legendary"],
+                            ["Starting a collection", "Collect 10 medals from monthly rankings", "legendary"],
 
-        # Special achievements
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("It's called skill", "Win a Woordle in 1 guess", "legendary"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("That was the last chance", "Win a Woordle in 6 guesses", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Whoops, my finger slipped", "Have over 100 wrong guesses in a single game", "epic"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("I don't like yellow", "Win a game with only green pieces but not in the first try", "epic"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("They said it couldn't be done", "Win a game where the only green pieces are in the answer", "legendary"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Mr. Clean", "Win a game without making a wrong guess", "epic"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Haaa, poor!", "Try to buy an item but do not have the required credits", "rare"))
+                            # Special achievements
+                            ["It's called skill", "Win a Woordle in 1 guess", "legendary"],
+                            ["That was the last chance", "Win a Woordle in 6 guesses", "common"],
+                            ["Whoops, my finger slipped", "Have over 100 wrong guesses in a single game", "epic"],
+                            ["I don't like yellow", "Win a game with only green pieces but not in the first try", "epic"],
+                            ["They said it couldn't be done", "Win a game where the only green pieces are in the answer", "legendary"],
+                            ["Mr. Clean", "Win a game without making a wrong guess", "epic"],
+                            ["Haaa, poor!", "Try to buy an item but do not have the required credits", "rare"],
 
-        # General stat achievements
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Learning from mistakes", "Have 100 wrong guesses", "epic"))
+                            # General stat achievements
+                            ["Learning from mistakes", "Have 100 wrong guesses", "epic"],
 
-        # Timed achievements
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Merry Christmas!", "Win a Woordle on Christmas", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Jokes on you", "Play a game on the 1st of april", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Early bird", "Complete a game before 8 o'clock", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Definitely past your bedtime", "Complete a game after 11pm", "epic"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("I'm fast as F boi", "Win a game under 10 seconds", "epic"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Were you even playing?", "Spend more than 1 hour on a game", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("That was on purpose", "Spend more than 10 hours on a game", "legendary"))
+                            # Timed achievements
+                            ["Merry Christmas!", "Win a Woordle on Christmas", "rare"],
+                            ["Jokes on you", "Play a game on the 1st of April", "rare"],
+                            ["Early bird", "Complete a game before 8 o'clock", "rare"],
+                            ["Definitely past your bedtime", "Complete a game after 11 pm", "epic"],
+                            ["I'm fast as F boi", "Win a game under 10 seconds", "epic"],
+                            ["Were you even playing?", "Spend more than 1 hour on a game", "rare"],
+                            ["That was on purpose", "Spend more than 10 hours on a game", "legendary"],
 
-        # Shop achievements
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Thank you, come again", "Spend your first credits", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Look how fancy", "Buy a skin", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Cold as ice", "Buy max freeze streaks", "rare"))
+                            # Shop achievements
+                            ["Thank you, come again", "Spend your first credits", "common"],
+                            ["Look how fancy", "Buy a skin", "common"],
+                            ["Cold as ice", "Buy max freeze streaks", "rare"],
 
-        # Credit achievements
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("Time to spend", "Get 500 credits", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO achievements (name, description, rarity)
-                    VALUES (?, ?, ?)
-                    """, ("What are you saving them for?", "Get 10.000 credits", "epic"))
+                            # Credit achievements
+                            ["Time to spend", "Get 500 credits", "rare"],
+                            ["What are you saving them for?", "Get 10,000 credits", "epic"]
+                        ]
 
-        # Basic skins
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Default", "Green and Yellow", "0", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Chess", "Black and white", "250", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Colorblind", "Blue and orange", "250", "common"))
+        for achievement in achievements:
+            cur.execute("""
+                        INSERT OR IGNORE INTO achievements (name, description, rarity)
+                        VALUES (?, ?, ?)
+                        """, achievement)
 
-        # Emoji skins
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Hearts", "Heartshaped", "250", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("I like balls", "Circles", "250", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Moooons", "Moons with smiles", "250", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Fruit", "Lemon and green apple", "250", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Fruit 2.0", "Banana and pear", "250", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Fruit (tropical edition)", "Pineapple and avocado", "500", "common"))
+        skins = [
+                    # Basic skins
+                    ["Default", "Green and Yellow", "0", "common"],
+                    ["Chess", "Black and white", "250", "common"],
+                    ["Colorblind", "Blue and orange", "250", "common"],
 
-        # Themed skins
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Santa", "Trees, gift, santa", "500", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Spooky", "Jack 'o lantern, ghost", "500", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Summer Time", "Sun, palmtree", "500", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Dipping time", "Cookie, milk", "750", "epic"))
+                    # Emoji skins
+                    ["Hearts", "Heartshaped", "250", "common"],
+                    ["I like balls", "Circles", "250", "common"],
+                    ["Moooons", "Moons with smiles", "250", "common"],
+                    ["Fruit", "Lemon and green apple", "250", "common"],
+                    ["Fruit 2.0", "Banana and pear", "250", "common"],
+                    ["Fruit (tropical edition)", "Pineapple and avocado", "500", "common"],
 
-        # Special skins
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Random", "Random letters", "750", "epic"))
+                    # Themed skins
+                    ["Santa", "Trees, gift, santa", "500", "rare"],
+                    ["Spooky", "Jack 'o lantern, ghost", "500", "rare"],
+                    ["Summer Time", "Sun, palmtree", "500", "rare"],
+                    ["Dipping time", "Cookie, milk", "750", "epic"],
 
-        # Items
-        cur.execute("""
-                    INSERT OR IGNORE INTO items (name, description, cost, rarity, max)
-                    VALUES (?, ?, ?, ?, ?)
-                    """, ("Freeze streak", "Keep your streak when missing a day", "250", "rare", "2"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO items (name, description, cost, rarity, max)
-                    VALUES (?, ?, ?, ?, ?)
-                    """, ("Loss streak", "Keep your streak when losing a game", "150", "common", "2"))
+                    # Special skins
+                    ["Random", "Random letters", "750", "epic"]
+                ]
 
-        # Colors
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Black", "Black", "0", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Red", "Red", "150", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Green", "Green", "150", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Yellow", "Yellow", "150", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Orange", "Orange", "150", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Blue", "Blue", "150", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Purple", "Purple", "150", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Pink", "Pink", "150", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("White", "White", "150", "common"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Your color", "Your color", "250", "rare"))
-        cur.execute("""
-                    INSERT OR IGNORE INTO colors (name, description, cost, rarity)
-                    VALUES (?, ?, ?, ?)
-                    """, ("Random", "Random", "1000", "legendary"))
+        for skin in skins:
+            cur.execute("""
+                        INSERT OR IGNORE INTO skins (name, description, cost, rarity)
+                        VALUES (?, ?, ?, ?)
+                        """, skin)
+
+        items = [
+                    # Streak items
+                    ["Freeze streak", "Keep your streak when missing a day", "250", "rare", "2"],
+                    ["Loss streak", "Keep your streak when losing a game", "150", "common", "2"]
+                ]
+
+        for item in items:
+            cur.execute("""
+                        INSERT OR IGNORE INTO items (name, description, cost, rarity, max)
+                        VALUES (?, ?, ?, ?, ?)
+                        """, item)
+
+        colors = [
+                    # Default colors
+                    ["Black", "Black", "0", "common"],
+                    ["Red", "Red", "150", "common"],
+                    ["Green", "Green", "150", "common"],
+                    ["Yellow", "Yellow", "150", "common"],
+                    ["Orange", "Orange", "150", "common"],
+                    ["Blue", "Blue", "150", "common"],
+                    ["Purple", "Purple", "150", "common"],
+                    ["Pink", "Pink", "150", "common"],
+                    ["White", "White", "150", "common"],
+
+                    # Special colors
+                    ["Your color", "Your color", "250", "rare"],
+                    ["Random", "Random", "1000", "legendary"]
+                 ]
+
+        for color in colors:
+            cur.execute("""
+                        INSERT OR IGNORE INTO colors (name, description, cost, rarity)
+                        VALUES (?, ?, ?, ?)
+                        """, color)
 
         # Make sure transaction is ended and changes have been made final
         db.commit()
+        cur.close()
     except Exception as e:
         print(f"Exception in fill_database: {e}")
 
 
-def set_word_of_today():
+def set_word_of_today() -> None:
+    """
+    Create new woordle game if it does not exist already
+    If there is a game for the current date already, ignore the new word
+    """
     db, cur = get_db_and_cur()
-    # Create new woordle game if it does not exist already
-    # If there is a game for the current date already, ignore the new word
     try:
         cur.execute("""
                     INSERT OR IGNORE INTO woordle_games (date, number_of_people, word)
