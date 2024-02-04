@@ -1,4 +1,4 @@
-PREFIX = "??"
+PREFIX = "?"
 
 COLOR_MAP = {
     "Red": 0xFF0000,
