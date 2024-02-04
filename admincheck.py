@@ -8,7 +8,7 @@ def file_exist(name: str) -> None:
     """
     Create file if it doesn't exist
 
-    name: str
+    name : str
         Name of file
     """
     file = Path(name)
@@ -23,6 +23,7 @@ def admin_check(ctx: commands.Context) -> bool:
     ----------
     ctx : commands
         Context the command is represented in
+
     Returns
     -------
     is_admin : bool
