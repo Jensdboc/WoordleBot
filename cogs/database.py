@@ -60,6 +60,16 @@ class Database(commands.Cog):
             print("Exception in sending UseFreezeStreak after a game: ", e)
 
     @commands.command()
+    async def medals(self, ctx: commands.Context):
+        places = [":first_place:", ":second_place:", ":third_place:"]
+        medals = await access_database.get_medals(ctx.author.id)
+        description = ""
+        for place, medal in zip(places, medals):
+            description += f"{place}: {medal}\n"
+        embed = discord.Embed(title=f"Medals of {ctx.author.name}:", description=description, color=access_database.get_user_color(self.client, ctx.author.id))
+        await ctx.reply(embed=embed)
+
+    @commands.command()
     async def get_games(self, ctx: commands.Context):
         """
         Retrieve the tables woordle_games

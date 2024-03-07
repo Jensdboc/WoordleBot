@@ -193,7 +193,6 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
 
 async def add_medal(client: discord.Client, rank: int, id: int, medal_type: str) -> None:
     db, cur = get_db_and_cur()
-    # user = client.get_user(id)
     medal_dict = {0: "First place medals", 1: "Second place medals", 2: "Third place medals"}
     try:
         # Check if the combination of medal and player already exists
@@ -236,6 +235,26 @@ async def add_medal(client: discord.Client, rank: int, id: int, medal_type: str)
         cur.close()
     except Exception as e:
         print("Exception in add_medal: ", e)
+
+
+async def get_medals(id: int) -> list[int]:
+    db, cur = get_db_and_cur()
+    medal_dict = {0: "First place medals", 1: "Second place medals", 2: "Third place medals"}
+    medals = []
+    try:
+        for place in medal_dict.values():
+            cur.execute("""
+                        SELECT amount FROM items_player
+                        WHERE name = ? AND id = ?
+                        """, (place, id))
+            datas = cur.fetchall()
+            if datas != []:
+                medals.append(datas[0][0])
+
+        cur.close()
+    except Exception as e:
+        print("Exception in get_medal: ", e)
+    return medals
 
 
 async def check_achievements_after_game(client: discord.Client, id: int, woordlegame: WoordleGame) -> None:
