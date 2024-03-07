@@ -9,7 +9,7 @@ from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 from cogs.database import UseFreezeStreak, UseLossStreak
 from access_database import check_achievements_after_game, get_user_color, get_user_skin, get_current_streak, get_max_streak
-from constants import COLOR_MAP
+from constants import COLOR_MAP, CHANNEL_IDS
 
 
 class Woordle(commands.Cog):
@@ -39,9 +39,7 @@ class Woordle(commands.Cog):
         self.color = COLOR_MAP["Black"]
         self.skin = "Default"
 
-        with open("data/channels.txt", "r") as file:
-            lines = file.readlines()
-            self.channel_ids = [int(line[:-1]) for line in lines]
+        self.channel_ids = CHANNEL_IDS
 
         print("Counter: ", self.counter)
         print("Word: ", self.games.word)
