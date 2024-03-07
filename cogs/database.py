@@ -33,7 +33,19 @@ class Database(commands.Cog):
         self.cur = self.db.cursor()
 
     @commands.command()
-    async def streak(self, ctx, id=None, monthly=False):
+    async def streak(self, ctx: commands.Context, id: int = None, monthly: bool = False) -> None:
+        """
+        Show the streak for a user
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        id : int
+            The id of the requested user
+        monthly : bool
+            True if monthly stats, else all stats
+        """
         if id is None:
             id = ctx.author.id
         current_streak = access_database.get_current_streak(id, monthly)
@@ -41,7 +53,19 @@ class Database(commands.Cog):
         await ctx.reply(embed=embed)
 
     @commands.command()
-    async def maxstreak(self, ctx, id=None, monthly=True):
+    async def maxstreak(self, ctx: commands.Context, id: int = None, monthly: bool = True) -> None:
+        """
+        Show the max streak for a user
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        id : int
+            The id of the requested user
+        monthly : bool
+            True if monthly stats, else all stats
+        """
         if id is None:
             id = ctx.author.id
         max_streak = access_database.get_max_streak(id, monthly)
@@ -49,7 +73,15 @@ class Database(commands.Cog):
         await ctx.reply(embed=embed)
 
     @commands.command()
-    async def freeze(self, ctx):
+    async def freeze(self, ctx: commands.Context) -> None:
+        """
+        Test the freeze streak
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        """
         test_counter = 10
         view = UseFreezeStreak(ctx.author.id, test_counter, self.db, self.cur, self.client)
         color = access_database.get_user_color(self.client, ctx.author.id)
@@ -60,13 +92,29 @@ class Database(commands.Cog):
             print("Exception in sending UseFreezeStreak after a game: ", e)
 
     @commands.command()
-    async def medals(self, ctx: commands.Context):
+    async def medals(self, ctx: commands.Context, user: discord.User = None) -> None:
+        """
+        Show the amount of medals for a user
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        user : discord.User
+            The requested user
+        """
+        if user is None:
+            id = ctx.author.id
+            name = ctx.author.name
+        else:
+            id = user.id
+            name = user.name
         places = [":first_place:", ":second_place:", ":third_place:"]
-        medals = await access_database.get_medals(ctx.author.id)
+        medals = await access_database.get_medals(id)
         description = ""
         for place, medal in zip(places, medals):
             description += f"{place}: {medal}\n"
-        embed = discord.Embed(title=f"Medals of {ctx.author.name}:", description=description, color=access_database.get_user_color(self.client, ctx.author.id))
+        embed = discord.Embed(title=f"Medals of {name}:", description=description, color=access_database.get_user_color(self.client, id))
         await ctx.reply(embed=embed)
 
     @commands.command()
