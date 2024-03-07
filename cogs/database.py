@@ -243,9 +243,33 @@ class Database(commands.Cog):
         Check if it is the first day of the month and reward monthly medals
         """
         types = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
+        places = [":first_place:", ":second_place:", ":third_place:"]
         if datetime.now().day == 1:
             for t in types:
-                access_database.get_all_data(type)
+                datas, title, currency = access_database.get_all_data(t)
+                try:
+                    for rank, data in enumerate(datas[:3]):
+                        await access_database.add_medal(self.client, rank, data[0])
+                        user = await self.client.fetch_user(data[0])
+                        embed = discord.Embed(title="Montly results", description=f"Congratulations, you got a {places[rank + 1]} in the category: **{t}**")
+                        await user.send(embed=embed)
+                except Exception as e:
+                    print(e)
+
+    @commands.command()
+    async def addmedals(self, ctx):
+        types = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
+        places = [":first_place:", ":second_place:", ":third_place:"]
+        for t in types:
+            datas, title, currency = access_database.get_all_data(t)
+            try:
+                for rank, data in enumerate(datas[:3]):
+                    await access_database.add_medal(self.client, rank, data[0])
+                    user = await self.client.fetch_user(data[0])
+                    embed = discord.Embed(title="Montly results", description=f"Congratulations, you got a {places[rank + 1]} in the category: **{t}**")
+                    await user.send(embed=embed)
+            except Exception as e:
+                print(e)
 
 
 class Shop(discord.ui.View):
