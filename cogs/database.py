@@ -249,7 +249,7 @@ class Database(commands.Cog):
                 datas, title, currency = access_database.get_all_data(t)
                 try:
                     for rank, data in enumerate(datas[:3]):
-                        await access_database.add_medal(self.client, rank, data[0])
+                        await access_database.add_medal(self.client, rank, data[0], t)
                         user = await self.client.fetch_user(data[0])
                         embed = discord.Embed(title="Montly results", description=f"Congratulations, you got a {places[rank + 1]} in the category: **{t}**")
                         await user.send(embed=embed)
@@ -264,7 +264,7 @@ class Database(commands.Cog):
             datas, title, currency = access_database.get_all_data(t)
             try:
                 for rank, data in enumerate(datas[:3]):
-                    await access_database.add_medal(self.client, rank, data[0])
+                    await access_database.add_medal(self.client, rank, data[0], t)
                     user = await self.client.fetch_user(data[0])
                     embed = discord.Embed(title="Montly results", description=f"Congratulations, you got a {places[rank + 1]} in the category: **{t}**")
                     await user.send(embed=embed)

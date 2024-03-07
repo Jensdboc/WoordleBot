@@ -191,7 +191,7 @@ async def add_achievement(client: discord.Client, name: str, id: int) -> None:
         print("Exception in add_achievement: ", e)
 
 
-async def add_medal(client: discord.Client, rank: int, id: int) -> None:
+async def add_medal(client: discord.Client, rank: int, id: int, medal_type: str) -> None:
     db, cur = get_db_and_cur()
     # user = client.get_user(id)
     medal_dict = {0: "First place medals", 1: "Second place medals", 2: "Third place medals"}
@@ -215,6 +215,24 @@ async def add_medal(client: discord.Client, rank: int, id: int) -> None:
                         VALUES (?, ?, ?)
                         """, (medal_dict[rank], id, 1))
         db.commit()
+
+        await add_achievement(client, "That's a start", id)
+
+        if rank == 0 and medal_type == "average guesses":
+            await add_achievement(client, "The best category", id)
+
+        amount_of_medals = 0
+        for medal in medal_dict.values():
+            cur.execute("""
+                        SELECT amount from items_player
+                        WHERE name = ? AND id = ?
+                        """, (medal, id))
+            datas = cur.fetchall()
+            if datas != []:
+                amount_of_medals += datas[0][0]
+        if amount_of_medals >= 10:
+            await add_achievement(client, "Starting a collection", id)
+
         cur.close()
     except Exception as e:
         print("Exception in add_medal: ", e)
