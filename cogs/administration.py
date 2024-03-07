@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 from admincheck import admin_check
+from constants import CHANNEL_IDS
 
 OWNER_ID = 656916865364525067
 
@@ -47,11 +48,7 @@ class Administration(commands.Cog):
         message : str
             Message to announce
         """
-        with open("data/channels.txt", "r") as file:
-            lines = file.readlines()
-            channel_ids = [int(line.rstrip("\n")) for line in lines]
-
-        for ch_id in channel_ids:
+        for ch_id in CHANNEL_IDS:
             try:
                 channel = self.client.get_channel(ch_id)
                 embed = discord.Embed(title="Woordle announcement", description=message, color=ctx.author.color)
@@ -59,15 +56,6 @@ class Administration(commands.Cog):
             except Exception:
                 embed = discord.Embed(title="Woordle announcement", description=f"Channel with {ch_id} not found!", color=ctx.author.color)
                 await ctx.send(embed=embed)
-
-    @commands.command(usage="=addchannel <channel_id>",
-                      description="Add a channel to the channels that broadcast WoordleGames")
-    @commands.check(admin_check)
-    async def addchannel(self, ctx: commands.Context, ch_id: int) -> None:
-        with open("data/channels.txt", "a+") as file:
-            file.write(str(ch_id) + "\n")
-        embed = discord.Embed(title="Woordle", description="The channel has been added successfully!", color=ctx.author.color)
-        await ctx.send(embed=embed)
 
 
 # Allows to connect cog to bot

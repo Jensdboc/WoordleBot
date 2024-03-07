@@ -1,6 +1,7 @@
 import sqlite3
 import random
 from datetime import datetime
+from typing import Tuple
 
 
 # Add word to woordle_game if not in the database already
@@ -19,7 +20,7 @@ def pick_word() -> str:
     return word
 
 
-def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
+def get_db_and_cur() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
     try:
         db = sqlite3.connect("woordle.db")
         cur = db.cursor()
@@ -288,7 +289,12 @@ def fill_database() -> None:
         items = [
                     # Streak items
                     ["Freeze streak", "Keep your streak when missing a day", "250", "rare", "2"],
-                    ["Loss streak", "Keep your streak when losing a game", "150", "common", "2"]
+                    ["Loss streak", "Keep your streak when losing a game", "150", "common", "2"],
+
+                    # Medal items
+                    ["First place medals", "Amount of first places in monthly competitions", "-1", "legendary", "-1"],
+                    ["Second place medals", "Amount of first places in monthly competitions", "-1", "epic", "-1"],
+                    ["Third place medals", "Amount of first places in monthly competitions", "-1", "rare", "-1"]
                 ]
 
         for item in items:
