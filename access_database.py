@@ -1,6 +1,7 @@
 import discord
 import sqlite3
 
+from typing import Tuple
 from datetime import datetime, timedelta
 from woordle_game import WoordleGame
 from constants import COLOR_MAP
@@ -11,7 +12,7 @@ def debug(message):
         out.write(message + "\n")
 
 
-def get_db_and_cur() -> (sqlite3.Connection, sqlite3.Cursor):
+def get_db_and_cur() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
     db = sqlite3.connect("woordle.db")
     cur = db.cursor()
     return db, cur

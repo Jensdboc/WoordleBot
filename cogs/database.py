@@ -242,8 +242,10 @@ class Database(commands.Cog):
         """
         Check if it is the first day of the month and reward monthly medals
         """
+        types = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
         if datetime.now().day == 1:
-            pass
+            for t in types:
+                access_database.get_all_data(type)
 
 
 class Shop(discord.ui.View):
