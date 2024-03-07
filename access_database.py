@@ -1,7 +1,7 @@
 import discord
 import sqlite3
 
-from typing import Tuple
+from typing import Tuple, List
 from datetime import datetime, timedelta
 from woordle_game import WoordleGame
 from constants import COLOR_MAP, CHANNEL_IDS
@@ -237,7 +237,7 @@ async def add_medal(client: discord.Client, rank: int, id: int, medal_type: str)
         print("Exception in add_medal: ", e)
 
 
-async def get_medals(id: int) -> list[int]:
+async def get_medals(id: int) -> List[int]:
     db, cur = get_db_and_cur()
     medal_dict = {0: "First place medals", 1: "Second place medals", 2: "Third place medals"}
     medals = []
