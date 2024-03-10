@@ -300,7 +300,7 @@ class Database(commands.Cog):
         """
         Check if it is the first day of the month and reward monthly medals
         """
-        types = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
+        types = ["xp", "games played", "games won", "average guesses"]
         places = [":first_place:", ":second_place:", ":third_place:"]
         if datetime.now().day == 1:
             for t in types:
@@ -315,8 +315,8 @@ class Database(commands.Cog):
                     print(e)
 
     @commands.command()
-    async def addmedals(self, ctx):
-        types = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
+    async def addmedals(self, ctx: commands.Context):
+        types = ["xp", "games played", "games won", "average guesses"]
         places = [":first_place:", ":second_place:", ":third_place:"]
         for t in types:
             datas, title, currency = access_database.get_all_data(t)
