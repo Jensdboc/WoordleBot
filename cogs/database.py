@@ -443,9 +443,12 @@ class Shop(discord.ui.View):
                              SELECT * FROM {}
                              """.format(self.view))
             datas = self.cur.fetchall()
-            if (index >= len(datas)):
+            if index >= len(datas):
                 return "No such item available!"
             item_to_buy = datas[index]
+
+            if item_to_buy[2] == -1:
+                return "No such item available!"
 
             # Check if item is already present or reached max
             self.cur.execute("""
@@ -566,7 +569,8 @@ class Shop(discord.ui.View):
             if self.page > len(datas) // ELEMENTS_ON_PAGE:
                 self.page = len(datas) // ELEMENTS_ON_PAGE
             for i, data in enumerate(datas):
-                if i >= self.page * ELEMENTS_ON_PAGE and i < (self.page + 1) * ELEMENTS_ON_PAGE:
+                # Check for not displaying items with cost -1
+                if data[2] != -1 and i >= self.page * ELEMENTS_ON_PAGE and i < (self.page + 1) * ELEMENTS_ON_PAGE:
                     rank = i + 1 - self.page * ELEMENTS_ON_PAGE
                     if selected == data[0]:
                         message += "*__"
