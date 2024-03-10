@@ -5,9 +5,9 @@ from datetime import datetime
 from discord.ext import commands, tasks
 
 import access_database
+from admincheck import admin_check
+from constants import PREFIX
 
-OWNER_ID = 656916865364525067
-CHANNEL_ID = 1161262990989991936
 ELEMENTS_ON_PAGE = 5
 
 
@@ -32,7 +32,13 @@ class Database(commands.Cog):
         self.db = sqlite3.connect("woordle.db")
         self.cur = self.db.cursor()
 
-    @commands.command()
+    @commands.command(usage=f"{PREFIX}streak [id] [monthly]",
+                      description="""
+                                  Show the streak of a user given their id.
+                                  For normal usage leave out the arguments.
+                                  If no member is provided, show the author itself.
+                                  Monthly should be 0/1 or False/True.
+                                  """)
     async def streak(self, ctx: commands.Context, id: int = None, monthly: bool = False) -> None:
         """
         Show the streak for a user
@@ -52,7 +58,13 @@ class Database(commands.Cog):
         embed = discord.Embed(title="Current streak", description=f"Your current streak is {current_streak}")
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(usage=f"{PREFIX}maxstreak [id] [monthly]",
+                      description="""
+                                  Show the maxstreak of a user given their id.
+                                  For normal usage leave out the arguments.
+                                  If no member is provided, show the author itself.
+                                  Monthly should be 0/1 or False/True.
+                                  """)
     async def maxstreak(self, ctx: commands.Context, id: int = None, monthly: bool = True) -> None:
         """
         Show the max streak for a user
@@ -72,7 +84,9 @@ class Database(commands.Cog):
         embed = discord.Embed(title="Max streak", description=f"Your max streak is {max_streak}")
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(usage="=freeze",
+                      description="Test the freeze streak embed")
+    @commands.check(admin_check)
     async def freeze(self, ctx: commands.Context) -> None:
         """
         Test the freeze streak
@@ -91,7 +105,11 @@ class Database(commands.Cog):
         except Exception as e:
             print("Exception in sending UseFreezeStreak after a game: ", e)
 
-    @commands.command()
+    @commands.command(usage=f"{PREFIX}medals [member]",
+                      description="""
+                                  Show the amount of medals.
+                                  If no member is provided, show the author itself.
+                                  """)
     async def medals(self, ctx: commands.Context, user: discord.User = None) -> None:
         """
         Show the amount of medals for a user
@@ -117,59 +135,9 @@ class Database(commands.Cog):
         embed = discord.Embed(title=f"Medals of {name}:", description=description, color=access_database.get_user_color(self.client, id))
         await ctx.reply(embed=embed)
 
-    @commands.command()
-    async def get_games(self, ctx: commands.Context):
-        """
-        Retrieve the tables woordle_games
-
-        Parameters
-        ----------
-        ctx : commands.Context
-            Context the command is represented in
-        """
-        self.cur.execute("""
-                         SELECT * FROM woordle_games
-                         """)
-        print("Fetching games")
-        print(self.cur.fetchall())
-        self.cur.close()
-
-    @commands.command()
-    async def get_game(self, ctx: commands.Context):
-        """
-        Retrieve the tables game
-
-        Parameters
-        ----------
-        ctx : commands.Context
-            Context the command is represented in
-        """
-        self.cur.execute("""
-                         SELECT * FROM game
-                         """)
-        print("Fetching game")
-        print(self.cur.fetchall())
-        self.cur.close()
-
-    @commands.command()
-    async def get_player(self, ctx: commands.Context):
-        """
-        Retrieve the tables player
-
-        Parameters
-        ----------
-        ctx : commands.Context
-            Context the command is represented in
-        """
-        self.cur.execute("""
-                         SELECT * FROM player
-                         """)
-        print("Fetching player")
-        print(self.cur.fetchall())
-        self.cur.close()
-
-    @commands.command(usage="=shop",
-                      description="Show which items the user can buy")
+    @commands.command(usage=f"{PREFIX}shop",
+                      description="Show which items the user can buy",
+                      aliases=['shopping'])
     async def shop(self, ctx: commands.Context):
         """
         Show the shop of a member
@@ -183,8 +151,12 @@ class Database(commands.Cog):
         view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
         await ctx.reply(view=view)
 
-    @commands.command(usage="=rank <type> <member>",
-                      description="""Show the ranking. If no member is provided, show the author itself.""")
+    @commands.command(usage=f"{PREFIX}rank <type> <member>",
+                      description="""
+                                  Show the ranking.
+                                  If no member is provided, show the author itself.
+                                  """,
+                      aliases=["ranking"])
     async def rank(self, ctx: commands.Context, type: str = "credit", member: discord.Member = None):
         """
         Show the ranking
@@ -212,6 +184,7 @@ class Database(commands.Cog):
                       description="""
                                   Add a manual game to the database. This can only be done by the owner.
                                   """)
+    @commands.check(admin_check)
     async def add_game(self, ctx, date: str, id: str, guesses: str,
                        timediff: str, counter: str, wordstring: str,
                        wrong_guesses: str, credits_gained: str, xp_gained: str):
@@ -241,66 +214,81 @@ class Database(commands.Cog):
         """
         # =add_game "2023-11-10" "656916865364525067" "5" "0:00:10.000" "3" "TESTSPAARDBOVEN" "0" "30" "5"
         # Change "2023-11-10" and "3"
-        if ctx.author.id == OWNER_ID:
-            try:
+        try:
+            self.cur.execute("""
+                                INSERT OR IGNORE INTO woordle_games (date, number_of_people, word)
+                                VALUES (?,?,?)
+                                """, [date, 1, "TESTS"])
+        except Exception as e:
+            await ctx.send(e)
+        try:
+            self.cur.execute("""
+                                INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                """, (id, guesses, timediff, counter, wordstring, wrong_guesses, credits_gained, xp_gained))
+        except Exception as e:
+            await ctx.send(e)
+        try:
+            self.cur.execute("""
+                                SELECT * FROM player
+                                WHERE id = ?
+                                """, (id,))
+            player_data = self.cur.fetchall()
+            if player_data == []:
                 self.cur.execute("""
-                                 INSERT OR IGNORE INTO woordle_games (date, number_of_people, word)
-                                 VALUES (?,?,?)
-                                 """, [date, 1, "TESTS"])
-            except Exception as e:
-                await ctx.send(e)
-            try:
-                self.cur.execute("""
-                                 INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
-                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                                 """, (id, guesses, timediff, counter, wordstring, wrong_guesses, credits_gained, xp_gained))
-            except Exception as e:
-                await ctx.send(e)
-            try:
-                self.cur.execute("""
-                                 SELECT * FROM player
-                                 WHERE id = ?
-                                 """, (id,))
-                player_data = self.cur.fetchall()
-                if player_data == []:
-                    self.cur.execute("""
-                                     INSERT INTO player (id, credits, xp, current_streak)
-                                     VALUES (?, ?, ?, ?)
-                                     """, (id, "0", "0", "0"))
-            except Exception as e:
-                await ctx.send(e)
-            try:
-                self.cur.execute("""
-                                 UPDATE player
-                                 SET credits = credits + ?
-                                 WHERE id = ?
-                                 """, (int(credits_gained), id))
-            except Exception as e:
-                await ctx.send(e)
+                                    INSERT INTO player (id, credits, xp, current_streak)
+                                    VALUES (?, ?, ?, ?)
+                                    """, (id, "0", "0", "0"))
+        except Exception as e:
+            await ctx.send(e)
+        try:
+            self.cur.execute("""
+                                UPDATE player
+                                SET credits = credits + ?
+                                WHERE id = ?
+                                """, (int(credits_gained), id))
+        except Exception as e:
+            await ctx.send(e)
 
-            self.db.commit()
-            await ctx.send("Game added")
+        self.db.commit()
+        await ctx.send("Game added")
 
     @commands.command()
+    @commands.check(admin_check)
     async def query(self, ctx: commands.Context, query: str):
         try:
-            if ctx.author.id == OWNER_ID:
-                self.cur.execute(query)
-                datas = self.cur.fetchall()
-                self.db.commit()
-                if datas != []:
-                    await ctx.send(datas)
+            self.cur.execute(query)
+            datas = self.cur.fetchall()
+            self.db.commit()
+            if datas != []:
+                await ctx.send(datas)
             await ctx.message.add_reaction("✔️")
         except Exception as e:
             await ctx.send(e)
             await ctx.message.add_reaction("❌")
+
+    @commands.command()
+    @commands.check(admin_check)
+    async def addmedals(self, ctx: commands.Context):
+        types = ["xp", "games played", "games won", "average guesses"]
+        places = [":first_place:", ":second_place:", ":third_place:"]
+        for t in types:
+            datas, title, currency = access_database.get_all_data(t)
+            try:
+                for rank, data in enumerate(datas[:3]):
+                    await access_database.add_medal(self.client, rank, data[0], t)
+                    user = await self.client.fetch_user(data[0])
+                    embed = discord.Embed(title="Montly results", description=f"Congratulations, you got a {places[rank + 1]} in the category: **{t}**")
+                    await user.send(embed=embed)
+            except Exception as e:
+                print(e)
 
     @tasks.loop(hours=24)
     async def DateChecker(self):
         """
         Check if it is the first day of the month and reward monthly medals
         """
-        types = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
+        types = ["xp", "games played", "games won", "average guesses"]
         places = [":first_place:", ":second_place:", ":third_place:"]
         if datetime.now().day == 1:
             for t in types:
@@ -313,21 +301,6 @@ class Database(commands.Cog):
                         await user.send(embed=embed)
                 except Exception as e:
                     print(e)
-
-    @commands.command()
-    async def addmedals(self, ctx):
-        types = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
-        places = [":first_place:", ":second_place:", ":third_place:"]
-        for t in types:
-            datas, title, currency = access_database.get_all_data(t)
-            try:
-                for rank, data in enumerate(datas[:3]):
-                    await access_database.add_medal(self.client, rank, data[0], t)
-                    user = await self.client.fetch_user(data[0])
-                    embed = discord.Embed(title="Montly results", description=f"Congratulations, you got a {places[rank + 1]} in the category: **{t}**")
-                    await user.send(embed=embed)
-            except Exception as e:
-                print(e)
 
 
 class Shop(discord.ui.View):

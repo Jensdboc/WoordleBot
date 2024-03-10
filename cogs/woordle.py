@@ -9,7 +9,8 @@ from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 from cogs.database import UseFreezeStreak, UseLossStreak
 from access_database import check_achievements_after_game, get_user_color, get_user_skin, get_current_streak, get_max_streak
-from constants import COLOR_MAP, CHANNEL_IDS
+from constants import COLOR_MAP, CHANNEL_IDS, PREFIX
+from admincheck import admin_check
 
 
 class Woordle(commands.Cog):
@@ -285,8 +286,11 @@ class Woordle(commands.Cog):
                 channel = self.client.get_channel(id)
                 await channel.send(embed=result_embed)
 
-    @commands.command(usage="=woordle",
-                      description="Guess the next word for the Woordle",
+    @commands.command(usage=f"{PREFIX}woordle <guess>",
+                      description="""
+                                  Play one guess in a WoordleGame.
+                                  Guess has to be a valid Dutch word and contain 5 letters.
+                                  """,
                       aliases=['w'])
     async def woordle(self, ctx: commands.Context, guess: str = None):
         """
@@ -345,8 +349,8 @@ class Woordle(commands.Cog):
 
     @commands.command(usage="=woordlereset",
                       description="Reset all current wordlegames",
-                      help="This is an admin-only command",
                       aliases=['wr'])
+    @commands.check(admin_check)
     async def woordlereset(self, ctx: commands.Context):
         """
         Reset all WoordleGames
@@ -356,20 +360,15 @@ class Woordle(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        # Check if author is admin
-        if ctx.author.id != 656916865364525067:
-            embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=COLOR_MAP["Red"])
-            await ctx.send(embed=embed)
-        else:
-            # Clear all games
-            self.games.reset_woordle_games()
-            embed = discord.Embed(title="Woordle", description="All the games have been reset!", color=0x11806a)
-            await ctx.send(embed=embed)
+        # Clear all games
+        self.games.reset_woordle_games()
+        embed = discord.Embed(title="Woordle", description="All the games have been reset!", color=0x11806a)
+        await ctx.send(embed=embed)
 
     @commands.command(usage="=setword <word>",
                       description="Set the current word",
-                      help="This is an admin-only command",
                       aliases=['sw'])
+    @commands.check(admin_check)
     async def setword(self, ctx: commands.Context, word: str):
         """
         Manually set a word
@@ -381,18 +380,14 @@ class Woordle(commands.Cog):
         word : str
             Word to set
         """
-        if ctx.author.id != 656916865364525067:
-            embed = discord.Embed(title="Woordle", description="You do not have permission to execute this command!", color=COLOR_MAP["Red"])
+        # Set current word
+        if self.games.set_word(word):
+            embed = discord.Embed(title="Woordle", description=f"{word} has been set as the new word!", color=0x11806a)
             await ctx.send(embed=embed)
         else:
-            # Set current word
-            if self.games.set_word(word):
-                embed = discord.Embed(title="Woordle", description=f"{word} has been set as the new word!", color=0x11806a)
-                await ctx.send(embed=embed)
-            else:
-                await ctx.message.add_reaction("❌")
-                embed = discord.Embed(title="Woordle", description=f"{word} is not a valid word!", color=0x11806a)
-                await ctx.send(embed=embed)
+            await ctx.message.add_reaction("❌")
+            embed = discord.Embed(title="Woordle", description=f"{word} is not a valid word!", color=0x11806a)
+            await ctx.send(embed=embed)
 
     @tasks.loop(hours=24)
     async def day_loop(self):
