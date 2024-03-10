@@ -6,6 +6,7 @@ from discord.ext import commands, tasks
 
 import access_database
 from admincheck import admin_check
+from constants import PREFIX
 
 ELEMENTS_ON_PAGE = 5
 
@@ -31,7 +32,13 @@ class Database(commands.Cog):
         self.db = sqlite3.connect("woordle.db")
         self.cur = self.db.cursor()
 
-    @commands.command()
+    @commands.command(usage=f"{PREFIX}streak [id] [monthly]",
+                      description="""
+                                  Show the streak of a user given their id.
+                                  For normal usage leave out the arguments.
+                                  If no member is provided, show the author itself.
+                                  Monthly should be 0/1 or False/True.
+                                  """)
     async def streak(self, ctx: commands.Context, id: int = None, monthly: bool = False) -> None:
         """
         Show the streak for a user
@@ -51,7 +58,13 @@ class Database(commands.Cog):
         embed = discord.Embed(title="Current streak", description=f"Your current streak is {current_streak}")
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(usage=f"{PREFIX}maxstreak [id] [monthly]",
+                      description="""
+                                  Show the maxstreak of a user given their id.
+                                  For normal usage leave out the arguments.
+                                  If no member is provided, show the author itself.
+                                  Monthly should be 0/1 or False/True.
+                                  """)
     async def maxstreak(self, ctx: commands.Context, id: int = None, monthly: bool = True) -> None:
         """
         Show the max streak for a user
@@ -71,7 +84,8 @@ class Database(commands.Cog):
         embed = discord.Embed(title="Max streak", description=f"Your max streak is {max_streak}")
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(usage="=freeze",
+                      description="Test the freeze streak embed")
     @commands.check(admin_check)
     async def freeze(self, ctx: commands.Context) -> None:
         """
@@ -91,7 +105,11 @@ class Database(commands.Cog):
         except Exception as e:
             print("Exception in sending UseFreezeStreak after a game: ", e)
 
-    @commands.command()
+    @commands.command(usage=f"{PREFIX}medals [member]",
+                      description="""
+                                  Show the amount of medals.
+                                  If no member is provided, show the author itself.
+                                  """)
     async def medals(self, ctx: commands.Context, user: discord.User = None) -> None:
         """
         Show the amount of medals for a user
@@ -117,8 +135,9 @@ class Database(commands.Cog):
         embed = discord.Embed(title=f"Medals of {name}:", description=description, color=access_database.get_user_color(self.client, id))
         await ctx.reply(embed=embed)
 
-    @commands.command(usage="=shop",
-                      description="Show which items the user can buy")
+    @commands.command(usage=f"{PREFIX}shop",
+                      description="Show which items the user can buy",
+                      aliases=['shopping'])
     async def shop(self, ctx: commands.Context):
         """
         Show the shop of a member
@@ -132,8 +151,12 @@ class Database(commands.Cog):
         view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
         await ctx.reply(view=view)
 
-    @commands.command(usage="=rank <type> <member>",
-                      description="""Show the ranking. If no member is provided, show the author itself.""")
+    @commands.command(usage=f"{PREFIX}rank <type> <member>",
+                      description="""
+                                  Show the ranking.
+                                  If no member is provided, show the author itself.
+                                  """,
+                      aliases=["ranking"])
     async def rank(self, ctx: commands.Context, type: str = "credit", member: discord.Member = None):
         """
         Show the ranking
