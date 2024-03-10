@@ -334,67 +334,77 @@ class Shop(discord.ui.View):
 
     @discord.ui.button(label="Skins", style=discord.ButtonStyle.blurple, row=1)
     async def skin(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.view = "skins"
-        self.page = 0
-        embed = self.make_embed(self.view)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            self.view = "skins"
+            self.page = 0
+            embed = self.make_embed(self.view)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Items", style=discord.ButtonStyle.blurple, row=1)
     async def item(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.view = "items"
-        self.page = 0
-        embed = self.make_embed(self.view)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            self.view = "items"
+            self.page = 0
+            embed = self.make_embed(self.view)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Colors", style=discord.ButtonStyle.blurple, row=1)
     async def color(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.view = "colors"
-        self.page = 0
-        embed = self.make_embed(self.view)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            self.view = "colors"
+            self.page = 0
+            embed = self.make_embed(self.view)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.grey, row=1)
     async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.page > 0:
-            self.page -= 1
-        embed = self.make_embed(self.view)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            if self.page > 0:
+                self.page -= 1
+            embed = self.make_embed(self.view)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.grey, row=1)
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.page += 1
-        embed = self.make_embed(self.view)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            self.page += 1
+            embed = self.make_embed(self.view)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 1", style=discord.ButtonStyle.blurple, row=2)
     async def one(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE)
-        embed = self.make_embed(self.view, feedback)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE)
+            embed = self.make_embed(self.view, feedback)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 2", style=discord.ButtonStyle.blurple, row=2)
     async def two(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 1)
-        embed = self.make_embed(self.view, feedback)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 1)
+            embed = self.make_embed(self.view, feedback)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 3", style=discord.ButtonStyle.blurple, row=2)
     async def three(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 2)
-        embed = self.make_embed(self.view, feedback)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 2)
+            embed = self.make_embed(self.view, feedback)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 4", style=discord.ButtonStyle.blurple, row=2)
     async def four(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 3)
-        embed = self.make_embed(self.view, feedback)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 3)
+            embed = self.make_embed(self.view, feedback)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(label="Buy/Select 5", style=discord.ButtonStyle.blurple, row=2)
     async def five(self, interaction: discord.Interaction, button: discord.ui.Button):
-        feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 4)
-        embed = self.make_embed(self.view, feedback)
-        await interaction.response.edit_message(embed=embed, view=self)
+        if interaction.user.id == self.id:
+            feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 4)
+            embed = self.make_embed(self.view, feedback)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     async def buy_item(self, index: int) -> str:
         """
