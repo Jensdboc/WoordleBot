@@ -11,7 +11,7 @@ from initialize_database import create_database, fill_database, set_word_of_toda
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix=PREFIX, help_command=CustomHelpCommand(),
                       case_insensitive=True, intents=intents)
-client.activity = discord.Game(name="Join https://discord.gg/KmN3jh3Fe5")
+client.activity = discord.Game(name="https://discord.gg/KmN3jh3Fe5")
 
 
 @client.command()
