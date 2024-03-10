@@ -43,7 +43,7 @@ class WoordleGame:
         self.wordstring = ""
         self.failed = True
         self.time = 0
-        self.letters = LETTER_MAP
+        self.letters = LETTER_MAP.copy()
 
     def add_row(self) -> None:
         """
@@ -91,6 +91,7 @@ class WoordleGame:
         board += "\n"
 
         # Set list of status of chosen letters
+        print(self.letters)
         for index, letter in enumerate(ALPHABET):
             if index == len(ALPHABET)/2:
                 board += "\n"
