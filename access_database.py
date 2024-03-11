@@ -382,6 +382,7 @@ def get_user_skin(id: int) -> int:
 def get_all_data(type: str):
     """
     Get data for view all
+
     Parameters
     ----------
     type : str
@@ -404,28 +405,28 @@ def get_all_data(type: str):
                         ORDER BY credits DESC
                         """)
             datas = cur.fetchall()
-            currency = "credits"
+            currency = ["credit", "credits"]
         elif type == "xp":
             cur.execute("""
                         SELECT id, xp FROM player
                         ORDER BY xp DESC
                         """)
             datas = cur.fetchall()
-            currency = "xp"
+            currency = ["xp", "xp"]
         elif type == "current streak":
             cur.execute("""
                         SELECT id, current_streak FROM player
                         ORDER BY current_streak DESC
                         """)
             datas = cur.fetchall()
-            currency = "days"
+            currency = ["day", "days"]
         elif type == "highest streak":
             cur.execute("""
                         SELECT id, highest_streak FROM player
                         ORDER BY highest_streak DESC
                         """)
             datas = cur.fetchall()
-            currency = "days"
+            currency = ["day", "days"]
         elif type == "games played":
             cur.execute("""
                         SELECT person, COUNT(*) FROM game
@@ -433,7 +434,7 @@ def get_all_data(type: str):
                         ORDER BY COUNT(*) DESC
                         """)
             datas = cur.fetchall()
-            currency = "games"
+            currency = ["game", "games"]
         elif type == "games won":
             cur.execute("""
                         SELECT person, COUNT(*) FROM game
@@ -442,7 +443,7 @@ def get_all_data(type: str):
                         ORDER BY COUNT(*) DESC
                         """)
             datas = cur.fetchall()
-            currency = "games"
+            currency = ["game", "games"]
         elif type == "average guesses":
             cur.execute("""
                         SELECT person, AVG(guesses) FROM game
@@ -450,7 +451,7 @@ def get_all_data(type: str):
                         ORDER BY AVG(guesses)
                         """)
             datas = cur.fetchall()
-            currency = "guesses"
+            currency = ["guess", "guesses"]
         return datas, title, currency
     except Exception as e:
         print(e)
@@ -487,7 +488,7 @@ def get_month_data(type: str):
                         ORDER BY SUM(game.credits_gained) DESC
                         """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
             datas = cur.fetchall()
-            currency = "credits"
+            currency = ["credit", "credits"]
         elif type == "xp":
             cur.execute("""
                         SELECT game.person, SUM(game.xp_gained) FROM game
@@ -500,21 +501,21 @@ def get_month_data(type: str):
                         ORDER BY SUM(game.xp_gained) DESC
                         """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
             datas = cur.fetchall()
-            currency = "xp"
+            currency = ["xp", "xp"]
         elif type == "current streak":
             cur.execute("""
                         SELECT id, current_streak FROM player
                         ORDER BY current_streak DESC
                         """)
             datas = cur.fetchall()
-            currency = "days"
+            currency = ["day", "days"]
         elif type == "highest streak":
             cur.execute("""
                         SELECT id, highest_streak FROM player
                         ORDER BY highest_streak DESC
                         """)
             datas = cur.fetchall()
-            currency = "days"
+            currency = ["day", "days"]
         elif type == "games played":
             cur.execute("""
                         SELECT person, COUNT(*) FROM game
@@ -527,7 +528,7 @@ def get_month_data(type: str):
                         ORDER BY COUNT(*) DESC
                         """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
             datas = cur.fetchall()
-            currency = "games"
+            currency = ["game", "games"]
         elif type == "games won":
             cur.execute("""
                         SELECT person, COUNT(*) FROM game
@@ -541,7 +542,7 @@ def get_month_data(type: str):
                         ORDER BY COUNT(*) DESC
                         """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
             datas = cur.fetchall()
-            currency = "games"
+            currency = ["game", "games"]
         elif type == "average guesses":
             cur.execute("""
                         SELECT person, AVG(guesses) FROM game
@@ -554,7 +555,7 @@ def get_month_data(type: str):
                         ORDER BY AVG(guesses)
                         """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
             datas = cur.fetchall()
-            currency = "guesses"
+            currency = ["guess", "guesses"]
         return datas, title, currency
     except Exception as e:
         print(e)
