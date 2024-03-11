@@ -18,6 +18,24 @@ def get_db_and_cur() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
     return db, cur
 
 
+def get_credits(id: int) -> int:
+    db, cur = get_db_and_cur()
+    try:
+        datas = cur.execute("""
+                            SELECT credits FROM player
+                            WHERE id = ?
+                            """, (id,)).fetchall()
+        cur.close()
+        if datas == []:
+            amount = 0
+        else:
+            amount = datas[0][0]
+        return amount
+    except Exception as e:
+        print("Exception in get_credits: ", e)
+    return 0
+
+
 def get_amount_of_games(id: int) -> int:
     db, cur = get_db_and_cur()
     try:
