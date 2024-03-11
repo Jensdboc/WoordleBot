@@ -32,6 +32,30 @@ class Database(commands.Cog):
         self.db = sqlite3.connect("woordle.db")
         self.cur = self.db.cursor()
 
+    @commands.command(usage=f"{PREFIX}credits [id]",
+                      description="""
+                                  Show your balance
+                                  For normal usage leave out the arguments.
+                                  If no member is provided, show the author itself.
+                                  """,
+                      aliases=["bal", "balance", "credit"])
+    async def credits(self, ctx: commands.Context, id: int = None) -> None:
+        """
+        Show the credits for a user
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        id : int
+            The id of the requested user
+        """
+        if id is None:
+            id = ctx.author.id
+        current_bal = access_database.get_credits(id)
+        embed = discord.Embed(title="Current balance", description=f"Your current balance is {current_bal}")
+        await ctx.reply(embed=embed)
+
     @commands.command(usage=f"{PREFIX}streak [id] [monthly]",
                       description="""
                                   Show the streak of a user given their id.
