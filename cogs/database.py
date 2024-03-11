@@ -725,9 +725,9 @@ class Ranking(discord.ui.View):
                 else:
                     rank = str(i+1)
                 if user == requested_user:
-                    message += f"{rank}: **{user.display_name}**: {str(data[1])} {currency}\n"
+                    message += f"{rank}: **{user.display_name}**: {str(data[1])} {currency[0 if int(data[1]) == 1 else 1]}\n"
                 else:
-                    message += f"{rank}: {user.display_name}: {str(data[1])} {currency}\n"
+                    message += f"{rank}: {user.display_name}: {str(data[1])} {currency[0 if int(data[1]) == 1 else 1]}\n"
         except Exception as e:
             print(e)
         embed = discord.Embed(title=title, description=message, color=self.color)

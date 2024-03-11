@@ -222,14 +222,14 @@ def fill_database() -> None:
                             # Special achievements
                             ["It's called skill", "Win a Woordle in 1 guess", "legendary"],
                             ["That was the last chance", "Win a Woordle in 6 guesses", "common"],
-                            ["Whoops, my finger slipped", "Have over 100 wrong guesses in a single game", "epic"],
+                            ["Whoops, my finger slipped", "Have over 100 non existent guesses in a single game", "epic"],
                             ["I don't like yellow", "Win a game with only green pieces but not in the first try", "epic"],
                             ["They said it couldn't be done", "Win a game where the only green pieces are in the answer", "legendary"],
-                            ["Mr. Clean", "Win a game without making a wrong guess", "epic"],
+                            ["Mr. Clean", "Win a game without making a non existent guess", "epic"],
                             ["Haaa, poor!", "Try to buy an item but do not have the required credits", "rare"],
 
                             # General stat achievements
-                            ["Learning from mistakes", "Have 100 wrong guesses", "epic"],
+                            ["Learning from mistakes", "Have 100 non existent guesses", "epic"],
 
                             # Timed achievements
                             ["Merry Christmas!", "Win a Woordle on Christmas", "rare"],
