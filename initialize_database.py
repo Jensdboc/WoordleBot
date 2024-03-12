@@ -290,8 +290,8 @@ def fill_database() -> None:
 
         items = [
                     # Streak items
-                    ["Freeze streak", "Keep your streak when missing a day", "250", "rare", "2"],
-                    ["Loss streak", "Keep your streak when losing a game", "100", "common", "2"],
+                    ["Freeze streak", "Keep your streak when missing a day", "150", "rare", "2"],
+                    ["Loss streak", "Keep your streak when losing a game", "75", "common", "2"],
 
                     # Medal items
                     ["First place medals", "Amount of first places in monthly competitions", "-1", "legendary", "-1"],
