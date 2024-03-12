@@ -9,7 +9,7 @@ from woordle_game import WoordleGame
 from woordle_games import WoordleGames
 from cogs.database import UseFreezeStreak, UseLossStreak
 from access_database import check_achievements_after_game, get_user_color, get_user_skin, get_current_streak, get_max_streak
-from constants import COLOR_MAP, CHANNEL_IDS, PREFIX
+from constants import COLOR_MAP, CHANNEL_IDS, PREFIX, DATABASE
 from admincheck import admin_check
 
 
@@ -27,7 +27,7 @@ class Woordle(commands.Cog):
         """
         self.client = client
         self.games = WoordleGames()
-        self.db = sqlite3.connect("woordle.db")
+        self.db = sqlite3.connect(DATABASE)
         self.cur = self.db.cursor()
         self.counter = int(self.cur.execute("""
                                             SELECT id FROM woordle_games
