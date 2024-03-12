@@ -564,7 +564,8 @@ def get_month_data(type: str):
         elif type == "average guesses":
             cur.execute("""
                         SELECT person, AVG(guesses) FROM game
-                        WHERE game.id IN (
+                        WHERE guesses != "X" AND
+                        game.id IN (
                         SELECT woordle_games.id FROM woordle_games
                         WHERE strftime("%m", woordle_games.date) = ?
                             AND strftime("%Y", woordle_games.date) = ?
