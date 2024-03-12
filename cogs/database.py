@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 
 import access_database
 from admincheck import admin_check
-from constants import PREFIX
+from constants import PREFIX, DATABASE
 
 ELEMENTS_ON_PAGE = 5
 
@@ -29,7 +29,7 @@ class Database(commands.Cog):
             Discord Woordle bot
         """
         self.client = client
-        self.db = sqlite3.connect("woordle.db")
+        self.db = sqlite3.connect(DATABASE)
         self.cur = self.db.cursor()
 
     @commands.command(usage=f"{PREFIX}credits [id]",
@@ -736,10 +736,10 @@ class Ranking(discord.ui.View):
             Embed with ranking
         """
         message = ""
+        requested_user = await self.client.fetch_user(self.id)
         try:
             for i, data in enumerate(datas):
                 user = await self.client.fetch_user(data[0])
-                requested_user = await self.client.fetch_user(self.id)
                 if i == 0:
                     rank = ":first_place:"
                 elif i == 1:

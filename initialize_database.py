@@ -3,6 +3,8 @@ import random
 from datetime import datetime
 from typing import Tuple
 
+from constants import DATABASE
+
 
 # Add word to woordle_game if not in the database already
 def pick_word() -> str:
@@ -22,7 +24,7 @@ def pick_word() -> str:
 
 def get_db_and_cur() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
     try:
-        db = sqlite3.connect("woordle.db")
+        db = sqlite3.connect(DATABASE)
         cur = db.cursor()
         return db, cur
     except Exception as e:
@@ -40,7 +42,7 @@ def create_database() -> None:
     try:
         cur.execute("""
                     CREATE TABLE IF NOT EXISTS woordle_games (
-                        id integer PRIMARY KEY AUTOINCREMENT,
+                        id integer PRIMARY KEY,
                         date date UNIQUE NOT NULL,
                         number_of_people integer NOT NULL,
                         word text NOT NULL
@@ -259,15 +261,15 @@ def fill_database() -> None:
         skins = [
                     # Basic skins
                     ["Default", "Green and Yellow", "0", "common"],
-                    ["Chess", "Black and white", "250", "common"],
-                    ["Colorblind", "Blue and orange", "250", "common"],
+                    ["Chess", "Black and white", "200", "common"],
+                    ["Colorblind", "Blue and orange", "200", "common"],
 
                     # Emoji skins
-                    ["Hearts", "Heartshaped", "250", "common"],
-                    ["I like balls", "Circles", "250", "common"],
-                    ["Moooons", "Moons with smiles", "250", "common"],
-                    ["Fruit", "Lemon and green apple", "250", "common"],
-                    ["Fruit 2.0", "Banana and pear", "250", "common"],
+                    ["Hearts", "Heartshaped", "200", "common"],
+                    ["I like balls", "Circles", "200", "common"],
+                    ["Moooons", "Moons with smiles", "200", "common"],
+                    ["Fruit", "Lemon and green apple", "200", "common"],
+                    ["Fruit 2.0", "Banana and pear", "200", "common"],
                     ["Fruit (tropical edition)", "Pineapple and avocado", "500", "common"],
 
                     # Themed skins
@@ -289,7 +291,7 @@ def fill_database() -> None:
         items = [
                     # Streak items
                     ["Freeze streak", "Keep your streak when missing a day", "250", "rare", "2"],
-                    ["Loss streak", "Keep your streak when losing a game", "150", "common", "2"],
+                    ["Loss streak", "Keep your streak when losing a game", "100", "common", "2"],
 
                     # Medal items
                     ["First place medals", "Amount of first places in monthly competitions", "-1", "legendary", "-1"],

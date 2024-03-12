@@ -1,6 +1,8 @@
 PREFIX = "="
 CHANNEL_IDS = [1161262990989991936]  # Real channel
 # CHANNEL_IDS = [1216431080698150942]  # Test channel
+DATABASE = "woordle.db"
+# DATABASE = "server_woordle.db"
 
 COLOR_MAP = {
     "Red": 0xFF0000,

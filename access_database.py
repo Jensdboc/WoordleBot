@@ -4,7 +4,7 @@ import sqlite3
 from typing import Tuple, List
 from datetime import datetime, timedelta
 from woordle_game import WoordleGame
-from constants import COLOR_MAP, CHANNEL_IDS
+from constants import COLOR_MAP, CHANNEL_IDS, DATABASE
 
 
 def debug(message):
@@ -13,7 +13,7 @@ def debug(message):
 
 
 def get_db_and_cur() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
-    db = sqlite3.connect("woordle.db")
+    db = sqlite3.connect(DATABASE)
     cur = db.cursor()
     return db, cur
 
