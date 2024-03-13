@@ -485,7 +485,7 @@ class Shop(discord.ui.View):
                                      WHERE name = ? AND id = ?
                                      """.format(f"{self.view}_player"), (item_to_buy[0], self.id))
                     self.db.commit()
-                    if self.view == "skins":
+                    if self.view == "skins" and item_to_buy[2] != 0:
                         """-----ACHIEVEMENT CHECK-----"""
                         await access_database.add_achievement(self.client, "Look how fancy", self.id)
                         """-----ACHIEVEMENT CHECK-----"""
