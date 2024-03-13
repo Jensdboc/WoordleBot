@@ -465,6 +465,7 @@ def get_all_data(type: str):
         elif type == "average guesses":
             cur.execute("""
                         SELECT person, AVG(guesses) FROM game
+                        WHERE guesses != "X"
                         GROUP BY person
                         ORDER BY AVG(guesses)
                         """)
