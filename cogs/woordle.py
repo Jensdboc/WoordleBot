@@ -205,7 +205,7 @@ class Woordle(commands.Cog):
                 streak_credits = 15
             else:
                 streak_credits = 20
-            credits_gained = int(10 * (6 - woordle_game.row) + streak_credits)
+            credits_gained = int(8 * (7 - woordle_game.row) + streak_credits)
         else:
             credits_gained = 0
         try:
