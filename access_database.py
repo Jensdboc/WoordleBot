@@ -255,6 +255,32 @@ async def add_medal(client: discord.Client, rank: int, id: int, medal_type: str)
         print("Exception in add_medal: ", e)
 
 
+async def get_achievements(id: int) -> List[Tuple[str, str]]:
+    db, cur = get_db_and_cur()
+    achievements = []
+    try:
+        cur.execute("""
+                    SELECT name FROM achievements_player
+                    WHERE id = ?
+                    """, (id,))
+        datas = cur.fetchall()
+        if datas == []:
+            return datas
+        for data in datas:
+            name = data[0]
+            cur.execute("""
+                        SELECT description FROM achievements
+                        WHERE name = ?
+                        """, (name,))
+            description = cur.fetchall()[0][0]
+            achievements.append((name, description))
+
+        cur.close()
+        return achievements
+    except Exception as e:
+        print("Exception in get_achievements: ", e)
+
+
 async def get_medals(id: int) -> List[int]:
     db, cur = get_db_and_cur()
     medal_dict = {0: "First place medals", 1: "Second place medals", 2: "Third place medals"}

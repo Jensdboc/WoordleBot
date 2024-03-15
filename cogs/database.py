@@ -16,6 +16,26 @@ def debug(message):
         out.write(message + "\n")
 
 
+def get_id_and_name(ctx: commands.Context, user: discord.User = None):
+    """
+    Check whether a user was provided for a command
+
+    Parameters
+    ----------
+    ctx : commands.Context
+        Context the command is represented in
+    user : discord.User
+        The requested user
+    """
+    if user is None:
+        id = ctx.author.id
+        name = ctx.author.name
+    else:
+        id = user.id
+        name = user.name
+    return id, name
+
+
 class Database(commands.Cog):
     """Class for interactions with the database"""
 
@@ -32,14 +52,38 @@ class Database(commands.Cog):
         self.db = sqlite3.connect(DATABASE)
         self.cur = self.db.cursor()
 
-    @commands.command(usage=f"{PREFIX}credits [id]",
+    @commands.command(usage=f"{PREFIX}achievements [member]",
                       description="""
-                                  Show your balance
-                                  For normal usage leave out the arguments.
+                                  Show the achievements of a given member.
+                                  If no member is provided, show the author itself.
+                                  """,
+                      aliases=["achievement"])
+    async def achievements(self, ctx: commands.Context, user: discord.User = None) -> None:
+        """
+        Show the achievements of a given member
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        user : discord.User
+            The requested user
+        """
+        id, name = get_id_and_name(ctx, user)
+        achievements = await access_database.get_achievements(id)
+        description = ""
+        for achievement in achievements:
+            description += f"**{achievement[0]}**\n> {achievement[1]}\n"
+        embed = discord.Embed(title=f"Achievements of {name}:", description=description, color=access_database.get_user_color(self.client, id))
+        await ctx.reply(embed=embed)
+
+    @commands.command(usage=f"{PREFIX}credits [member]",
+                      description="""
+                                  Show the balance of the given member.
                                   If no member is provided, show the author itself.
                                   """,
                       aliases=["bal", "balance", "credit"])
-    async def credits(self, ctx: commands.Context, id: int = None) -> None:
+    async def credits(self, ctx: commands.Context, user: discord.User = None) -> None:
         """
         Show the credits for a user
 
@@ -47,66 +91,40 @@ class Database(commands.Cog):
         ----------
         ctx : commands.Context
             Context the command is represented in
-        id : int
-            The id of the requested user
+        user : discord.User
+            The requested user
         """
-        if id is None:
-            id = ctx.author.id
+        id, name = get_id_and_name(ctx, user)
         current_bal = access_database.get_credits(id)
-        embed = discord.Embed(title="Current balance", description=f"Your current balance is {current_bal}")
+        embed = discord.Embed(title=f"Current balance of {name}", description=f"Your current balance is {current_bal}")
         await ctx.reply(embed=embed)
 
-    @commands.command(usage=f"{PREFIX}streak [id] [monthly]",
+    @commands.command(usage=f"{PREFIX}streak [member] [monthly]",
                       description="""
-                                  Show the streak of a user given their id.
-                                  For normal usage leave out the arguments.
+                                  Show the streak/maxstreak of a member.
                                   If no member is provided, show the author itself.
                                   Monthly should be 0/1 or False/True.
-                                  """)
-    async def streak(self, ctx: commands.Context, id: int = None, monthly: bool = False) -> None:
+                                  """,
+                      aliases=["maxstreak"])
+    async def streak(self, ctx: commands.Context, user: discord.User = None, monthly: bool = False) -> None:
         """
-        Show the streak for a user
+        Show the streak/maxstreak for a user
 
         Parameters
         ----------
         ctx : commands.Context
             Context the command is represented in
-        id : int
-            The id of the requested user
+        user : discord.User
+            The requested user
         monthly : bool
             True if monthly stats, else all stats
         """
-        if id is None:
-            id = ctx.author.id
+        id, name = get_id_and_name(ctx, user)
         current_streak = access_database.get_current_streak(id, monthly)
-        embed = discord.Embed(title="Current streak", description=f"Your current streak is {current_streak}")
-        await ctx.reply(embed=embed)
-
-    @commands.command(usage=f"{PREFIX}maxstreak [id] [monthly]",
-                      description="""
-                                  Show the maxstreak of a user given their id.
-                                  For normal usage leave out the arguments.
-                                  If no member is provided, show the author itself.
-                                  Monthly should be 0/1 or False/True.
-                                  """)
-    async def maxstreak(self, ctx: commands.Context, id: int = None, monthly: bool = True) -> None:
-        """
-        Show the max streak for a user
-
-        Parameters
-        ----------
-        ctx : commands.Context
-            Context the command is represented in
-        id : int
-            The id of the requested user
-        monthly : bool
-            True if monthly stats, else all stats
-        """
-        if id is None:
-            id = ctx.author.id
         max_streak = access_database.get_max_streak(id, monthly)
-        embed = discord.Embed(title="Max streak", description=f"Your max streak is {max_streak}")
+        embed = discord.Embed(title=f"Streaks of {name}", description=f"Your current streak is **{current_streak}**\nYour max streak is **{max_streak}**")
         await ctx.reply(embed=embed)
+
 
     @commands.command(usage="=freeze",
                       description="Test the freeze streak embed")
