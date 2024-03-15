@@ -16,6 +16,26 @@ def debug(message):
         out.write(message + "\n")
 
 
+def get_id_and_name(ctx: commands.Context, user: discord.User = None):
+    """
+    Check whether a user was provided for a command
+
+    Parameters
+    ----------
+    ctx : commands.Context
+        Context the command is represented in
+    user : discord.User
+        The requested user
+    """
+    if user is None:
+        id = ctx.author.id
+        name = ctx.author.name
+    else:
+        id = user.id
+        name = user.name
+    return id, name
+
+
 class Database(commands.Cog):
     """Class for interactions with the database"""
 
@@ -31,6 +51,31 @@ class Database(commands.Cog):
         self.client = client
         self.db = sqlite3.connect(DATABASE)
         self.cur = self.db.cursor()
+
+    @commands.command(usage=f"{PREFIX}achievements [member]",
+                      description="""
+                                  Show the achievements of a given member.
+                                  If no member is provided, show the author itself.
+                                  """,
+                      aliases=["achievement"])
+    async def achievements(self, ctx: commands.Context, user: discord.User = None) -> None:
+        """
+        Show the achievements of a given member
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        user : discord.User
+            The requested user
+        """
+        id, name = get_id_and_name(ctx, user)
+        achievements = await access_database.get_achievements(id)
+        description = ""
+        for achievement in achievements:
+            description += f"**{achievement[0]}**\n> {achievement[1]}\n"
+        embed = discord.Embed(title=f"Achievements of {name}:", description=description, color=access_database.get_user_color(self.client, id))
+        await ctx.reply(embed=embed)
 
     @commands.command(usage=f"{PREFIX}credits [id]",
                       description="""
