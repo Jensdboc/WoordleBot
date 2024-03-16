@@ -363,7 +363,7 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
     if woordlegame.time < timedelta(seconds=10) and not woordlegame.failed:
         await add_achievement(client, "I'm fast as F boi", id)
     if woordlegame.time > timedelta(hours=1):
-        await add_achievement("Were you even playing?", id)
+        await add_achievement(client, "Were you even playing?", id)
     if woordlegame.time > timedelta(hours=10):
         await add_achievement(client, "That was on purpose", id)
 

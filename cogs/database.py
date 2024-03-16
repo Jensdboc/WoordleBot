@@ -125,7 +125,6 @@ class Database(commands.Cog):
         embed = discord.Embed(title=f"Streaks of {name}", description=f"Your current streak is **{current_streak}**\nYour max streak is **{max_streak}**")
         await ctx.reply(embed=embed)
 
-
     @commands.command(usage="=freeze",
                       description="Test the freeze streak embed")
     @commands.check(admin_check)
