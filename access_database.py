@@ -349,7 +349,7 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
     # General stat achievements
     amount_of_wrong_guesses = get_amount_of_wrong_guesses(id)
     if amount_of_wrong_guesses > 100:
-        await add_achievement("Learning from mistakes", id)
+        await add_achievement(client, "Learning from mistakes", id)
 
     # Timed achievements
     if datetime.now().month == 12 and datetime.now().day == 25 and not woordlegame.failed:
