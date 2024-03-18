@@ -13,6 +13,11 @@ from constants import COLOR_MAP, CHANNEL_IDS, PREFIX, DATABASE
 from admincheck import admin_check
 
 
+def debug(message: str) -> None:
+    with open("prints.txt", "a") as out:
+        out.write(f"{message}\n")
+
+
 class Woordle(commands.Cog):
     """Class for Woordle commands"""
 
@@ -322,6 +327,7 @@ class Woordle(commands.Cog):
 
         # Check if the game is being played
         if woordle_game is None:
+            debug(f"{ctx.author.name} -> {guess}")
             # Check if (author, id) are already present in the database
             # This could happen if the bot was restarted and the author plays a second time this day
             past_game = self.cur.execute("""
@@ -345,6 +351,7 @@ class Woordle(commands.Cog):
             await ctx.send(embed=embed)
         else:
             # Update board with guess, edit message
+            debug(f"{ctx.author.name} -> {guess}")
             await self.update_and_edit_game(ctx, guess, woordle_game, False)
 
     @commands.command(usage="=woordlereset",
