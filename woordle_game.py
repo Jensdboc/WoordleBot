@@ -91,7 +91,6 @@ class WoordleGame:
         board += "\n"
 
         # Set list of status of chosen letters
-        print(self.letters)
         for index, letter in enumerate(ALPHABET):
             if index == len(ALPHABET)/2:
                 board += "\n"
