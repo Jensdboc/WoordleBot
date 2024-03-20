@@ -96,7 +96,7 @@ class Database(commands.Cog):
         """
         id, name = get_id_and_name(ctx, user)
         current_bal = access_database.get_credits(id)
-        embed = discord.Embed(title=f"Current balance of {name}", description=f"Your current balance is {current_bal}")
+        embed = discord.Embed(title=f"Current balance of {name}", description=f"Your current balance is {current_bal}", color=access_database.get_user_color(self.client, id))
         await ctx.reply(embed=embed)
 
     @commands.command(usage=f"{PREFIX}streak [member] [monthly]",
@@ -122,7 +122,7 @@ class Database(commands.Cog):
         id, name = get_id_and_name(ctx, user)
         current_streak = access_database.get_current_streak(id, monthly)
         max_streak = access_database.get_max_streak(id, monthly)
-        embed = discord.Embed(title=f"Streaks of {name}", description=f"Your current streak is **{current_streak}**\nYour max streak is **{max_streak}**")
+        embed = discord.Embed(title=f"Streaks of {name}", description=f"Your current streak is **{current_streak}**\nYour max streak is **{max_streak}**", color=access_database.get_user_color(self.client, id))
         await ctx.reply(embed=embed)
 
     @commands.command(usage="=freeze",
