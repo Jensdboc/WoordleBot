@@ -275,6 +275,7 @@ def fill_database() -> None:
                     # Themed skins
                     ["Santa", "Trees, gift, santa", "500", "rare"],
                     ["Spooky", "Jack 'o lantern, ghost", "500", "rare"],
+                    ["Valentine", "Red heart, pink heart, white heart", "500", "rare"],
                     ["Summer Time", "Sun, palmtree", "500", "rare"],
                     ["Dipping time", "Cookie, milk", "750", "epic"],
 

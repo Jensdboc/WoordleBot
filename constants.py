@@ -28,6 +28,7 @@ SKIN_MAP = {
     "Fruit (tropical edition)": {"green": "🥑", "yellow": "🍍", "gray": "⬛"},
     "Santa": {"green": "🌲", "yellow": "🎅", "gray": "🎁"},
     "Spooky": {"green": "🎃", "yellow": "👻", "gray": "⬛"},
+    "Valentine": {"green": "❤️", "yellow": "💗", "gray": "🤍"},
     "Summer Time": {"green": "🌴", "yellow": "☀️", "gray": "⬛"},
     "Dipping time": {"green": "🥛", "yellow": "🍪", "gray": "⬛"},
     "Random": "Random"
