@@ -493,8 +493,8 @@ class Shop(discord.ui.View):
                     self.cur.execute("""
                                      UPDATE {}
                                      SET selected = False
-                                     WHERE selected = True
-                                     """.format(f"{self.view}_player"))
+                                     WHERE selected = True AND id = ?
+                                     """.format(f"{self.view}_player"), (self.id,))
                     # Select current one
                     self.cur.execute("""
                                      UPDATE {}
