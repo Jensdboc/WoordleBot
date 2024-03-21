@@ -537,8 +537,8 @@ class Shop(discord.ui.View):
                 self.cur.execute("""
                                  UPDATE {}
                                  SET selected = False
-                                 WHERE selected = True
-                                 """.format(f"{self.view}_player"))
+                                 WHERE selected = True and id = ?
+                                 """.format(f"{self.view}_player"), (self.id,))
                 # Insert and select current one
                 self.cur.execute("""
                                  INSERT INTO {} (name, id, selected)
