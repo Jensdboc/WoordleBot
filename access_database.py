@@ -81,9 +81,10 @@ def get_current_streak(id: int, monthly: bool = False) -> int:
         if len(ids_games) == 0:
             return 0
 
+        not_played_today = int(ids_games[0] != current_game_id)
         current_streak = 0
         for id in ids_games:
-            if id == current_game_id - current_streak:
+            if id == current_game_id - not_played_today - current_streak:
                 current_streak += 1
             else:
                 break
