@@ -81,9 +81,10 @@ def get_current_streak(id: int, monthly: bool = False) -> int:
         if len(ids_games) == 0:
             return 0
 
+        not_played_today = int(ids_games[0] != current_game_id)
         current_streak = 0
         for id in ids_games:
-            if id == current_game_id - current_streak:
+            if id == current_game_id - not_played_today - current_streak:
                 current_streak += 1
             else:
                 break
@@ -490,16 +491,38 @@ def get_all_data(type: str):
             currency = ["game", "games"]
         elif type == "average guesses":
             cur.execute("""
-                        SELECT person, AVG(guesses) FROM game
+                        SELECT person, AVG(guesses) as average_guesses FROM game
                         WHERE guesses != "X"
                         GROUP BY person
-                        ORDER BY AVG(guesses)
+                        ORDER BY average_guesses
                         """)
             datas = cur.fetchall()
             currency = ["guess", "guesses"]
+        elif type == "average time":
+            cur.execute("""
+                        SELECT person, time FROM game
+                        WHERE guesses != "X"
+                        """)
+            datas = cur.fetchall()
+            user_dict = {}
+            for user, time in datas:
+                if user not in user_dict.keys():
+                    user_dict[user] = [str_to_time(time)]
+                else:
+                    user_dict[user].append(str_to_time(time))
+            for key, value_list in user_dict.items():
+                user_dict[key] = sum(value_list) / len(value_list)
+            datas = sorted(user_dict.items(), key=lambda x: x[1])
+            currency = ["second", "seconds"]
         return datas, title, currency
     except Exception as e:
         print(e)
+
+
+def str_to_time(timestamp: str) -> float:
+    hours, minutes, seconds = map(float, timestamp.split(':'))
+    total_seconds = hours * 3600 + minutes * 60 + seconds
+    return total_seconds
 
 
 def get_month_data(type: str):
@@ -590,7 +613,7 @@ def get_month_data(type: str):
             currency = ["game", "games"]
         elif type == "average guesses":
             cur.execute("""
-                        SELECT person, AVG(guesses) FROM game
+                        SELECT person, AVG(guesses) as average_guesses FROM game
                         WHERE guesses != "X" AND
                         game.id IN (
                         SELECT woordle_games.id FROM woordle_games
@@ -598,10 +621,31 @@ def get_month_data(type: str):
                             AND strftime("%Y", woordle_games.date) = ?
                         )
                         GROUP BY person
-                        ORDER BY AVG(guesses)
+                        ORDER BY average_guesses
                         """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
             datas = cur.fetchall()
             currency = ["guess", "guesses"]
+        elif type == "average time":
+            cur.execute("""
+                        SELECT person, time FROM game
+                        WHERE guesses != "X" AND
+                        game.id IN (
+                        SELECT woordle_games.id FROM woordle_games
+                        WHERE strftime("%m", woordle_games.date) = ?
+                            AND strftime("%Y", woordle_games.date) = ?
+                        )
+                        """, (datetime.now().strftime("%m"), datetime.now().strftime("%Y")))
+            datas = cur.fetchall()
+            user_dict = {}
+            for user, time in datas:
+                if user not in user_dict.keys():
+                    user_dict[user] = [str_to_time(time)]
+                else:
+                    user_dict[user].append(str_to_time(time))
+            for key, value_list in user_dict.items():
+                user_dict[key] = sum(value_list) / len(value_list)
+            datas = sorted(user_dict.items(), key=lambda x: x[1])
+            currency = ["second", "seconds"]
         return datas, title, currency
     except Exception as e:
         print(e)
