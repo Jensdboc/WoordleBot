@@ -122,7 +122,8 @@ class Database(commands.Cog):
         id, name = get_id_and_name(ctx, user)
         current_streak = access_database.get_current_streak(id, monthly)
         max_streak = access_database.get_max_streak(id, monthly)
-        embed = discord.Embed(title=f"Streaks of {name}", description=f"Your current streak is **{current_streak}**\nYour max streak is **{max_streak}**", color=access_database.get_user_color(self.client, id))
+        embed = discord.Embed(title=f"Streaks of {name}", description=f"Your current streak is **{current_streak}**\nYour max streak is **{max_streak}**",
+                              color=access_database.get_user_color(self.client, id))
         await ctx.reply(embed=embed)
 
     @commands.command(usage="=freeze",
@@ -329,7 +330,7 @@ class Database(commands.Cog):
         """
         Check if it is the first day of the month and reward monthly medals
         """
-        types = ["xp", "games played", "games won", "average guesses"]
+        types = ["xp", "games played", "games won", "average guesses", "average time"]
         places = [":first_place:", ":second_place:", ":third_place:"]
         if datetime.now().day == 1:
             for t in types:
@@ -643,7 +644,7 @@ class Ranking(discord.ui.View):
         self.client = client
         self.type = type
         self.view = "all"
-        self.list = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses"]
+        self.list = ["credit", "xp", "current streak", "highest streak", "games played", "games won", "average guesses", "average time"]
         for index, type in enumerate(self.list):
             if self.type == type:
                 self.index = index
