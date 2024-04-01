@@ -295,8 +295,6 @@ async def get_medals(id: int) -> List[int]:
             datas = cur.fetchall()
             if datas != []:
                 medals.append(datas[0][0])
-            else:
-                medals.append(0)
         cur.close()
     except Exception as e:
         print("Exception in get_medal: ", e)
