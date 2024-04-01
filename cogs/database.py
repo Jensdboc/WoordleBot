@@ -325,7 +325,7 @@ class Database(commands.Cog):
             except Exception as e:
                 print(e)
 
-    @tasks.loop(hours=24)
+    @tasks.loop(hours=1)
     async def DateChecker(self):
         """
         Check if it is the first day of the month and reward monthly medals
