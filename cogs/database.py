@@ -320,12 +320,12 @@ class Database(commands.Cog):
                 for rank, data in enumerate(datas[:3]):
                     await access_database.add_medal(self.client, rank, data[0], t)
                     user = await self.client.fetch_user(data[0])
-                    embed = discord.Embed(title="Montly results", description=f"Congratulations, you got a {places[rank + 1]} in the category: **{t}**")
+                    embed = discord.Embed(title="Montly results", description=f"Congratulations, you got a {places[rank]} in the category: **{t}**")
                     await user.send(embed=embed)
             except Exception as e:
                 print(e)
 
-    @tasks.loop(hours=1)
+    @tasks.loop(seconds=1)
     async def DateChecker(self):
         """
         Check if it is the first day of the month and reward monthly medals
