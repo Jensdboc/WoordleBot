@@ -11,7 +11,7 @@ from constants import PREFIX, DATABASE
 ELEMENTS_ON_PAGE = 5
 
 
-def debug(message):
+def debug(message: str) -> None:
     with open("prints.txt", "a") as out:
         out.write(message + "\n")
 
@@ -51,6 +51,43 @@ class Database(commands.Cog):
         self.client = client
         self.db = sqlite3.connect(DATABASE)
         self.cur = self.db.cursor()
+
+    @commands.command()
+    @commands.check(admin_check)
+    async def fill_names_for_user(self, ctx: commands.Context) -> None:
+        """
+        Fill the column NAME in the table PLAYER with the actual player names.
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context the command is represented in
+        """
+        try:
+            self.cur.execute("""
+                             ALTER TABLE player
+                             ADD COLUMN name TEXT NOT NULL DEFAULT 'notselected'
+                             """)
+            self.db.commit()
+
+            self.cur.execute("""
+                             SELECT id FROM player
+                             """)
+            user_ids = self.cur.fetchall()
+
+            for user_id in user_ids:
+                user = await self.client.fetch_user(user_id[0])
+                self.cur.execute("""
+                                 UPDATE player
+                                 SET name = ?
+                                 WHERE id = ?
+                                 """, (user.name, user_id[0]))
+
+            self.db.commit()
+        except Exception as e:
+            print("Exception in fill_names_for_user: ", e)
+
+        await ctx.send("Names filled for all users successfully!")
 
     @commands.command(usage=f"{PREFIX}achievements [member]",
                       description="""
@@ -265,30 +302,31 @@ class Database(commands.Cog):
             await ctx.send(e)
         try:
             self.cur.execute("""
-                                INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                                """, (id, guesses, timediff, counter, wordstring, wrong_guesses, credits_gained, xp_gained))
+                             INSERT INTO game (person, guesses, time, id, wordstring, wrong_guesses, credits_gained, xp_gained)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                             """, (id, guesses, timediff, counter, wordstring, wrong_guesses, credits_gained, xp_gained))
         except Exception as e:
             await ctx.send(e)
         try:
             self.cur.execute("""
-                                SELECT * FROM player
-                                WHERE id = ?
-                                """, (id,))
+                             SELECT * FROM player
+                             WHERE id = ?
+                             """, (id,))
             player_data = self.cur.fetchall()
             if player_data == []:
+                user = await self.client.fetch_user(id)
                 self.cur.execute("""
-                                    INSERT INTO player (id, credits, xp, current_streak)
-                                    VALUES (?, ?, ?, ?)
-                                    """, (id, "0", "0", "0"))
+                                 INSERT INTO player (id, credits, xp, current_streak, name)
+                                 VALUES (?, ?, ?, ?, ?)
+                                 """, (id, "0", "0", "0", user.name))
         except Exception as e:
             await ctx.send(e)
         try:
             self.cur.execute("""
-                                UPDATE player
-                                SET credits = credits + ?
-                                WHERE id = ?
-                                """, (int(credits_gained), id))
+                             UPDATE player
+                             SET credits = credits + ?
+                             WHERE id = ?
+                             """, (int(credits_gained), id))
         except Exception as e:
             await ctx.send(e)
 
@@ -312,7 +350,7 @@ class Database(commands.Cog):
     @commands.command()
     @commands.check(admin_check)
     async def addmedals(self, ctx: commands.Context):
-        types = ["xp", "games played", "games won", "average guesses"]
+        types = ["xp", "games played", "games won", "average guesses", "average time"]
         places = [":first_place:", ":second_place:", ":third_place:"]
         for t in types:
             datas, title, currency = access_database.get_all_data(t)
@@ -754,10 +792,8 @@ class Ranking(discord.ui.View):
             Embed with ranking
         """
         message = ""
-        requested_user = await self.client.fetch_user(self.id)
         try:
             for i, data in enumerate(datas):
-                user = await self.client.fetch_user(data[0])
                 if i == 0:
                     rank = ":first_place:"
                 elif i == 1:
@@ -766,10 +802,19 @@ class Ranking(discord.ui.View):
                     rank = ":third_place:"
                 else:
                     rank = str(i+1)
-                if user == requested_user:
-                    message += f"{rank}: **{user.display_name}**: {str(round(data[1], 2))} {currency[0 if int(data[1]) == 1 else 1]}\n"
+                user_id = data[0]
+                try:
+                    self.cur.execute("""
+                                     SELECT name FROM player
+                                     WHERE id = ?
+                                     """, (user_id,))
+                    name = self.cur.fetchall()[0][0]
+                except Exception as e:
+                    print("Exception in make_embed: ", e)
+                if user_id == self.id:
+                    message += f"{rank}: **{name}**: {str(round(data[1], 2))} {currency[0 if int(data[1]) == 1 else 1]}\n"
                 else:
-                    message += f"{rank}: {user.display_name}: {str(round(data[1], 2))} {currency[0 if int(data[1]) == 1 else 1]}\n"
+                    message += f"{rank}: {name}: {str(round(data[1], 2))} {currency[0 if int(data[1]) == 1 else 1]}\n"
         except Exception as e:
             print(e)
         embed = discord.Embed(title=title, description=message, color=self.color)
