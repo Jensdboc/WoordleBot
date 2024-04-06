@@ -76,6 +76,7 @@ def create_database() -> None:
                         xp integer NOT NULL,
                         current_streak integer NOT NULL,
                         highest_streak integer NOT NULL,
+                        name text NOT NULL,
                         PRIMARY KEY (id)
                         )
                     """)

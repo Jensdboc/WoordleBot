@@ -153,9 +153,9 @@ class Woordle(commands.Cog):
             # If player not in the database yet, create player profile
             if player_data == []:
                 self.cur.execute("""
-                                 INSERT INTO player (id, credits, xp, current_streak, highest_streak)
+                                 INSERT INTO player (id, credits, xp, current_streak, highest_streak, name)
                                  VALUES (?, ?, ?, ?, ?)
-                                 """, (ctx.author.id, "0", "0", "0", "0"))
+                                 """, (ctx.author.id, "0", "0", "0", "0", ctx.author.name))
                 self.db.commit()
         except Exception as e:
             print("Exception (1) in updating database after a game: ", e)
