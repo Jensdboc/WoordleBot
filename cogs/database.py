@@ -111,7 +111,7 @@ class Database(commands.Cog):
         description = ""
         for achievement in achievements:
             description += f"**{achievement[0]}**\n> {achievement[1]}\n"
-        embed = discord.Embed(title=f"Achievements of {name}:", description=description, color=access_database.get_user_color(self.client, id))
+        embed = discord.Embed(title=f"Achievements of {name}:", description=description, color=access_database.get_user_color(ctx, self.client, id))
         await ctx.reply(embed=embed)
 
     @commands.command(usage=f"{PREFIX}credits [member]",
@@ -133,7 +133,7 @@ class Database(commands.Cog):
         """
         id, name = get_id_and_name(ctx, user)
         current_bal = access_database.get_credits(id)
-        embed = discord.Embed(title=f"Current balance of {name}", description=f"Your current balance is {current_bal}", color=access_database.get_user_color(self.client, id))
+        embed = discord.Embed(title=f"Current balance of {name}", description=f"Your current balance is {current_bal}", color=access_database.get_user_color(ctx, self.client, id))
         await ctx.reply(embed=embed)
 
     @commands.command(usage=f"{PREFIX}streak [member] [monthly]",
@@ -160,7 +160,7 @@ class Database(commands.Cog):
         current_streak = access_database.get_current_streak(id, monthly)
         max_streak = access_database.get_max_streak(id, monthly)
         embed = discord.Embed(title=f"Streaks of {name}", description=f"Your current streak is **{current_streak}**\nYour max streak is **{max_streak}**",
-                              color=access_database.get_user_color(self.client, id))
+                              color=access_database.get_user_color(ctx, self.client, id))
         await ctx.reply(embed=embed)
 
     @commands.command(usage="=freeze",
@@ -176,8 +176,8 @@ class Database(commands.Cog):
             Context the command is represented in
         """
         test_counter = 10
-        view = UseFreezeStreak(ctx.author.id, test_counter, self.db, self.cur, self.client)
-        color = access_database.get_user_color(self.client, ctx.author.id)
+        view = UseFreezeStreak(ctx, ctx.author.id, test_counter, self.db, self.cur, self.client)
+        color = access_database.get_user_color(ctx, self.client, ctx.author.id)
         try:
             embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?", color=color)
             await ctx.reply(embed=embed, view=view)
@@ -211,7 +211,7 @@ class Database(commands.Cog):
         description = ""
         for place, medal in zip(places, medals):
             description += f"{place}: {medal}\n"
-        embed = discord.Embed(title=f"Medals of {name}:", description=description, color=access_database.get_user_color(self.client, id))
+        embed = discord.Embed(title=f"Medals of {name}:", description=description, color=access_database.get_user_color(ctx, self.client, id))
         await ctx.reply(embed=embed)
 
     @commands.command(usage=f"{PREFIX}shop",
@@ -227,7 +227,7 @@ class Database(commands.Cog):
             Context the command is represented in
         """
         credits = access_database.get_amount_of_credits(ctx.author.id)
-        view = Shop(ctx.author.id, credits, self.db, self.cur, self.client)
+        view = Shop(ctx, ctx.author.id, credits, self.db, self.cur, self.client)
         await ctx.reply(view=view)
 
     @commands.command(usage=f"{PREFIX}rank <type> <member>",
@@ -251,7 +251,7 @@ class Database(commands.Cog):
             Only needed in case of progress
         """
         id = ctx.author.id if member is None else member.id
-        view = Ranking(id, type, self.db, self.cur, self.client)
+        view = Ranking(ctx, id, type, self.db, self.cur, self.client)
         try:
             await ctx.reply(view=view)
         except Exception as e:
@@ -384,12 +384,14 @@ class Database(commands.Cog):
 
 
 class Shop(discord.ui.View):
-    def __init__(self, id: int, credits: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
+    def __init__(self, ctx: commands.Context, id: int, credits: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
         """
         Initialize the Shop UI
 
         Parameters
         ----------
+        ctx : commands.Context
+            Context the command is represented in
         id : int
             Id of the requested user
         credits : int
@@ -403,6 +405,7 @@ class Shop(discord.ui.View):
         """
         super().__init__()
         self.value = None
+        self.ctx = ctx
         self.id = id
         self.credits = credits
         self.db = db
@@ -410,7 +413,7 @@ class Shop(discord.ui.View):
         self.client = client
         self.view = None
         self.page = 0
-        self.color = access_database.get_user_color(self.client, self.id)
+        self.color = access_database.get_user_color(ctx, self.client, self.id)
 
     @discord.ui.button(label="Skins", style=discord.ButtonStyle.blurple, row=1)
     async def skin(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -657,12 +660,14 @@ class Shop(discord.ui.View):
 
 
 class Ranking(discord.ui.View):
-    def __init__(self, id: int, type: str, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
+    def __init__(self, ctx: commands.Context, id: int, type: str, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
         """
         Initialize the Ranking UI
 
         Parameters
         ----------
+        ctx : commands.Context
+            Context the command is represented in
         id : int
             Id of the requested user
         type : str
@@ -676,6 +681,7 @@ class Ranking(discord.ui.View):
         """
         super().__init__()
         self.value = None
+        self.ctx = ctx
         self.id = id
         self.db = db
         self.cur = cur
@@ -686,7 +692,7 @@ class Ranking(discord.ui.View):
         for index, type in enumerate(self.list):
             if self.type == type:
                 self.index = index
-        self.color = access_database.get_user_color(self.client, self.id)
+        self.color = access_database.get_user_color(ctx, self.client, self.id)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.red, custom_id="<")
     async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -822,12 +828,14 @@ class Ranking(discord.ui.View):
 
 
 class UseFreezeStreak(discord.ui.View):
-    def __init__(self, id: int, counter: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
+    def __init__(self, ctx: commands.Context, id: int, counter: int, db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
         """
         Initialize the UseFreezeStreak UI
 
         Parameters
         ----------
+        ctx : commands.Context
+            Context the command is represented in
         id : int
             Id of the requested user
         counter : int
@@ -841,6 +849,7 @@ class UseFreezeStreak(discord.ui.View):
         """
         super().__init__()
         self.value = None
+        self.ctx = ctx
         self.id = id
         self.counter = counter
         self.db = db
@@ -858,7 +867,7 @@ class UseFreezeStreak(discord.ui.View):
         except Exception as e:
             print("Exception in UseFreezeStreak: ", e)
         self.buttons_disabled = False
-        self.color = access_database.get_user_color(self.client, self.id)
+        self.color = access_database.get_user_color(ctx, self.client, self.id)
 
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
     async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -923,13 +932,15 @@ class UseFreezeStreak(discord.ui.View):
 
 
 class UseLossStreak(discord.ui.View):
-    def __init__(self, id: int, counter: int, word: str,
+    def __init__(self, ctx: commands.Context, id: int, counter: int, word: str,
                  db: sqlite3.Connection, cur: sqlite3.Cursor, client: discord.Client):
         """
         Initialize the UseFreezeStreak UI
 
         Parameters
         ----------
+        ctx : commands.Context
+            Context the command is represented in
         id : int
             Id of the requested user
         counter : str
@@ -943,6 +954,7 @@ class UseLossStreak(discord.ui.View):
         """
         super().__init__()
         self.value = None
+        self.ctx = ctx
         self.id = id
         self.counter = counter
         self.word = word
@@ -961,7 +973,7 @@ class UseLossStreak(discord.ui.View):
         except Exception as e:
             print("Exception in UseLossStreak: ", e)
         self.buttons_disabled = False
-        self.color = access_database.get_user_color(self.client, self.id)
+        self.color = access_database.get_user_color(ctx, self.client, self.id)
 
     @discord.ui.button(label="Yes", style=discord.ButtonStyle.green)
     async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):

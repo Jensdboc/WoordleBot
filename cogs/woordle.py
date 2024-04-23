@@ -189,7 +189,7 @@ class Woordle(commands.Cog):
                 print("Exception while checking previous games: ", e)
 
             if data_one_day_ago == [] and data_two_days_ago != []:
-                view = UseFreezeStreak(ctx.author.id, self.counter, self.db, self.cur, self.client)
+                view = UseFreezeStreak(ctx, ctx.author.id, self.counter, self.db, self.cur, self.client)
                 try:
                     embed = discord.Embed(title="Oh ow, you missed a day!", description="Do you want to use a freeze streak?")
                     await ctx.reply(embed=embed, view=view)
@@ -242,7 +242,7 @@ class Woordle(commands.Cog):
 
         # User has to have loss streaks
         if amount_of_loss > 0 and woordle_game.failed:
-            view = UseLossStreak(ctx.author.id, self.counter, woordle_game.word, self.db, self.cur, self.client)
+            view = UseLossStreak(ctx, ctx.author.id, self.counter, woordle_game.word, self.db, self.cur, self.client)
             try:
                 embed = discord.Embed(title=f"Better luck next time, the word was {woordle_game.word}!", description="Do you want to use a loss streak?", color=COLOR_MAP["Red"])
                 await ctx.reply(embed=embed, view=view)
@@ -322,7 +322,7 @@ class Woordle(commands.Cog):
             return
         if not await self.check_valid_guess(ctx, guess, woordle_game):
             return
-        self.color = get_user_color(self.client, ctx.author.id)
+        self.color = get_user_color(ctx, self.client, ctx.author.id)
         self.skin = get_user_skin(ctx.author.id)
 
         # Check if the game is being played
