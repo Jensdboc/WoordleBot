@@ -1,6 +1,7 @@
 import discord
 import sqlite3
 
+from discord.ext import commands
 from typing import Tuple, List
 from datetime import datetime, timedelta
 from woordle_game import WoordleGame
@@ -376,7 +377,7 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
         await add_achievement(client, "What are you saving them for?", id)
 
 
-def get_user_color(client: discord.Client, id: int) -> int:
+def get_user_color(ctx: commands.Context, client: discord.Client, id: int) -> int:
     db, cur = get_db_and_cur()
     # Set color of author
     datas = cur.execute("""
@@ -394,8 +395,7 @@ def get_user_color(client: discord.Client, id: int) -> int:
     else:
         # Handle special colors
         if datas[0][0] == "Your color":
-            user = client.get_user(id)
-            color = user.color
+            color = ctx.author.color
         elif datas[0][0] == "Random":
             color = discord.Colour.random()
         else:
