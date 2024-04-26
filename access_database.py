@@ -417,16 +417,16 @@ def get_user_skin(id: int) -> int:
                             """, (id, True)).fetchall()
     except Exception as e:
         print("Exception in get_user_skin: ", e)
-        # First time the user has ever played a game
-        if datas == []:
-            cur.execute("""
-                        INSERT OR IGNORE INTO skins_player (name, id, selected)
-                        VALUES (?, ?, ?)
-                        """, ("Default", id, True))
-            db.commit()
-            skin = "Default"
-        else:
-            skin = datas[0][0]
+    # First time the user has ever played a game
+    if datas == []:
+        cur.execute("""
+                    INSERT OR IGNORE INTO skins_player (name, id, selected)
+                    VALUES (?, ?, ?)
+                    """, ("Default", id, True))
+        db.commit()
+        skin = "Default"
+    else:
+        skin = datas[0][0]
     return skin
 
 
