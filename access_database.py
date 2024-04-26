@@ -377,13 +377,16 @@ async def check_achievements_after_game(client: discord.Client, id: int, woordle
         await add_achievement(client, "What are you saving them for?", id)
 
 
-def get_user_color(ctx: commands.Context, client: discord.Client, id: int) -> int:
+async def get_user_color(ctx: commands.Context, client: discord.Client, id: int) -> int:
     db, cur = get_db_and_cur()
-    # Set color of author
-    datas = cur.execute("""
-                        SELECT * FROM colors_player
-                        WHERE id = ? AND selected = ?
-                        """, (id, True)).fetchall()
+    try:
+        # Set color of author
+        datas = cur.execute("""
+                            SELECT * FROM colors_player
+                            WHERE id = ? AND selected = ?
+                            """, (id, True)).fetchall()
+    except Exception as e:
+        print("Exception in get_user_color:", e)
     # First time the user has ever played a game
     if datas == []:
         cur.execute("""
@@ -395,7 +398,8 @@ def get_user_color(ctx: commands.Context, client: discord.Client, id: int) -> in
     else:
         # Handle special colors
         if datas[0][0] == "Your color":
-            color = ctx.author.color
+            user = await client.fetch_user(id)
+            color = user.accent_color
         elif datas[0][0] == "Random":
             color = discord.Colour.random()
         else:
@@ -405,21 +409,24 @@ def get_user_color(ctx: commands.Context, client: discord.Client, id: int) -> in
 
 def get_user_skin(id: int) -> int:
     db, cur = get_db_and_cur()
-    # Set color of author
-    datas = cur.execute("""
-                        SELECT * FROM skins_player
-                        WHERE id = ? AND selected = ?
-                        """, (id, True)).fetchall()
-    # First time the user has ever played a game
-    if datas == []:
-        cur.execute("""
-                    INSERT OR IGNORE INTO skins_player (name, id, selected)
-                    VALUES (?, ?, ?)
-                    """, ("Default", id, True))
-        db.commit()
-        skin = "Default"
-    else:
-        skin = datas[0][0]
+    try:
+        # Set color of author
+        datas = cur.execute("""
+                            SELECT * FROM skins_player
+                            WHERE id = ? AND selected = ?
+                            """, (id, True)).fetchall()
+    except Exception as e:
+        print("Exception in get_user_skin: ", e)
+        # First time the user has ever played a game
+        if datas == []:
+            cur.execute("""
+                        INSERT OR IGNORE INTO skins_player (name, id, selected)
+                        VALUES (?, ?, ?)
+                        """, ("Default", id, True))
+            db.commit()
+            skin = "Default"
+        else:
+            skin = datas[0][0]
     return skin
 
 
