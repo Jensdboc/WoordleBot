@@ -154,7 +154,7 @@ class Woordle(commands.Cog):
             if player_data == []:
                 self.cur.execute("""
                                  INSERT INTO player (id, credits, xp, current_streak, highest_streak, name)
-                                 VALUES (?, ?, ?, ?, ?)
+                                 VALUES (?, ?, ?, ?, ?, ?)
                                  """, (ctx.author.id, "0", "0", "0", "0", ctx.author.name))
                 self.db.commit()
         except Exception as e:
