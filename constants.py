@@ -1,4 +1,5 @@
 PREFIX = "="
+SERVER_ID = 1161256907521146881
 CHANNEL_IDS = [1161262990989991936]  # Real channel
 # CHANNEL_IDS = [1216431080698150942]  # Test channel
 DATABASE = "woordle.db"
@@ -102,7 +103,7 @@ SKINS = [
             ["Moooons", "Moons with smiles", "200", "common"],
             ["Fruit", "Lemon and green apple", "200", "common"],
             ["Fruit 2.0", "Banana and pear", "200", "common"],
-            ["Fruit (tropical edition)", "Pineapple and avocado", "500", "common"],
+            ["Fruit (tropical edition)", "Pineapple and avocado", "500", "rare"],
 
             # Themed skins
             ["Santa", "Trees, gift, santa", "500", "rare"],
@@ -141,4 +142,11 @@ COLORS = [
             # Special colors
             ["Your color", "Your color", "500", "rare"],
             ["Random", "Random", "1000", "legendary"]
+        ]
+
+ROLES = [
+            ["Broke", "Broke", "150", "common", "Black", 1249644832465621043],
+            ["Cheater", "Cheater", "500", "rare", "Red", 1249644997675057243],
+            [" ", "Empty", "750", "epic", "Discord", 1249645491478859807],
+            # ["Choose your role", "Choose your role", "1000", "legendary", "Own color", "0"]
         ]
