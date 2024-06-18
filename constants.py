@@ -86,6 +86,7 @@ ACHIEVEMENTS = [
                     ["Thank you, come again", "Spend your first credits", "common"],
                     ["Look how fancy", "Buy a skin", "common"],
                     ["Cold as ice", "Buy max freeze streaks", "rare"],
+                    ["Buying air", "Buy the empty role", "epic"],
 
                     # Credit achievements
                     ["Time to spend", "Get 500 credits", "rare"],
@@ -148,7 +149,11 @@ COLORS = [
 
 ROLES = [
             ["Broke", "Broke", "150", "common", "Black", 1249644832465621043],
+            ["Green, just green", "Yes green", "250", "common", "Green", 1252636958027546665],
             ["Cheater", "Cheater", "500", "rare", "Red", 1249644997675057243],
+            ["uwu", "uwu", "500", "rare", "Pink", 1252635326908731546],
             [" ", "Empty", "750", "epic", "Discord", 1249645491478859807],
+            ["Moderator", "Moderator", "750", "epic", "Blue", 1252635966443749477],
+            ["Rich boy", "Rich boy", "10000", "legendary", "Yellow", 1252636285336686663],
             # ["Choose your role", "Choose your role", "1000", "legendary", "Own color", "0"]
         ]

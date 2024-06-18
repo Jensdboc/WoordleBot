@@ -650,6 +650,14 @@ class Shop(discord.ui.View):
                                  """.format(f"{self.view}_player"), (item_to_buy[0], self.id, True))
                 new_role = guild.get_role(item_to_buy[5])
                 await member.add_roles(new_role)
+
+                self.db.commit()
+
+                """-----ACHIEVEMENT CHECK-----"""
+                if item_to_buy[5] == 1249645491478859807:
+                    await access_database.add_achievement(self.client, "Buying air", self.id)
+                """-----ACHIEVEMENT CHECK-----"""
+
             self.db.commit()
 
             """-----ACHIEVEMENT CHECK-----"""
