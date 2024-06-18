@@ -32,6 +32,7 @@ SKIN_MAP = {
     "Valentine": {"green": "❤️", "yellow": "💗", "gray": "🤍"},
     "Summer Time": {"green": "🌴", "yellow": "☀️", "gray": "⬛"},
     "Dipping time": {"green": "🥛", "yellow": "🍪", "gray": "⬛"},
+    "Stonks": {"green": "💸", "yellow": "💰", "gray": "🤑"},
     "Random": "Random"
 }
 
@@ -113,7 +114,8 @@ SKINS = [
             ["Dipping time", "Cookie, milk", "750", "epic"],
 
             # Special skins
-            ["Random", "Random letters", "750", "epic"]
+            ["Random", "Random letters", "750", "epic"],
+            ["Stonks", "Money, money, money", "10000", "legendary"]
         ]
 
 ITEMS = [
