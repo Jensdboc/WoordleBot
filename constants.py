@@ -1,4 +1,5 @@
 PREFIX = "="
+SERVER_ID = 1161256907521146881
 CHANNEL_IDS = [1161262990989991936]  # Real channel
 # CHANNEL_IDS = [1216431080698150942]  # Test channel
 DATABASE = "woordle.db"
@@ -31,6 +32,7 @@ SKIN_MAP = {
     "Valentine": {"green": "❤️", "yellow": "💗", "gray": "🤍"},
     "Summer Time": {"green": "🌴", "yellow": "☀️", "gray": "⬛"},
     "Dipping time": {"green": "🥛", "yellow": "🍪", "gray": "⬛"},
+    "Stonks": {"green": "💸", "yellow": "💰", "gray": "🤑"},
     "Random": "Random"
 }
 
@@ -84,6 +86,7 @@ ACHIEVEMENTS = [
                     ["Thank you, come again", "Spend your first credits", "common"],
                     ["Look how fancy", "Buy a skin", "common"],
                     ["Cold as ice", "Buy max freeze streaks", "rare"],
+                    ["Buying air", "Buy the empty role", "epic"],
 
                     # Credit achievements
                     ["Time to spend", "Get 500 credits", "rare"],
@@ -102,7 +105,7 @@ SKINS = [
             ["Moooons", "Moons with smiles", "200", "common"],
             ["Fruit", "Lemon and green apple", "200", "common"],
             ["Fruit 2.0", "Banana and pear", "200", "common"],
-            ["Fruit (tropical edition)", "Pineapple and avocado", "500", "common"],
+            ["Fruit (tropical edition)", "Pineapple and avocado", "500", "rare"],
 
             # Themed skins
             ["Santa", "Trees, gift, santa", "500", "rare"],
@@ -112,7 +115,8 @@ SKINS = [
             ["Dipping time", "Cookie, milk", "750", "epic"],
 
             # Special skins
-            ["Random", "Random letters", "750", "epic"]
+            ["Random", "Random letters", "750", "epic"],
+            ["Stonks", "Money, money, money", "10000", "legendary"]
         ]
 
 ITEMS = [
@@ -141,4 +145,15 @@ COLORS = [
             # Special colors
             ["Your color", "Your color", "500", "rare"],
             ["Random", "Random", "1000", "legendary"]
+        ]
+
+ROLES = [
+            ["Broke", "Broke", "150", "common", "Black", 1249644832465621043],
+            ["Green, just green", "Yes green", "250", "common", "Green", 1252636958027546665],
+            ["Cheater", "Cheater", "500", "rare", "Red", 1249644997675057243],
+            ["uwu", "uwu", "500", "rare", "Pink", 1252635326908731546],
+            [" ", "Empty", "750", "epic", "Discord", 1249645491478859807],
+            ["Moderator", "Moderator", "750", "epic", "Blue", 1252635966443749477],
+            ["Rich boy", "Rich boy", "10000", "legendary", "Yellow", 1252636285336686663],
+            # ["Choose your role", "Choose your role", "1000", "legendary", "Own color", "0"]
         ]

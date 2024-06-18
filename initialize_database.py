@@ -3,7 +3,7 @@ import random
 from datetime import datetime
 from typing import Tuple
 
-from constants import DATABASE, ACHIEVEMENTS, SKINS, ITEMS, COLORS
+from constants import DATABASE, ACHIEVEMENTS, SKINS, ITEMS, COLORS, ROLES
 
 
 # Add word to woordle_game if not in the database already
@@ -129,6 +129,20 @@ def create_database() -> None:
                         )
                     """)
 
+        # Create table for roles if it does not exist
+        # This contains the information about each role
+        cur.execute("""
+                    CREATE TABLE IF NOT EXISTS roles (
+                        name text,
+                        description text NOT NULL,
+                        cost integer NOT NULL,
+                        rarity text NOT NULL,
+                        color text NOT NULL,
+                        role_id integer NOT NULL,
+                        PRIMARY KEY (name)
+                        )
+                    """)
+
         # Create table for achievements_player if it does not exist
         # This links information between achievements and players
         cur.execute("""
@@ -188,6 +202,21 @@ def create_database() -> None:
                         )
                     """)
 
+        # Create table for roles_player if it does not exist
+        # This links information between roles and players
+        cur.execute("""
+                    CREATE TABLE IF NOT EXISTS roles_player (
+                        name text,
+                        id integer,
+                        selected bool NOT NULL,
+                        PRIMARY KEY (name, id),
+                        FOREIGN KEY (id)
+                            REFERENCES player (id)
+                        FOREIGN KEY (name)
+                            REFERENCES roles (name)
+                        )
+                    """)
+
         # Make sure transaction is ended and changes have been made final
         db.commit()
         cur.close()
@@ -230,6 +259,12 @@ def fill_database() -> None:
                         INSERT OR IGNORE INTO colors (name, description, cost, rarity)
                         VALUES (?, ?, ?, ?)
                         """, color)
+
+        for role in ROLES:
+            cur.execute("""
+                        INSERT OR IGNORE INTO roles (name, description, cost, rarity, color, role_id)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        """, role)
 
         # Make sure transaction is ended and changes have been made final
         db.commit()

@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 
 import access_database
 from admincheck import admin_check
-from constants import PREFIX, DATABASE
+from constants import PREFIX, DATABASE, SERVER_ID
 
 ELEMENTS_ON_PAGE = 5
 
@@ -227,10 +227,13 @@ class Database(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        credits = access_database.get_amount_of_credits(ctx.author.id)
-        view = Shop(ctx, ctx.author.id, credits, self.db, self.cur, self.client)
-        await view._init_color()
-        await ctx.reply(view=view)
+        try:
+            credits = access_database.get_amount_of_credits(ctx.author.id)
+            view = Shop(ctx, ctx.author.id, credits, self.db, self.cur, self.client)
+            await view._init_color()
+            await ctx.reply(view=view)
+        except Exception as e:
+            print("Exception in sending Shop after a game: ", e)
 
     @commands.command(usage=f"{PREFIX}rank <type> <member>",
                       description="""
@@ -442,18 +445,11 @@ class Shop(discord.ui.View):
             embed = self.make_embed(self.view)
             await interaction.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(label="<", style=discord.ButtonStyle.grey, row=1)
-    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(label="Roles", style=discord.ButtonStyle.blurple, row=1)
+    async def role(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id == self.id:
-            if self.page > 0:
-                self.page -= 1
-            embed = self.make_embed(self.view)
-            await interaction.response.edit_message(embed=embed, view=self)
-
-    @discord.ui.button(label=">", style=discord.ButtonStyle.grey, row=1)
-    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id == self.id:
-            self.page += 1
+            self.view = "roles"
+            self.page = 0
             embed = self.make_embed(self.view)
             await interaction.response.edit_message(embed=embed, view=self)
 
@@ -490,6 +486,21 @@ class Shop(discord.ui.View):
         if interaction.user.id == self.id:
             feedback = await self.buy_item(self.page * ELEMENTS_ON_PAGE + 4)
             embed = self.make_embed(self.view, feedback)
+            await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label="<", style=discord.ButtonStyle.grey, row=3)
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id == self.id:
+            if self.page > 0:
+                self.page -= 1
+            embed = self.make_embed(self.view)
+            await interaction.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(label=">", style=discord.ButtonStyle.grey, row=3)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id == self.id:
+            self.page += 1
+            embed = self.make_embed(self.view)
             await interaction.response.edit_message(embed=embed, view=self)
 
     async def buy_item(self, index: int) -> str:
@@ -552,6 +563,32 @@ class Shop(discord.ui.View):
                         await access_database.add_achievement(self.client, "Look how fancy", self.id)
                         """-----ACHIEVEMENT CHECK-----"""
                     return f"You selected **{item_to_buy[0]}**!"
+                elif self.view == "roles":
+                    # Retrieve old role
+                    self.cur.execute("""
+                                     SELECT role_id FROM {} JOIN {} USING (name)
+                                     WHERE selected = True and id = ?
+                                     """.format(f"{self.view}_player", f"{self.view}"), (self.id,))
+                    old_roles = self.cur.fetchall()
+                    guild = await self.client.fetch_guild(SERVER_ID)
+                    member = await guild.fetch_member(self.id)
+                    old_role = guild.get_role(old_roles[0][0])
+                    await member.remove_roles(old_role)
+                    # Unselect all the previous ones
+                    self.cur.execute("""
+                                     UPDATE {}
+                                     SET selected = False
+                                     WHERE selected = True and id = ?
+                                     """.format(f"{self.view}_player"), (self.id,))
+                    # Select current one
+                    self.cur.execute("""
+                                     UPDATE {}
+                                     SET selected = True
+                                     WHERE name = ? AND id = ?
+                                     """.format(f"{self.view}_player"), (item_to_buy[0], self.id))
+                    new_role = guild.get_role(item_to_buy[5])
+                    await member.add_roles(new_role)
+                    return f"You selected **{item_to_buy[0]}**!"
 
             # Check if player has enough credits
             if (self.credits - item_to_buy[2] < 0):
@@ -589,6 +626,38 @@ class Shop(discord.ui.View):
                                  INSERT INTO {} (name, id, selected)
                                  VALUES (?, ?, ?)
                                  """.format(f"{self.view}_player"), (item_to_buy[0], self.id, True))
+            elif self.view == "roles":
+                guild = await self.client.fetch_guild(SERVER_ID)
+                member = await guild.fetch_member(self.id)
+                # Unselect all the previous ones
+                self.cur.execute("""
+                                 SELECT role_id FROM {} JOIN {} USING (name)
+                                 WHERE selected = True and id = ?
+                                 """.format(f"{self.view}_player", f"{self.view}"), (self.id,))
+                old_roles = self.cur.fetchall()
+                if old_roles != []:
+                    old_role = guild.get_role(old_roles[0][0])
+                    await member.remove_roles(old_role)
+                self.cur.execute("""
+                                 UPDATE {}
+                                 SET selected = False
+                                 WHERE selected = True and id = ?
+                                 """.format(f"{self.view}_player"), (self.id,))
+                # Insert and select current one
+                self.cur.execute("""
+                                 INSERT INTO {} (name, id, selected)
+                                 VALUES (?, ?, ?)
+                                 """.format(f"{self.view}_player"), (item_to_buy[0], self.id, True))
+                new_role = guild.get_role(item_to_buy[5])
+                await member.add_roles(new_role)
+
+                self.db.commit()
+
+                """-----ACHIEVEMENT CHECK-----"""
+                if item_to_buy[5] == 1249645491478859807:
+                    await access_database.add_achievement(self.client, "Buying air", self.id)
+                """-----ACHIEVEMENT CHECK-----"""
+
             self.db.commit()
 
             """-----ACHIEVEMENT CHECK-----"""
