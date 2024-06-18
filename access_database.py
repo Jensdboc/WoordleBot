@@ -497,8 +497,13 @@ def get_all_data(type: str):
             currency = ["game", "games"]
         elif type == "average guesses":
             cur.execute("""
-                        SELECT person, AVG(guesses) as average_guesses FROM game
-                        WHERE guesses != "X"
+                        SELECT person, AVG(CASE
+                                            WHEN guesses = 'X' THEN 7
+                                            WHEN guesses = 'FREEZE' THEN 7
+                                            WHEN guesses = 'LOSS' THEN 7
+                                            ELSE guesses
+                                        END) as average_guesses
+                        FROM game
                         GROUP BY person
                         ORDER BY average_guesses
                         """)
@@ -619,9 +624,14 @@ def get_month_data(type: str):
             currency = ["game", "games"]
         elif type == "average guesses":
             cur.execute("""
-                        SELECT person, AVG(guesses) as average_guesses FROM game
-                        WHERE guesses != "X" AND
-                        game.id IN (
+                        SELECT person, AVG(CASE
+                                            WHEN guesses = 'X' THEN 7
+                                            WHEN guesses = 'FREEZE' THEN 7
+                                            WHEN guesses = 'LOSS' THEN 7
+                                            ELSE guesses
+                                        END) as average_guesses
+                        FROM game
+                        WHERE game.id IN (
                         SELECT woordle_games.id FROM woordle_games
                         WHERE strftime("%m", woordle_games.date) = ?
                             AND strftime("%Y", woordle_games.date) = ?
