@@ -16,7 +16,7 @@ def pick_word() -> str:
     word : str
         Word for the next WoordleGame
     """
-    if datetime.datetime.now().month == 8 and datetime.datetime.now().day == 7:
+    if datetime.now().month == 8 and datetime.now().day == 7:
         word = "SHREK"
     else:
         with open("data/woorden.txt", 'r') as all_words:
