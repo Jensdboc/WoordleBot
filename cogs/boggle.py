@@ -3,7 +3,7 @@ from discord.ext import commands
 
 from boggle_game import BoggleGame
 from boggle_games import BoggleGames
-from constants import BOGGLE_STATE
+from constants import BOGGLE_STATE, COLOR_MAP
 
 
 class Boggle(commands.Cog):
@@ -23,19 +23,37 @@ class Boggle(commands.Cog):
 
     @commands.command(aliases=["cb"])
     async def createboggle(self, ctx: commands.Context):
-        self.games.remove_old_games()
         view = BoggleWaitingRoom(ctx, self.client, self.games)
         await ctx.reply(view=view)
 
     @commands.command(aliases=["sb"])
     async def startboggle(self, ctx: commands.Context, game_id: int = 0):
-        results = await self.games.get_game(game_id).start()
-
+        game = self.games.get_game(game_id)
+        try:
+            if game is None:
+                print("1")
+                fail_embed = discord.Embed(title=f"No game with id {game_id} found!", description="Create a boggle game with =createboggle or =cb first.", color=COLOR_MAP["Red"])
+                await ctx.reply(embed=fail_embed)
+                return
+            elif ctx.author != game.players[0]:
+                print("2")
+                fail_embed = discord.Embed(title="No permission!", description=f"You are not the creator of this game!\n{game.players[0].name} should start this game.", color=COLOR_MAP["Red"])
+                await ctx.reply(embed=fail_embed)
+                return
+            elif game.state != BOGGLE_STATE[0]:
+                print("3")
+                fail_embed = discord.Embed(title="Cannot be started!", description=f"Game with id {game_id} is currently {game.state}!", color=COLOR_MAP["Red"])
+                await ctx.reply(embed=fail_embed)
+                return
+        except Exception as e:
+            print(e)
+        results = await game.start()
         channel_embed_description = ""
         sorted_results = sorted(results.items(), key=lambda item: item[1], reverse=True)
         for player, result in sorted_results:
             channel_embed_description += f"{player.name}: {result}\n"
         channel_embed = discord.Embed(title="Boggle Results", description=channel_embed_description)
+        self.games.remove_game(game)
         await ctx.send(embed=channel_embed)
 
     @commands.command(aliases=["b"])
@@ -43,7 +61,11 @@ class Boggle(commands.Cog):
         if ctx.channel.type == discord.ChannelType.private:
             for game in self.games.games:
                 if game.state == BOGGLE_STATE[1] and ctx.author.id in [player.id for player in game.players]:
-                    game.add_guess(ctx.author, guess)
+                    valid = game.add_guess(ctx.author, guess)
+                    if not valid:
+                        await ctx.message.add_reaction("❌")
+                    else:
+                        await ctx.message.add_reaction("✅")
 
 
 class BoggleWaitingRoom(discord.ui.View):

@@ -1,7 +1,7 @@
-PREFIX = "="
+PREFIX = "=="
 SERVER_ID = 1161256907521146881
-CHANNEL_IDS = [1161262990989991936]  # Real channel
-# CHANNEL_IDS = [1216431080698150942]  # Test channel
+# CHANNEL_IDS = [1161262990989991936]  # Real channel
+CHANNEL_IDS = [1216431080698150942]  # Test channel
 DATABASE = "woordle.db"
 # DATABASE = "server_woordle.db"
 
@@ -178,8 +178,8 @@ BOGGLE_BLOCKS = [
         ]
 
 BOGGLE_STATE = {
-    0: "Waiting",
-    1: "Playing",
-    2: "Calculating",
-    3: "Finished",
+    0: "waiting",
+    1: "playing",
+    2: "calculating",
+    3: "finishing",
 }

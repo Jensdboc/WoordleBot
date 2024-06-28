@@ -24,7 +24,7 @@ class BoggleGuess():
         return self.guess
 
     def __eq__(self, other: object) -> bool:
-        return self.guess == other.guess
+        return self.guess == other.guess and self.valid == other.valid
 
 
 class BoggleGame():
@@ -39,16 +39,20 @@ class BoggleGame():
         self.board_size = 4
         self.board = np.array([block[random.randint(0, 5)] for block in self.blocks]).reshape(self.board_size, self.board_size)
         self.state = BOGGLE_STATE[0]
+        self.refresh_time = 30
         self.game_time = 180
-        self.guesses = {player: [] for player in self.players}
-        self.results = {player: 0 for player in self.players}
         self.found_words = {}  # key=word, value=players
+        self.results = None
+        self.guesses = None
+        self.wanting_to_rotate = 0
 
         with open("data/bogglewords.txt", 'r') as file:
             self.words = set(line.strip().upper() for line in file)
 
-    # TODO: add button to rotate the board
-    def show_board(self, client: discord.Client):
+    def rotate_board(self):
+        self.board = np.rot90(self.board)
+
+    def show_board(self, client: discord.Client, time: int = 0) -> discord.Embed:
         board = ""
         for i in range(self.board_size):
             for j in range(self.board_size):
@@ -56,7 +60,16 @@ class BoggleGame():
                 board += str(get(client.emojis, name=emoji_name))
                 if j == self.board_size - 1:
                     board += "\n"
-        return board
+        return discord.Embed(title="Boggle:", description=board + "\n" + "Time left: " + str(self.game_time - time) + "s")
+
+    def show_words_per_player(self, player: discord.Member) -> discord.Embed:
+        message = ""
+        for guess in self.guesses[player]:
+            if guess.is_valid():
+                message += guess.get_guess() + "\n"
+            else:
+                message += "~~" + guess.get_guess() + "~~\n"
+        return discord.Embed(title="List of words:", description=message)
 
     def check_surrounding_letters(self, possibilities, guess):
         current_i, current_j = possibilities[-1]
@@ -108,13 +121,17 @@ class BoggleGame():
         boggle_guess = self.is_valid(player, guess)
         if boggle_guess:
             boggle_guess = BoggleGuess(player, guess, True)
-            if guess not in self.found_words:
+            if guess not in self.found_words.keys():
                 self.found_words[guess] = [boggle_guess]
             elif boggle_guess not in self.found_words[guess]:
                 self.found_words[guess].append(boggle_guess)
-            print("Added guess", guess)
+            return True
+
+        return False
 
     def calculate_results(self):
+        self.results = {player: 0 for player in self.players}
+        self.guesses = {player: [] for player in self.players}
         for guesses in self.found_words.values():
             if len(guesses) == 1:
                 guess = guesses[0].guess
@@ -129,19 +146,52 @@ class BoggleGame():
                     self.results[player] += 5
                 elif len(guess) >= 8:
                     self.results[player] += 11
+            for guess in guesses:
+                player = guess.player
+                self.guesses[player].append(guess)
 
     async def start(self):
         self.state = BOGGLE_STATE[1]
+        view = BoggleBoard(self.client, self)
         for player in self.players:
-            embed = discord.Embed(title="Boggle:", description=self.show_board(self.client))
-            await player.send(embed=embed)
+            board_message = await player.send(embed=self.show_board(self.client), view=view)
 
-        print("before sleep")
-        await asyncio.sleep(self.game_time)
-        print("after sleep")
+        for i in range(self.game_time):
+            if i > 0:
+                board_embed = self.show_board(self.client, i)
+                if i % self.refresh_time == 0:
+                    new_board_message = await player.send(embed=board_embed)
+                    await board_message.delete()
+                    board_message = new_board_message
+                else:
+                    await board_message.edit(embed=board_embed)
+            await asyncio.sleep(1)
 
         self.state = BOGGLE_STATE[2]
         self.calculate_results()
 
+        for player in self.players:
+            await player.send(embed=self.show_words_per_player(player))
+
         self.state = BOGGLE_STATE[3]
         return self.results
+
+
+class BoggleBoard(discord.ui.View):
+    def __init__(self, client: discord.Client, game: BoggleGame):
+        super().__init__()
+        self.client = client
+        self.game = game
+
+    @discord.ui.button(label="↪️", style=discord.ButtonStyle.blurple)
+    async def left(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        self.game.rotate_board()
+        await interaction.response.edit_message(embed=self.game.show_board(), view=self)
+
+    @discord.ui.button(label="↩️", style=discord.ButtonStyle.blurple)
+    async def right(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        for _ in range(3):
+            self.game.rotate_board()
+        await interaction.response.edit_message(embed=self.game.show_board(), view=self)
