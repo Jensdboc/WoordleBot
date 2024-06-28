@@ -3,8 +3,9 @@ import random
 import asyncio
 import numpy as np
 from discord.utils import get
-from constants import BOGGLE_BLOCKS, BOGGLE_STATE
 from typing import Union, List
+
+from constants import BOGGLE_BLOCKS, BOGGLE_STATE
 
 
 class BoggleGuess():
@@ -14,16 +15,43 @@ class BoggleGuess():
         self.guess = guess
         self.valid = valid
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
+        """
+        Check if the guess has not been guessed twice
+
+        Return
+        ------
+        valid : bool
+            If the guess is valid or not
+        """
         return self.valid
 
-    def set_invalid(self):
+    def set_invalid(self) -> None:
+        """
+        Set the guess to invalid
+        """
         self.valid = False
 
-    def get_guess(self):
+    def get_guess(self) -> str:
+        """
+        Get the value of the guess
+
+        Return
+        ------
+        guess : str
+            The value of the guess
+        """
         return self.guess
 
     def __eq__(self, other: object) -> bool:
+        """
+        Overwrite equal operator
+
+        Return
+        ------
+        equal : bool
+            If the guess is equal or not
+        """
         return self.guess == other.guess and self.valid == other.valid
 
 
@@ -38,21 +66,39 @@ class BoggleGame():
         random.shuffle(self.blocks)
         self.board_size = 4
         self.board = np.array([block[random.randint(0, 5)] for block in self.blocks]).reshape(self.board_size, self.board_size)
+
         self.state = BOGGLE_STATE[0]
         self.refresh_time = 30
         self.game_time = 180
         self.found_words = {}  # key=word, value=players
         self.results = None
         self.guesses = None
-        self.wanting_to_rotate = 0
 
         with open("data/bogglewords.txt", 'r') as file:
             self.words = set(line.strip().upper() for line in file)
 
-    def rotate_board(self):
+    def rotate_board(self) -> None:
+        """
+        Rotate the board 90 degrees to the left
+        """
         self.board = np.rot90(self.board)
 
     def show_board(self, client: discord.Client, time: int = 0) -> discord.Embed:
+        """
+        Show the board in an embed
+
+        Parameters
+        ----------
+        client : discord.Client
+            Discord Woordle bot
+        time : int
+            Time spend in the game
+
+        Return
+        ------
+        board : discord.Embed
+            The embed with the board
+        """
         board = ""
         for i in range(self.board_size):
             for j in range(self.board_size):
@@ -63,6 +109,19 @@ class BoggleGame():
         return discord.Embed(title="Boggle:", description=board + "\n" + "Time left: " + str(self.game_time - time) + "s")
 
     def show_words_per_player(self, player: discord.Member) -> discord.Embed:
+        """
+        Show the list of words guessed by the player
+
+        Parameters
+        ----------
+        player : discord.Member
+            The player to show the list of words of
+
+        Return
+        ------
+        message : discord.Embed
+            The embed with the list of words guessed by the player
+        """
         message = ""
         for guess in self.guesses[player]:
             if guess.is_valid():
@@ -71,7 +130,22 @@ class BoggleGame():
                 message += "~~" + guess.get_guess() + "~~\n"
         return discord.Embed(title="List of words:", description=message)
 
-    def check_surrounding_letters(self, possibilities, guess):
+    def check_surrounding_letters(self, possibilities: List[(int, int)], guess: BoggleGuess) -> bool:
+        """
+        Check if the surrounding letters match the next letter in the guess
+
+        Parameters
+        ----------
+        possibilities : List[(int, int)]
+            List of previous coordinates of the guess
+        guess : str
+            The guess to check
+
+        Return
+        ------
+        valid : bool
+            If the guess has been found or not
+        """
         current_i, current_j = possibilities[-1]
         for ii in range(max(0, current_i - 1), min(current_i + 2, self.board_size)):
             for jj in range(max(0, current_j - 1), min(current_j + 2, self.board_size)):
@@ -87,7 +161,22 @@ class BoggleGame():
                     possibilities.remove((ii, jj))
         return False
 
-    def is_valid(self, player, guess) -> Union[None, BoggleGuess]:
+    def is_valid(self, player: discord.Member, guess: BoggleGuess) -> Union[None, BoggleGuess]:
+        """
+        Check if the guess is valid
+
+        Parameters
+        ----------
+        player : discord.Member
+            The player who made the guess
+        guess : str
+            The guess to check
+
+        Return
+        ------
+        guess : BoggleGuess
+            The guess if it is valid, else None
+        """
         # Check if guess has been checked previously
         # Set previous guesses and the current one to invalid
         if guess in self.found_words:
@@ -116,7 +205,22 @@ class BoggleGame():
 
         return False
 
-    def add_guess(self, player, guess):
+    def add_guess(self, player: discord.Member, guess: BoggleGuess) -> bool:
+        """
+        Add a guess to the game
+
+        Parameters
+        ----------
+        player : discord.Member
+            The player who made the guess
+        guess : BoggleGuess
+            The guess to add
+
+        Return
+        ------
+        valid : bool
+            If the guess is valid or not
+        """
         guess = guess.upper()
         boggle_guess = self.is_valid(player, guess)
         if boggle_guess:
@@ -129,7 +233,10 @@ class BoggleGame():
 
         return False
 
-    def calculate_results(self):
+    def calculate_results(self) -> None:
+        """
+        Calculate the score for each player
+        """
         self.results = {player: 0 for player in self.players}
         self.guesses = {player: [] for player in self.players}
         for guesses in self.found_words.values():
@@ -150,7 +257,15 @@ class BoggleGame():
                 player = guess.player
                 self.guesses[player].append(guess)
 
-    async def start(self):
+    async def start(self) -> dict[discord.Member, int]:
+        """
+        Execute the flow of a BoggleGame
+
+        Return
+        ------
+        results : dict[discord.Member, int]
+            The score for each player
+        """
         self.state = BOGGLE_STATE[1]
         view = BoggleBoard(self.client, self)
         for player in self.players:
