@@ -3,7 +3,7 @@ import random
 import asyncio
 import numpy as np
 from discord.utils import get
-from typing import Union, List
+from typing import Union, List, Tuple
 
 from constants import BOGGLE_BLOCKS, BOGGLE_STATE
 
@@ -68,22 +68,29 @@ class BoggleGame():
         self.board = np.array([block[random.randint(0, 5)] for block in self.blocks]).reshape(self.board_size, self.board_size)
 
         self.state = BOGGLE_STATE[0]
-        self.refresh_time = 30
+        self.refresh_time = 15
         self.game_time = 180
         self.found_words = {}  # key=word, value=players
-        self.results = None
-        self.guesses = None
+        self.results = {}  # key=player, value=int
+        self.guesses = {}  # key=player, value=List[BoggleGuess]
+        self.boards = {}  # key=player, value=np.array
+        self.messages = {}  # key=player, value=discord.Message
 
         with open("data/bogglewords.txt", 'r') as file:
             self.words = set(line.strip().upper() for line in file)
 
-    def rotate_board(self) -> None:
+    def rotate_board(self, player: discord.Member) -> None:
         """
         Rotate the board 90 degrees to the left
-        """
-        self.board = np.rot90(self.board)
 
-    def show_board(self, client: discord.Client, time: int = 0) -> discord.Embed:
+        Parameters
+        ----------
+        player : discord.Member
+            The player to rotate
+        """
+        self.boards[player] = np.rot90(self.boards[player])
+
+    def show_board(self, client: discord.Client, player: discord.Member, time: int = 0) -> discord.Embed:
         """
         Show the board in an embed
 
@@ -102,7 +109,7 @@ class BoggleGame():
         board = ""
         for i in range(self.board_size):
             for j in range(self.board_size):
-                emoji_name = "gray_" + self.board[i][j]
+                emoji_name = "gray_" + self.boards[player][i][j]
                 board += str(get(client.emojis, name=emoji_name))
                 if j == self.board_size - 1:
                     board += "\n"
@@ -130,7 +137,7 @@ class BoggleGame():
                 message += "~~" + guess.get_guess() + "~~\n"
         return discord.Embed(title="List of words:", description=message)
 
-    def check_surrounding_letters(self, possibilities: List[(int, int)], guess: BoggleGuess) -> bool:
+    def check_surrounding_letters(self, possibilities: List[Tuple[int, int]], guess: BoggleGuess) -> bool:
         """
         Check if the surrounding letters match the next letter in the guess
 
@@ -179,7 +186,7 @@ class BoggleGame():
         """
         # Check if guess has been checked previously
         # Set previous guesses and the current one to invalid
-        if guess in self.found_words:
+        if guess in self.found_words.keys():
             for boggle_guess in self.found_words[guess]:
                 boggle_guess.set_invalid()
             return BoggleGuess(player, guess, False)
@@ -205,7 +212,7 @@ class BoggleGame():
 
         return False
 
-    def add_guess(self, player: discord.Member, guess: BoggleGuess) -> bool:
+    def add_guess(self, player: discord.Member, guess: str) -> bool:
         """
         Add a guess to the game
 
@@ -267,19 +274,23 @@ class BoggleGame():
             The score for each player
         """
         self.state = BOGGLE_STATE[1]
-        view = BoggleBoard(self.client, self)
+
         for player in self.players:
-            board_message = await player.send(embed=self.show_board(self.client), view=view)
+            view = BoggleBoard(self.client, self, player)
+            self.boards[player] = self.board.copy()
+            self.messages[player] = await player.send(embed=self.show_board(self.client, player), view=view)
 
         for i in range(self.game_time):
             if i > 0:
-                board_embed = self.show_board(self.client, i)
-                if i % self.refresh_time == 0:
-                    new_board_message = await player.send(embed=board_embed)
-                    await board_message.delete()
-                    board_message = new_board_message
-                else:
-                    await board_message.edit(embed=board_embed)
+                for player in self.players:
+                    board_message = self.show_board(self.client, player, i)
+                    if i % self.refresh_time == 0:
+                        view = BoggleBoard(self.client, self, player)
+                        new_board_message = await player.send(embed=board_message, view=view)
+                        await self.messages[player].delete()
+                        self.messages[player] = new_board_message
+                    else:
+                        await self.messages[player].edit(embed=board_message)
             await asyncio.sleep(1)
 
         self.state = BOGGLE_STATE[2]
@@ -293,20 +304,21 @@ class BoggleGame():
 
 
 class BoggleBoard(discord.ui.View):
-    def __init__(self, client: discord.Client, game: BoggleGame):
+    def __init__(self, client: discord.Client, game: BoggleGame, player: discord.Member):
         super().__init__()
         self.client = client
         self.game = game
+        self.player = player
 
     @discord.ui.button(label="↪️", style=discord.ButtonStyle.blurple)
     async def left(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
-        self.game.rotate_board()
+        self.game.rotate_board(self.player)
         await interaction.response.edit_message(embed=self.game.show_board(), view=self)
 
     @discord.ui.button(label="↩️", style=discord.ButtonStyle.blurple)
     async def right(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         for _ in range(3):
-            self.game.rotate_board()
+            self.game.rotate_board(self.player)
         await interaction.response.edit_message(embed=self.game.show_board(), view=self)
