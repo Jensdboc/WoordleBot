@@ -54,6 +54,17 @@ class BoggleGuess():
         """
         return self.guess == other.guess and self.valid == other.valid
 
+    def __str__(self) -> str:
+        """
+        Overwrite str operator
+
+        Return
+        ------
+        guess : str
+            The representation of the guess
+        """
+        return f"{self.player} - {self.guess} - {self.valid}"
+
 
 class BoggleGame():
     """Class representing a boggle game"""
@@ -69,8 +80,8 @@ class BoggleGame():
 
         self.state = BOGGLE_STATE[0]
         self.refresh_time = 15
-        self.game_time = 180
-        self.found_words = {}  # key=word, value=players
+        self.game_time = 5
+        self.found_words = {}  # key=word, value=List[BoggleGuess]
         self.results = {}  # key=player, value=int
         self.guesses = {}  # key=player, value=List[BoggleGuess]
         self.boards = {}  # key=player, value=np.array
@@ -113,7 +124,11 @@ class BoggleGame():
                 board += str(get(client.emojis, name=emoji_name))
                 if j == self.board_size - 1:
                     board += "\n"
-        return discord.Embed(title="Boggle:", description=board + "\n" + "Time left: " + str(self.game_time - time) + "s")
+        if time == self.game_time:
+            description = board + "\n" + "Game over!"
+        else:
+            description = board + "\n" + "Time left: " + str(self.game_time - time) + "s"
+        return discord.Embed(title="Boggle:", description=description)
 
     def show_words_per_player(self, player: discord.Member) -> discord.Embed:
         """
@@ -184,16 +199,17 @@ class BoggleGame():
         guess : BoggleGuess
             The guess if it is valid, else None
         """
+        # Check if guess is a valid word
+        if guess not in self.words:
+            return False
+
         # Check if guess has been checked previously
         # Set previous guesses and the current one to invalid
+
         if guess in self.found_words.keys():
             for boggle_guess in self.found_words[guess]:
                 boggle_guess.set_invalid()
             return BoggleGuess(player, guess, False)
-
-        # Check if guess is a valid word
-        if guess not in self.words:
-            return False
 
         # Check if guess is on the board
         # 1) Go over all possible positions on the board
@@ -231,13 +247,12 @@ class BoggleGame():
         guess = guess.upper()
         boggle_guess = self.is_valid(player, guess)
         if boggle_guess:
-            boggle_guess = BoggleGuess(player, guess, True)
-            if guess not in self.found_words.keys():
+            if boggle_guess.is_valid():
                 self.found_words[guess] = [boggle_guess]
-            elif boggle_guess not in self.found_words[guess]:
+            else:
                 self.found_words[guess].append(boggle_guess)
-            return True
 
+            return True
         return False
 
     def calculate_results(self) -> None:
@@ -280,7 +295,7 @@ class BoggleGame():
             self.boards[player] = self.board.copy()
             self.messages[player] = await player.send(embed=self.show_board(self.client, player), view=view)
 
-        for i in range(self.game_time):
+        for i in range(self.game_time + 1):
             if i > 0:
                 for player in self.players:
                     board_message = self.show_board(self.client, player, i)
