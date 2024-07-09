@@ -35,8 +35,12 @@ class Boggle(commands.Cog):
         ctx : commands.Context
             Context the command is represented in
         """
-        view = BoggleWaitingRoom(ctx, self.client, self.games)
-        await ctx.reply(view=view)
+        try:
+            view = BoggleWaitingRoom(ctx, self.client, self.games)
+            await ctx.reply(view=view)
+        except Exception as e:
+            print(e)
+            await ctx.send(e)
 
     @commands.command(usage=f"{PREFIX}startboggle <game_id>",
                       description="""
