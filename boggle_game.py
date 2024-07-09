@@ -80,7 +80,7 @@ class BoggleGame():
 
         self.state = BOGGLE_STATE[0]
         self.refresh_time = 15
-        self.game_time = 180
+        self.game_time = 120
         self.found_words = {}  # key=word, value=List[BoggleGuess]
         self.results = {}  # key=player, value=int
         self.guesses = {}  # key=player, value=List[BoggleGuess]
