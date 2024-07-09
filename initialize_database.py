@@ -16,9 +16,12 @@ def pick_word() -> str:
     word : str
         Word for the next WoordleGame
     """
-    with open("data/woorden.txt", 'r') as all_words:
-        words = all_words.read().splitlines()
-        word = random.choice(words)
+    if datetime.now().month == 8 and datetime.now().day == 7:
+        word = "SHREK"
+    else:
+        with open("data/woorden.txt", 'r') as all_words:
+            words = all_words.read().splitlines()
+            word = random.choice(words)
     return word
 
 

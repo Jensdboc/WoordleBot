@@ -157,3 +157,29 @@ ROLES = [
             ["Rich boy", "Rich boy", "10000", "legendary", "Yellow", 1252636285336686663],
             # ["Choose your role", "Choose your role", "1000", "legendary", "Own color", "0"]
         ]
+
+BOGGLE_BLOCKS = [
+            ["A", "R", "X", "F", "O", "I"],
+            ["I", "S", "O", "A", "M", "R"],
+            ["H", "I", "S", "R", "E", "N"],
+            ["E", "I", "R", "U", "L", "W"],
+            ["E", "P", "A", "M", "C", "D"],
+            ["B", "T", "L", "R", "I", "A"],
+            ["O", "A", "Q", "J", "M", "B"],
+            ["V", "I", "T", "E", "G", "N"],
+            ["Z", "N", "V", "D", "A", "E"],
+            ["A", "A", "T", "O", "I", "E"],
+            ["S", "L", "E", "C", "R", "A"],
+            ["N", "L", "E", "G", "U", "Y"],
+            ["D", "O", "N", "S", "T", "E"],
+            ["O", "N", "E", "K", "T", "U"],
+            ["S", "L", "U", "E", "T", "P"],
+            ["E", "E", "H", "I", "S", "F"],
+        ]
+
+BOGGLE_STATE = {
+    0: "waiting",
+    1: "playing",
+    2: "calculating",
+    3: "finishing",
+}
