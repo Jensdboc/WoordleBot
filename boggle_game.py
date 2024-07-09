@@ -3,7 +3,7 @@ import random
 import asyncio
 import numpy as np
 from discord.utils import get
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict
 
 from constants import BOGGLE_BLOCKS, BOGGLE_STATE
 
@@ -279,13 +279,13 @@ class BoggleGame():
                 player = guess.player
                 self.guesses[player].append(guess)
 
-    async def start(self) -> dict[discord.Member, int]:
+    async def start(self) -> Dict[discord.Member, int]:
         """
         Execute the flow of a BoggleGame
 
         Return
         ------
-        results : dict[discord.Member, int]
+        results : Dict[discord.Member, int]
             The score for each player
         """
         self.state = BOGGLE_STATE[1]
