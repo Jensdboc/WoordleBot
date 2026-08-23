@@ -32,7 +32,7 @@ SKIN_MAP = {
     "Valentine": {"green": "❤️", "yellow": "💗", "gray": "🤍"},
     "Summer Time": {"green": "🌴", "yellow": "☀️", "gray": "⬛"},
     "Dipping time": {"green": "🥛", "yellow": "🍪", "gray": "⬛"},
-    "Stonks": {"green": "💸", "yellow": "💰", "gray": "🤑"},
+    "Stonks": {"green": "💵", "yellow": "💴", "gray": "💷"},
     "Random": "Random"
 }
 
